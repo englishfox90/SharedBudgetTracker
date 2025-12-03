@@ -28,6 +28,26 @@ yarn-error.log*
 # Database
 *.db
 *.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# Misc
+.DS_Store
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 dev.db
 dev.db-journal
 

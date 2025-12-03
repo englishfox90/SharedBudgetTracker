@@ -1,37 +1,42 @@
 # Shared Balance Planner
 
-A full-stack web application that helps two people manage a shared checking account, forecast the balance throughout the month, and decide how much to contribute from their salaries.
+A full-stack TypeScript application for managing a shared checking account between two people. The app forecasts daily account balances and recommends contribution percentages to maintain a safe minimum balance.
 
 ## Features
 
-- 📊 **Forecast Engine**: Simulate daily balance across the month based on income and expenses
-- 💰 **Smart Recommendations**: Get personalized contribution percentage recommendations
-- 🎯 **Balance Warnings**: Visual alerts when balance drops below safe minimum
-- 📅 **Variable Expense Estimation**: Automatically estimate variable costs from historical data
-- 📝 **Easy Setup**: Configure accounts, income sources, and recurring expenses
-- 📤 **CSV Import**: Import historical transactions from CSV files
+- **Dashboard**: Quick overview with predicted balance, month-end balance, transfer alerts, and contribution insights
+- **Forecast**: Day-by-day cash flow projection showing income deposits and expenses
+- **Recommendations**: AI-powered financial suggestions
+  - Automatic contribution adjustment calculator with one-click implementation
+  - 6-month financial outlook with trend analysis
+  - Actionable insights for variable expense management
+- **Period Trend Forecast**: Predict variable expenses using weighted historical patterns
+- **Transactions**: Track and manage actual transactions vs. forecasts
+- **Setup**: Configure income rules and recurring expenses
 
-## Tech Stack
+## Technology Stack
 
-- **Frontend**: React + TypeScript + Next.js (App Router)
-- **Component Library**: Radix UI
-- **Typography**: Space Grotesk (Google Fonts)
-- **Backend**: Next.js API Routes
-- **Database**: SQLite with Prisma ORM
-- **Utilities**: date-fns, papaparse
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript (strict mode)
+- **Database**: SQLite with Prisma 5.x ORM
+- **UI Components**: Radix UI
+- **Styling**: Inline React styles
+- **Date Handling**: date-fns
+- **Font**: Space Grotesk (Google Fonts)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- npm or yarn package manager
+- Node.js 18+
+- npm or yarn
 
 ### Installation
 
-1. **Clone or navigate to the project directory**:
+1. **Clone the repository**:
    ```bash
-   cd d:\Projects\SharedBudgetTracker
+   git clone https://github.com/englishfox90/SharedBudgetTracker.git
+   cd SharedBudgetTracker
    ```
 
 2. **Install dependencies**:
@@ -41,27 +46,40 @@ A full-stack web application that helps two people manage a shared checking acco
 
 3. **Set up the database**:
    ```bash
+   # Push the schema to create the database
    npm run db:push
-   ```
 
-4. **Seed the database with sample data**:
-   ```bash
+   # Generate Prisma client
+   npm run db:generate
+
+   # Seed the database with initial data
    npm run db:seed
    ```
-   
-   This creates:
-   - A shared checking account with $2,500 starting balance
-   - Two income sources (Paul and Jameson, each contributing 25%)
-   - Six recurring expenses (mortgage, HOA, utilities, etc.)
-   - Historical transactions for variable expense estimation
 
-5. **Run the development server**:
+   This creates:
+   - A shared checking account with sample starting balance
+   - Two income sources with contribution schedules
+   - Recurring expenses (fixed and variable)
+   - Historical daily spending patterns for trend analysis
+
+4. **Run the development server**:
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**:
+5. **Open your browser**:
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run db:push` - Push Prisma schema to database
+- `npm run db:generate` - Generate Prisma client
+- `npm run db:seed` - Seed database with sample data
+- `npm run db:studio` - Open Prisma Studio (database GUI)
 
 ## How It Works
 
@@ -79,145 +97,265 @@ View a detailed forecast of your shared account balance:
 
 - **Monthly View**: Select any month to see daily balance projections
 - **Event Tracking**: See all income deposits and expense withdrawals by date
-- **Balance Warnings**: Days when balance drops below safe minimum are highlighted in red
-- **Summary Stats**: View starting balance, lowest projected balance, and warning count
+### Dashboard Tab
 
-#### How Forecast Calculation Works
+Quick overview with actionable insights:
+
+- **Predicted Balance Today**: Current day's forecasted balance
+- **Estimated Month End Balance**: Projected balance at month's end
+- **Transfer Needed Alert**: Earliest upcoming balance violation (color-coded by severity)
+- **Contribution Insights**: Status of recommended adjustments
+- **Missing Transactions Banner**: Alerts when past forecast events need actual transaction data
+
+### Forecast Tab
+
+Detailed day-by-day cash flow projection:
+
+- **Monthly View**: Navigate any month to see daily balance projections
+- **Event Tracking**: All income deposits and expense withdrawals by date
+- **Balance Warnings**: Days below safe minimum highlighted in orange
+- **Actual vs. Forecast**: Green badges for actualized transactions, yellow for forecasts
+
+#### Forecast Calculation
 
 1. **Generate Cash Events**:
-   - Income deposits on configured pay days (e.g., 1st and 15th)
+   - Income deposits on configured pay days
    - Fixed expenses on their scheduled days
    - Variable expenses using historical averages
 
 2. **Simulate Daily Balance**:
-   - Start with the account's starting balance
-   - For each day, apply all scheduled events
+   - Start with account's current balance
+   - Apply all scheduled events for each day
    - Calculate opening balance, net change, and closing balance
    - Flag days when balance drops below safe minimum
 
 3. **Variable Expense Estimation**:
-   - Looks back N months (default: 3) in transaction history
-   - Filters transactions by category (e.g., "credit_card_payment")
+   - Analyzes last 3 months of transaction history
+   - Filters by expense category
    - Calculates average monthly spend
-   - Uses this average as the predicted variable cost
+   - Uses average as predicted amount
 
-### 3. Recommendation Tab
+### Recommendation Tab
 
-Get smart contribution recommendations:
+Smart financial guidance with automated implementation:
 
-- **Current vs. Recommended**: Compare your current contribution percentage with what's needed
-- **Balance Impact**: See how the recommendation affects your lowest balance
-- **One-Click Apply**: Update all income sources to the recommended percentage
-- **Monthly Analysis**: Run recommendations for any future month to plan ahead
+- **Action Required Card**: One-click contribution adjustment with confirmation modal
+- **6-Month Forecast Overview**: Visual timeline of projected balances
+- **Trend Analysis**: Identify expense categories trending higher or lower
+- **Recommendation Insights**: Balance warnings, contribution suggestions, and expense alerts
 
-#### How Recommendation Calculation Works
+#### Recommendation Algorithm
 
-1. **Baseline Forecast**: Generate a forecast with current contribution percentages
-2. **Check Safety**: If lowest balance stays above safe minimum, you're all set!
-3. **Optimize Contribution**:
-   - If balance goes too low, incrementally increase contribution percentage
-   - Test each increment until balance stays above safe minimum
-   - Find the minimum contribution needed (up to 50% max)
-4. **Per-Paycheck Amount**: Calculate exact dollar amount to deposit each pay period
+1. **Analyze Future Months**: Generate 6-month forecast (excluding current month if past mid-month)
+2. **Check Balance Health**: 
+   - If future balances stay above safe minimum → No action needed
+   - If declining or below minimum → Calculate adjustment
+3. **Calculate Contribution Increase**:
+   - Cover shortfall to reach safe minimum (100% buffer)
+   - Target positive monthly growth ($150+/month)
+   - Add 20% variability buffer
+4. **Minimum Threshold**: Only recommend if increase ≥ 0.5% AND ≥ $500/year
+5. **Implementation**: Update all income rules proportionally with user confirmation
 
-### 4. CSV Import (Optional)
+### Period Trend Forecast
 
-Import historical transactions to improve variable expense estimation:
+Advanced variable expense prediction using weighted algorithm:
 
-**CSV Format**:
-```csv
-date,amount,description,category
-2024-11-10,-850.00,Credit Card Payment,credit_card_payment
-2024-11-01,750.00,Paul Contribution,income
+- **Current Period Rate** (50%): Spending rate so far this period
+- **Recent 3-Month Average** (30%): Recent spending trend
+- **Historical Daily Patterns** (20%): Day-of-month spending patterns scaled to current level
+
+**Example**: Predict credit card spending by analyzing daily patterns from historical data
+
+### Transactions Tab
+
+Track actual vs. forecasted transactions:
+
+- View all transactions with category filters
+- Add new transactions manually
+- Link transactions to forecast events
+- Update forecasted amounts with actuals
+
+## Database Management
+
+The app uses SQLite stored at `prisma/dev.db` (excluded from git).
+
+### Reset Database
+```bash
+# Windows PowerShell
+Remove-Item prisma\dev.db
+npm run db:push
+npm run db:seed
+
+# Unix/Mac
+rm prisma/dev.db
+npm run db:push
+npm run db:seed
 ```
 
-- **date**: ISO format (YYYY-MM-DD)
-- **amount**: Positive for deposits, negative for withdrawals
-- **description**: Transaction description
-- **category**: Category (used for variable expense estimation)
+### Database Schema
 
-## Database Schema
+**Main Tables**:
+- `accounts`: Shared account details (balance, safe minimum)
+- `incomeRules`: Income sources with contribution schedules
+- `recurringExpenses`: Fixed and variable recurring expenses
+- `transactions`: Historical transaction data
+- `dailySpendingAverages`: 366 days of historical spending patterns
 
-### Tables
-
-1. **accounts**: Shared account details (balance, safe minimum)
-2. **income_rules**: Income sources with contribution rules
-3. **recurring_expenses**: Fixed and variable recurring expenses
-4. **transactions**: Historical transaction data for analysis
-
-See `prisma/schema.prisma` for full schema details.
+See `prisma/schema.prisma` for full schema.
 
 ## Project Structure
 
 ```
-SharedBudgetTracker/
-├── app/
-│   ├── api/              # Next.js API routes
-│   │   ├── accounts/     # Account CRUD
-│   │   ├── income-rules/ # Income source management
-│   │   ├── expenses/     # Expense management
-│   │   ├── forecast/     # Forecast generation
-│   │   ├── recommendation/ # Recommendation calculator
-│   │   └── import/       # CSV import
-│   ├── layout.tsx        # Root layout with Space Grotesk
-│   ├── page.tsx          # Main app with tabs
-│   └── globals.css       # Global styles
-├── components/
-│   ├── SetupTab.tsx      # Setup page with forms
-│   ├── ForecastTab.tsx   # Forecast visualization
-│   └── RecommendationTab.tsx # Recommendation display
-├── lib/
-│   ├── prisma.ts         # Prisma client singleton
-│   ├── forecast.ts       # Forecast engine logic
-│   ├── recommendation.ts # Recommendation calculator
-│   └── variable-expenses.ts # Historical analysis
+├── app/                    # Next.js app router
+│   ├── api/               # API routes
+│   │   ├── accounts/
+│   │   ├── income-rules/
+│   │   ├── expenses/
+│   │   ├── forecast/
+│   │   ├── recommendations/
+│   │   └── period-trend-forecast/
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Main dashboard with tabs
+├── components/            # React components
+│   ├── DashboardTab.tsx
+│   ├── DashboardSummaryWidgets.tsx
+│   ├── ForecastTab.tsx
+│   ├── RecommendationTab.tsx
+│   ├── PeriodTrendWidget.tsx
+│   └── recommendations/   # Recommendation subcomponents
+├── lib/                   # Business logic
+│   ├── forecast.ts        # Forecast engine
+│   ├── recommendation-engine.ts
+│   ├── period-trend-forecast.ts
+│   ├── six-month-forecast.ts
+│   ├── trend-detection.ts
+│   └── prisma.ts          # Prisma client
 ├── prisma/
-│   ├── schema.prisma     # Database schema
-│   └── seed.ts           # Seed data script
-└── types/
-    └── index.ts          # TypeScript types
+│   ├── schema.prisma      # Database schema
+│   └── seed.ts            # Seed data
+├── types/
+│   └── index.ts           # Shared TypeScript types
+└── scripts/
+    └── daily_spending.tsv # Historical daily patterns
 ```
 
-## API Endpoints
+## Key Features Explained
 
-### Accounts
-- `GET /api/accounts` - List all accounts
-- `POST /api/accounts` - Create account
-- `GET /api/accounts/[id]` - Get account details
-- `PATCH /api/accounts/[id]` - Update account
-- `DELETE /api/accounts/[id]` - Delete account
+### Smart Alerts
 
-### Income Rules
-- `GET /api/income-rules?accountId=1` - List income rules
-- `POST /api/income-rules` - Create income rule
-- `PATCH /api/income-rules/[id]` - Update income rule
-- `DELETE /api/income-rules/[id]` - Delete income rule
+**Missing Transactions Banner**:
+- Appears when past forecast events haven't been actualized
+- Only counts expense transactions (not income contributions)
+- Click "Update Transactions" to navigate to Transactions tab
 
-### Expenses
-- `GET /api/expenses?accountId=1` - List expenses
-- `POST /api/expenses` - Create expense
-- `PATCH /api/expenses/[id]` - Update expense
-- `DELETE /api/expenses/[id]` - Delete expense
+**Transfer Needed Widget**:
+- Shows **earliest** upcoming balance violation (not worst case)
+- Color-coded severity:
+  - 🟠 Orange: Below $500 safe minimum
+  - 🔴 Red: Balance will go negative
+- Excludes past days (can't fix history)
 
-### Forecast
-- `GET /api/forecast?accountId=1&year=2025&month=12` - Generate forecast
+**Contribution Insights Widget**:
+- Shows "Action Required" only when `adjustmentNeeded` flag is true
+- "On Track" when contributions are sufficient
+- Navigate to Recommendations tab for details
 
-### Recommendation
-- `GET /api/recommendation?accountId=1&year=2025&month=12` - Get recommendation
+## Design Principles
 
-### Import
-- `POST /api/import` - Import CSV transactions (multipart/form-data)
+### Styling
+- **Inline React styles** for component-level styling
+- **Space Grotesk** font family throughout
+- **Color palette**:
+  - Primary: `#1a1a1a` (dark text, buttons)
+  - Background: `#fafafa`
+  - Borders: `#e0e0e0`
+  - Success: `#16a34a`
+  - Warning: `#fcd34d` / `#d97706`
+  - Danger: `#dc2626`
 
-## Development
+### File Size Limit
+- Maximum **500 lines per file**
+- Extract functions into separate modules when files grow large
+- Keep components focused and modular
 
-### Available Scripts
+### Code Conventions
+- **TypeScript strict mode** enabled
+- **Table names**: `snake_case` with `@@map()`
+- **Property names**: `camelCase` in TypeScript
+- **Pay days**: Stored as JSON strings (e.g., `"[1,15]"`)
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema changes to database
-- `npm run db:seed` - Seed database with sample data
+## Common Tasks
+
+### Reset Database Completely
+```bash
+Remove-Item prisma\dev.db
+npm run db:push
+npm run db:generate
+npm run db:seed
+```
+
+### View Database Contents
+```bash
+npm run db:studio
+```
+Opens Prisma Studio at http://localhost:5555
+
+### Add New Income Rule
+1. Go to Setup tab
+2. Click "+ Add Income Source"
+3. Configure name, salary, contribution %, frequency, pay days
+4. Save
+
+### Import Historical Data
+Place `daily_spending.tsv` in `scripts/` directory with format:
+```
+date	amount
+12-01	9.37
+12-02	17.92
+```
+
+## Troubleshooting
+
+**Database not found**:
+```bash
+npm run db:push
+npm run db:seed
+```
+
+**Prisma client out of sync**:
+```bash
+npm run db:generate
+```
+
+**Port 3000 already in use**:
+```bash
+# Change port in package.json dev script
+"dev": "next dev -p 3001"
+```
+
+## Future Enhancements
+
+Potential features for future development:
+- Multiple accounts support
+- User authentication
+- Mobile responsive design
+- Dark mode theme
+- Export reports to PDF
+- Shared access for both partners
+- Budget vs. actual comparisons
+
+## Contributing
+
+This is a personal project, but suggestions and feedback are welcome via GitHub issues!
+
+## License
+
+MIT
+
+## Acknowledgments
+
+Built with ❤️ to simplify shared financial management between partners.
 
 ### Database Management
 
