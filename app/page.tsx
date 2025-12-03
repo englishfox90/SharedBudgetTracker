@@ -1,0 +1,166 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import * as Tabs from '@radix-ui/react-tabs';
+import SetupTab from '@/components/SetupTab';
+import ForecastTab from '@/components/ForecastTab';
+import RecommendationTab from '@/components/RecommendationTab';
+import TransactionsTab from '@/components/TransactionsTab';
+import DashboardTab from '@/components/DashboardTab';
+import { getCurrentMonthUTC } from '@/lib/date-utils';
+
+export default function Home() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [currentMonth, setCurrentMonth] = useState<{ year: number; month: number }>(getCurrentMonthUTC());
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'forecast');
+
+  useEffect(() => {
+    // Update URL when tab changes
+    const currentTab = searchParams.get('tab') || 'forecast';
+    if (currentTab !== activeTab) {
+      router.push(`/?tab=${activeTab}`, { scroll: false });
+    }
+  }, [activeTab, router, searchParams]);
+
+  function handleTabChange(value: string) {
+    setActiveTab(value);
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+      <header style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+          Shared Balance Planner
+        </h1>
+        <p style={{ color: '#666', fontSize: '1rem' }}>
+          Manage your shared checking account and forecast balances
+        </p>
+      </header>
+
+      <Tabs.Root value={activeTab} onValueChange={handleTabChange} style={{ width: '100%' }}>
+        <Tabs.List
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            borderBottom: '1px solid #e0e0e0',
+            marginBottom: '2rem',
+          }}
+        >
+          <Tabs.Trigger
+            value="dashboard"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: '#666',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+            }}
+            data-state-active-style={{
+              color: '#1a1a1a',
+              borderBottomColor: '#1a1a1a',
+            }}
+          >
+            Dashboard
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="forecast"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: '#666',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Forecast
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="recommendation"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: '#666',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Recommendation
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="transactions"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: '#666',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Transactions
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="setup"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: '#666',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Setup
+          </Tabs.Trigger>
+        </Tabs.List>
+
+        <Tabs.Content value="dashboard">
+          <DashboardTab onNavigate={(tab) => setActiveTab(tab)} />
+        </Tabs.Content>
+
+        <Tabs.Content value="forecast">
+          <ForecastTab currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+        </Tabs.Content>
+
+        <Tabs.Content value="recommendation">
+          <RecommendationTab currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
+        </Tabs.Content>
+
+        <Tabs.Content value="transactions">
+          <TransactionsTab />
+        </Tabs.Content>
+
+        <Tabs.Content value="setup">
+          <SetupTab />
+        </Tabs.Content>
+      </Tabs.Root>
+
+      <style jsx>{`
+        :global([data-state='active']) {
+          color: #1a1a1a !important;
+          border-bottom-color: #1a1a1a !important;
+        }
+      `}</style>
+    </div>
+  );
+}

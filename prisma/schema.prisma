@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                    Int                 @id @default(autoincrement())
+  name                  String
+  type                  String              // "checking", "credit_card"
+  startingBalance       Float
+  startDate             DateTime            @default(now()) // Date when starting balance is effective
+  safeMinBalance        Float
+  defaultPayFrequency   String              @default("semi_monthly") // "monthly", "semi_monthly", "bi_weekly", "weekly"
+  inflationRate         Float               @default(3.0) // Percentage for expense forecasting
+  autoCalculateContrib  Boolean             @default(true) // Auto-calculate contributions based on expenses
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  incomeRules           IncomeRule[]
+  recurringExpenses     RecurringExpense[]
+  transactions          Transaction[]
+
+  @@map("accounts")
+}
+
+model IncomeRule {
+  id                   Int           @id @default(autoincrement())
+  accountId            Int
+  name                 String
+  annualSalary         Float         // Annual gross salary
+  contributionAmount   Float         @default(0) // Calculated contribution amount per pay period
+  payFrequency         String        // "monthly", "semi_monthly", "bi_weekly", "weekly"
+  payDays              String        // JSON array of pay days (day of month or week)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  account              Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions         Transaction[] // Actualized income transactions
+
+  @@map("income_rules")
+}
+
+model RecurringExpense {
+  id                    Int                     @id @default(autoincrement())
+  accountId             Int
+  name                  String
+  amount                Float
+  dayOfMonth            Int                     // 1-31
+  category              String
+  frequency             String                  @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
+  isVariable            Boolean                 @default(false)
+  activeFrom            DateTime?
+  activeTo              DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  account               Account                 @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]           // Actualized expense transactions
+  dailySpendingAverages DailySpendingAverage[]  // Historical daily spending patterns
+
+  @@map("recurring_expenses")
+}
+
+model Transaction {
+  id                  Int               @id @default(autoincrement())
+  accountId           Int
+  date                DateTime
+  description         String
+  amount              Float             // positive = deposit, negative = withdrawal
+  category            String?
+  source              String            @default("manual") // "manual", "import"
+  incomeRuleId        Int?              // Link to income rule if this actualizes a salary deposit
+  recurringExpenseId  Int?              // Link to recurring expense if this actualizes a recurring payment
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  account             Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  incomeRule          IncomeRule?       @relation(fields: [incomeRuleId], references: [id], onDelete: SetNull)
+  recurringExpense    RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
+}
+
+model DailySpendingAverage {
+  id                  Int      @id @default(autoincrement())
+  recurringExpenseId  Int
+  month               Int      // 1-12
+  day                 Int      // 1-31
+  sumOfSpending       Float    // Total spending for this day across all years
+  transactionCount    Int      // Number of transactions for this day
+  dailyAverage        Float    // Average spending for this calendar day
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  recurringExpense    RecurringExpense @relation(fields: [recurringExpenseId], references: [id], onDelete: Cascade)
+
+  @@unique([recurringExpenseId, month, day])
+  @@map("daily_spending_averages")
+}
