@@ -13,7 +13,7 @@ export default function SuggestionCards({ suggestions }: Props) {
         <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#16a34a' }}>
           ✅ All Clear!
         </h3>
-        <p style={{ color: '#666', fontSize: '0.875rem' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
           Your finances are looking good. No immediate recommendations at this time.
         </p>
       </div>
@@ -35,10 +35,10 @@ export default function SuggestionCards({ suggestions }: Props) {
             iconColor: '#991b1b',
           },
           warning: {
-            bg: '#fef3c7',
-            border: '#fcd34d',
+            bg: 'var(--warning-bg)',
+            border: 'var(--warning-border)',
             icon: '⚠️',
-            iconColor: '#92400e',
+            iconColor: 'var(--warning-text)',
           },
           info: {
             bg: '#dbeafe',
@@ -65,10 +65,10 @@ export default function SuggestionCards({ suggestions }: Props) {
 
               {/* Content */}
               <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1a1a1a', marginBottom: '0.5rem' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
                   {suggestion.title}
                 </h4>
-                <p style={{ fontSize: '0.875rem', color: '#4a5568', lineHeight: '1.5', marginBottom: suggestion.actionable ? '0.75rem' : 0 }}>
+                <p style={{ fontSize: '0.875rem', color: suggestion.severity === 'warning' ? 'var(--warning-text)' : '#4a5568', lineHeight: '1.5', marginBottom: suggestion.actionable ? '0.75rem' : 0 }}>
                   {suggestion.description}
                 </p>
 
@@ -76,15 +76,15 @@ export default function SuggestionCards({ suggestions }: Props) {
                   <div
                     style={{
                       padding: '0.75rem',
-                      background: 'white',
+                      background: 'var(--bg-primary)',
                       borderRadius: '4px',
-                      border: '1px solid #e0e0e0',
+                      border: '1px solid var(--border-primary)',
                     }}
                   >
-                    <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem', fontWeight: '600' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: '600' }}>
                       RECOMMENDED ACTION
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#1a1a1a' }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                       {suggestion.recommendedAction}
                     </div>
                   </div>
@@ -99,8 +99,8 @@ export default function SuggestionCards({ suggestions }: Props) {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };

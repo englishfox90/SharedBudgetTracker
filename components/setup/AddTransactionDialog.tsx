@@ -117,7 +117,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
 
             <div style={{ marginBottom: '1rem' }}>
               <Label.Root style={labelStyle}>Category (Optional)</Label.Root>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle}>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} style={selectStyle}>
                 <option value="">-- Select Category --</option>
                 <optgroup label="Income & Transfers">
                   <option value="income">Income</option>
@@ -178,7 +178,7 @@ const contentStyle: React.CSSProperties = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
   width: '90%',
@@ -196,7 +196,7 @@ const titleStyle: React.CSSProperties = {
 
 const descriptionStyle: React.CSSProperties = {
   fontSize: '0.875rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   marginBottom: '1.5rem',
 };
 
@@ -210,15 +210,28 @@ const labelStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
+};
+
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.5rem',
+  border: '1px solid var(--border-primary)',
+  borderRadius: '4px',
+  fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
 };
 
 const cancelButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#f5f5f5',
-  border: '1px solid #e0e0e0',
+  background: 'var(--bg-tertiary)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-primary)',
   borderRadius: '6px',
   cursor: 'pointer',
   fontSize: '0.875rem',

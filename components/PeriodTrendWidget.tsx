@@ -164,7 +164,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
             <div style={getTrendBadgeStyle(forecast.trendLabel)}>
               {forecast.trendLabel}
             </div>
-            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
               You are currently{' '}
               <strong style={{ color: getTrendColor(forecast.trendLabel) }}>
                 {forecast.trendPercentage >= 0 ? '+' : ''}
@@ -207,12 +207,12 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
               <div style={metricValueStyle}>${formatCurrency(forecast.baselineFullPeriodSpend)}</div>
             </div>
 
-            <div style={{ ...metricCardStyle, gridColumn: '1 / -1', background: '#f9fafb' }}>
+            <div style={{ ...metricCardStyle, gridColumn: '1 / -1', background: 'var(--bg-tertiary)' }}>
               <div style={metricLabelStyle}>Predicted End Balance</div>
-              <div style={{ ...metricValueStyle, fontSize: '1.5rem', color: '#1a1a1a' }}>
+              <div style={{ ...metricValueStyle, fontSize: '1.5rem', color: 'var(--text-primary)' }}>
                 ${formatCurrency(forecast.predictedFullPeriodSpend)}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                 vs baseline ${formatCurrency(forecast.baselineFullPeriodSpend)} (
                 {forecast.predictedFullPeriodSpend >= forecast.baselineFullPeriodSpend ? '+' : ''}
                 {((forecast.predictedFullPeriodSpend - forecast.baselineFullPeriodSpend) / forecast.baselineFullPeriodSpend * 100).toFixed(1)}%)
@@ -227,7 +227,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   Predicted Total: ${formatCurrency(forecast.predictedFullPeriodSpend)}
                 </div>
                 <div style={comparisonBarContainerStyle}>
@@ -279,7 +279,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                 borderRadius: '4px',
               }}>
                 <table style={{ width: '100%', fontSize: '0.75rem', borderCollapse: 'collapse' }}>
-                  <thead style={{ position: 'sticky', top: 0, background: '#f9fafb', borderBottom: '1px solid #e0e0e0' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
                     <tr>
                       <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500' }}>Date</th>
                       <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '500' }}>Predicted Spend</th>
@@ -314,10 +314,18 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
 
 // Styles
 const widgetStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
+  marginBottom: '1.5rem',
+};
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--bg-secondary)',
+  padding: '1.5rem',
+  borderRadius: '8px',
+  border: '1px solid var(--border-primary)',
 };
 
 const headingStyle: React.CSSProperties = {
@@ -328,7 +336,7 @@ const headingStyle: React.CSSProperties = {
 
 const descriptionStyle: React.CSSProperties = {
   fontSize: '0.875rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   marginBottom: '1.5rem',
 };
 
@@ -350,19 +358,21 @@ const inputGroupStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontSize: '0.875rem',
   fontWeight: '500',
-  color: '#374151',
+  color: 'var(--text-primary)',
 };
 
 const inputStyle: React.CSSProperties = {
   padding: '0.5rem',
-  border: '1px solid #d1d5db',
+  border: '1px solid var(--border-primary)',
   borderRadius: '6px',
   fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
 };
 
 const selectStyle: React.CSSProperties = {
   ...inputStyle,
-  background: 'white',
+  background: 'var(--bg-primary)',
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -409,14 +419,14 @@ const metricsGridStyle: React.CSSProperties = {
 
 const metricCardStyle: React.CSSProperties = {
   padding: '1rem',
-  background: '#fafafa',
+  background: 'var(--bg-tertiary)',
   borderRadius: '6px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };
 
 const metricLabelStyle: React.CSSProperties = {
   fontSize: '0.75rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
   marginBottom: '0.25rem',
@@ -425,12 +435,12 @@ const metricLabelStyle: React.CSSProperties = {
 const metricValueStyle: React.CSSProperties = {
   fontSize: '1.125rem',
   fontWeight: '600',
-  color: '#1a1a1a',
+  color: 'var(--text-primary)',
 };
 
 const comparisonBarContainerStyle: React.CSSProperties = {
   height: '24px',
-  background: '#f3f4f6',
+  background: 'var(--bg-tertiary)',
   borderRadius: '4px',
   overflow: 'hidden',
 };

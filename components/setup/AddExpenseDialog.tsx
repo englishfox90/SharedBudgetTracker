@@ -108,7 +108,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
                   value={dayOfMonth}
                   onChange={(e) => setDayOfMonth(e.target.value)}
                   required
-                  style={inputStyle}
+                  style={selectStyle}
                 >
                   <option value="0">Sunday</option>
                   <option value="1">Monday</option>
@@ -141,7 +141,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                style={inputStyle}
+                style={selectStyle}
               >
                 <option value="auto">Auto</option>
                 <option value="bills">Bills</option>
@@ -159,7 +159,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
               <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                style={inputStyle}
+                style={selectStyle}
               >
                 <option value="weekly">Weekly</option>
                 <option value="bi_weekly">Bi-Weekly (Every 2 weeks)</option>
@@ -208,9 +208,9 @@ const buttonStyle: React.CSSProperties = {
 
 const buttonSecondaryStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: 'white',
-  color: '#1a1a1a',
-  border: '1px solid #e0e0e0',
+  background: 'var(--bg-secondary)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   fontSize: '0.875rem',
   fontWeight: '500',
@@ -229,7 +229,7 @@ const contentStyle: React.CSSProperties = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
   maxWidth: '500px',
@@ -255,7 +255,19 @@ const labelStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
+};
+
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.5rem',
+  border: '1px solid var(--border-primary)',
+  borderRadius: '4px',
+  fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
 };

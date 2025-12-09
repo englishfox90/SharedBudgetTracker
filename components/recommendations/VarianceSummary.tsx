@@ -59,16 +59,16 @@ export default function VarianceSummary({ months }: Props) {
 
       {/* Expense Breakdown */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1a1a1a' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
           Expense Breakdown
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: '#fafafa', borderRadius: '4px' }}>
-            <span style={{ fontSize: '0.875rem', color: '#666' }}>Fixed Expenses</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Fixed Expenses</span>
             <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>${totals.fixed.toLocaleString()}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: '#fafafa', borderRadius: '4px' }}>
-            <span style={{ fontSize: '0.875rem', color: '#666' }}>Variable Expenses</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '4px' }}>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Variable Expenses</span>
             <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>${totals.variable.toLocaleString()}</span>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function VarianceSummary({ months }: Props) {
 
       {/* Month-by-Month Table */}
       <div>
-        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1a1a1a' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
           Month-by-Month Details
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -116,17 +116,17 @@ export default function VarianceSummary({ months }: Props) {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };
 
 const tableHeaderStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '0.75rem 0.5rem',
   fontWeight: '600',
-  color: '#666',
+  color: 'var(--text-secondary)',
 };
 
 const tableCellStyle: React.CSSProperties = {

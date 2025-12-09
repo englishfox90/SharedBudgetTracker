@@ -125,20 +125,18 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.5rem',
-            background: '#fefce8',
-            border: '1px solid #fde047',
+            background: 'var(--forecast-bg)',
+            border: '1px solid var(--forecast-border)',
             borderRadius: '6px',
             cursor: 'pointer',
             fontSize: '0.875rem',
             transition: 'all 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fef9c3';
-            e.currentTarget.style.borderColor = '#facc15';
+            e.currentTarget.style.opacity = '0.9';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#fefce8';
-            e.currentTarget.style.borderColor = '#fde047';
+            e.currentTarget.style.opacity = '1';
           }}
         >
           <div style={{ flex: 1 }}>
@@ -152,7 +150,7 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
           </div>
           <div style={{
             padding: '0.25rem 0.5rem',
-            background: '#eab308',
+            background: 'var(--forecast-badge)',
             color: 'white',
             borderRadius: '4px',
             fontSize: '0.625rem',
@@ -209,7 +207,7 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
                 required
                 style={inputStyle}
               />
-              <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                 Forecasted: ${Math.abs(event.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -243,7 +241,7 @@ const contentStyle: React.CSSProperties = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
   width: '90%',
@@ -261,7 +259,7 @@ const titleStyle: React.CSSProperties = {
 
 const descriptionStyle: React.CSSProperties = {
   fontSize: '0.875rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   marginBottom: '1.5rem',
 };
 
@@ -275,15 +273,18 @@ const labelStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
 };
 
 const cancelButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#f5f5f5',
-  border: '1px solid #e0e0e0',
+  background: 'var(--bg-tertiary)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-primary)',
   borderRadius: '6px',
   cursor: 'pointer',
   fontSize: '0.875rem',

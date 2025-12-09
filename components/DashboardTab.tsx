@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { PeriodTrendWidget } from './PeriodTrendWidget';
 import { DashboardSummaryWidgets } from './DashboardSummaryWidgets';
+import SixMonthTrendChart from './dashboard/SixMonthTrendChart';
+import { getCurrentMonthUTC } from '@/lib/date-utils';
 
 interface DashboardTabProps {
   onNavigate: (tab: string) => void;
@@ -11,6 +13,7 @@ interface DashboardTabProps {
 export default function DashboardTab({ onNavigate }: DashboardTabProps) {
   const [account, setAccount] = useState<any>(null);
   const [variableExpenses, setVariableExpenses] = useState<Array<{ id: number; name: string }>>([]);
+  const [sixMonthData, setSixMonthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +38,17 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
           .map((exp: any) => ({ id: exp.id, name: exp.name }));
         
         setVariableExpenses(variableOnly);
+
+        // Fetch 6-month forecast from recommendations API
+        const currentMonth = getCurrentMonthUTC();
+        const recommendationsRes = await fetch(
+          `/api/recommendations?accountId=${acc.id}&year=${currentMonth.year}&month=${currentMonth.month}`
+        );
+        const recommendations = await recommendationsRes.json();
+        
+        if (recommendations.sixMonthForecast) {
+          setSixMonthData(recommendations.sixMonthForecast);
+        }
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -72,6 +86,12 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <DashboardSummaryWidgets accountId={account.id} onNavigate={onNavigate} />
+      
+      {/* 6-Month Trend Chart */}
+      {sixMonthData && sixMonthData.months && sixMonthData.months.length > 0 && (
+        <SixMonthTrendChart months={sixMonthData.months} />
+      )}
+      
       <PeriodTrendWidget accountId={account.id} variableExpenses={variableExpenses} />
     </div>
   );

@@ -127,7 +127,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   type="text"
                   value={rule.name}
                   disabled
-                  style={{ ...inputStyle, background: '#f5f5f5', cursor: 'not-allowed' }}
+                  style={{ ...inputStyle, background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
                 />
               </div>
               <div>
@@ -147,7 +147,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   type="text"
                   value={payFrequencyLabel}
                   disabled
-                  style={{ ...inputStyle, background: '#f5f5f5', cursor: 'not-allowed' }}
+                  style={{ ...inputStyle, background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: rule.payFrequency === 'monthly' ? '1fr' : '1fr 1fr', gap: '1rem' }}>
@@ -206,10 +206,10 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1rem',
   borderRadius: '6px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   display: 'flex',
   alignItems: 'center',
   gap: '1rem',
@@ -218,9 +218,11 @@ const cardStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.5rem',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   fontSize: '0.875rem',
+  background: 'var(--bg-primary)',
+  color: 'var(--text-primary)',
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -236,12 +238,13 @@ const buttonStyle: React.CSSProperties = {
 
 const buttonSecondaryStyle: React.CSSProperties = {
   padding: '0.375rem 0.75rem',
-  background: '#f5f5f5',
-  border: '1px solid #e0e0e0',
+  background: 'var(--bg-tertiary)',
+  border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   cursor: 'pointer',
   fontSize: '0.75rem',
   fontWeight: '500',
+  color: 'var(--text-primary)',
 };
 
 const buttonDangerStyle: React.CSSProperties = {
@@ -267,7 +270,7 @@ const contentStyle: React.CSSProperties = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
   maxWidth: '500px',

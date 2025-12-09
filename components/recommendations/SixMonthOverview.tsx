@@ -18,7 +18,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
         {months.map((month, idx) => {
           const statusColors = {
             safe: { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' },
-            warning: { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
+            warning: { bg: 'var(--warning-bg)', border: 'var(--warning-border)', text: 'var(--warning-text)' },
             danger: { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' },
           };
           const colors = statusColors[month.status];
@@ -34,13 +34,13 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
               }}
             >
               {/* Month Name */}
-              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1a1a1a', marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
                 {month.monthName.split(' ')[0]} {/* Just the month name */}
               </div>
 
               {/* Opening Balance */}
               <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#666' }}>Opening</div>
+                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Opening</div>
                 <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
                   ${month.openingBalance.toLocaleString()}
                 </div>
@@ -48,7 +48,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
 
               {/* Net Change */}
               <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#666' }}>Net Change</div>
+                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Net Change</div>
                 <div
                   style={{
                     fontSize: '0.875rem',
@@ -63,7 +63,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
 
               {/* Lowest Balance */}
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#666' }}>Lowest</div>
+                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Lowest</div>
                 <div style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.text }}>
                   ${month.lowestBalance.toLocaleString()}
                 </div>
@@ -79,13 +79,13 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: '#666' }}>
+      <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#d1fae5', border: '1px solid #6ee7b7' }} />
           <span>Safe</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#fef3c7', border: '1px solid #fcd34d' }} />
+          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--warning-bg)', border: '1px solid var(--warning-border)' }} />
           <span>Warning (&lt;7 days)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -98,8 +98,8 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };

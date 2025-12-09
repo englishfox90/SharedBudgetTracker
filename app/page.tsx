@@ -9,10 +9,12 @@ import RecommendationTab from '@/components/RecommendationTab';
 import TransactionsTab from '@/components/TransactionsTab';
 import DashboardTab from '@/components/DashboardTab';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [currentMonth, setCurrentMonth] = useState<{ year: number; month: number }>(getCurrentMonthUTC());
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'forecast');
 
@@ -30,13 +32,37 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-          Shared Balance Planner
-        </h1>
-        <p style={{ color: '#666', fontSize: '1rem' }}>
-          Manage your shared checking account and forecast balances
-        </p>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+            Shared Balance Planner
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+            Manage your shared checking account and forecast balances
+          </p>
+        </div>
+        
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            padding: '0.5rem',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '1.125rem',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+          }}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? '🌙' : '☀️'}
+        </button>
       </header>
 
       <Tabs.Root value={activeTab} onValueChange={handleTabChange} style={{ width: '100%' }}>
@@ -44,7 +70,7 @@ export default function Home() {
           style={{
             display: 'flex',
             gap: '1rem',
-            borderBottom: '1px solid #e0e0e0',
+            borderBottom: '1px solid var(--border-primary)',
             marginBottom: '2rem',
           }}
         >
@@ -57,7 +83,7 @@ export default function Home() {
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
-              color: '#666',
+              color: 'var(--text-secondary)',
               borderBottom: '2px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -77,7 +103,7 @@ export default function Home() {
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
-              color: '#666',
+              color: 'var(--text-secondary)',
               borderBottom: '2px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -93,7 +119,7 @@ export default function Home() {
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
-              color: '#666',
+              color: 'var(--text-secondary)',
               borderBottom: '2px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -109,7 +135,7 @@ export default function Home() {
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
-              color: '#666',
+              color: 'var(--text-secondary)',
               borderBottom: '2px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -125,7 +151,7 @@ export default function Home() {
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
-              color: '#666',
+              color: 'var(--text-secondary)',
               borderBottom: '2px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -157,8 +183,8 @@ export default function Home() {
 
       <style jsx>{`
         :global([data-state='active']) {
-          color: #1a1a1a !important;
-          border-bottom-color: #1a1a1a !important;
+          color: var(--text-primary) !important;
+          border-bottom-color: var(--text-primary) !important;
         }
       `}</style>
     </div>

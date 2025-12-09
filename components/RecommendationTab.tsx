@@ -5,6 +5,7 @@ import SixMonthOverview from './recommendations/SixMonthOverview';
 import VarianceSummary from './recommendations/VarianceSummary';
 import TrendChart from './recommendations/TrendChart';
 import SuggestionCards from './recommendations/SuggestionCards';
+import ComparisonChart from './recommendations/ComparisonChart';
 import { RecommendationOverview } from '@/lib/recommendation-engine';
 
 interface Props {
@@ -129,16 +130,16 @@ export default function RecommendationTab({ currentMonth }: Props) {
   if (loading && !data) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ height: '200px', background: '#f0f0f0', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '300px', background: '#f0f0f0', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '250px', background: '#f0f0f0', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '200px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '300px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '250px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
       </div>
     );
   }
 
   if (!accountId) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
         No account found. Please set up your account in the Setup tab first.
       </div>
     );
@@ -146,7 +147,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   if (!data) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
         No recommendation data available. Please set up income and expenses in the Setup tab.
       </div>
     );
@@ -161,7 +162,8 @@ export default function RecommendationTab({ currentMonth }: Props) {
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(255, 255, 255, 0.7)',
+          background: 'var(--bg-primary)',
+          opacity: 0.7,
           zIndex: 10,
           borderRadius: '8px',
         }} />
@@ -172,13 +174,13 @@ export default function RecommendationTab({ currentMonth }: Props) {
         <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
           Financial Recommendations
         </h2>
-        <p style={{ fontSize: '0.875rem', color: '#666' }}>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
           6-month outlook starting {monthName}
         </p>
       </div>
 
       {/* How This Works - Moved to top */}
-      <details open style={{ ...cardStyle, background: '#f9f9f9' }}>
+      <details open style={{ ...cardStyle, background: 'var(--bg-tertiary)' }}>
         <summary style={{ 
           fontSize: '1rem', 
           fontWeight: '600', 
@@ -188,7 +190,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
         }}>
           ℹ️ How This Works
         </summary>
-        <ul style={{ paddingLeft: '1.5rem', fontSize: '0.875rem', lineHeight: '1.6', color: '#666', marginTop: '0.5rem' }}>
+        <ul style={{ paddingLeft: '1.5rem', fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
           <li>Analyzes your forecasted income and expenses for the next 6 months</li>
           <li>Compares actual variable spending to estimates based on historical data</li>
           <li>Identifies spending trends and potential issues before they impact your balance</li>
@@ -200,22 +202,22 @@ export default function RecommendationTab({ currentMonth }: Props) {
       {data.contributionAnalysis.adjustmentNeeded && (
         <div style={{
           ...cardStyle,
-          background: '#fef3c7',
-          border: '2px solid #fcd34d',
+          background: 'var(--warning-bg)',
+          border: '2px solid var(--warning-border)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
             <div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
                 ⚡ Action Required
               </h3>
-              <p style={{ fontSize: '0.875rem', color: '#92400e' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--warning-text)' }}>
                 Increase contributions by {Math.round(data.contributionAnalysis.adjustmentPercentage)}% to maintain safe balance
               </p>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                 Current Annual
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
@@ -223,7 +225,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                 Recommended Annual
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
@@ -233,15 +235,15 @@ export default function RecommendationTab({ currentMonth }: Props) {
           </div>
           <div style={{
             padding: '1rem',
-            background: 'white',
+            background: 'var(--bg-secondary)',
             borderRadius: '6px',
-            border: '1px solid #fcd34d',
+            border: '1px solid var(--warning-border)',
             marginTop: '1rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.75rem',
           }}>
-            <div style={{ fontSize: '0.875rem', color: '#92400e', lineHeight: '1.6' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
               Click below to automatically update your income rules to the recommended contribution amounts.
               This will increase your contributions proportionally across all income sources.
             </div>
@@ -262,6 +264,15 @@ export default function RecommendationTab({ currentMonth }: Props) {
             >
               {implementSuccess ? '✓ Implemented Successfully!' : (implementing ? 'Updating...' : '⚡ Implement Recommendation')}
             </button>
+          </div>
+
+          {/* Comparison Chart - inside action required box */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <ComparisonChart
+              currentAnnual={data.contributionAnalysis.currentAnnualContribution}
+              recommendedAnnual={data.contributionAnalysis.recommendedAnnualContribution || data.contributionAnalysis.currentAnnualContribution}
+              months={data.sixMonthForecast.months}
+            />
           </div>
         </div>
       )}
@@ -289,9 +300,9 @@ export default function RecommendationTab({ currentMonth }: Props) {
               Confirm Contribution Increase
             </h3>
             
-            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9f9f9', borderRadius: '6px' }}>
-              <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Total Annual Increase</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1a1a1a' }}>
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Annual Increase</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 ${(data.contributionAnalysis.recommendedAnnualContribution! - data.contributionAnalysis.currentAnnualContribution).toLocaleString()}/year
               </div>
               <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
@@ -312,8 +323,8 @@ export default function RecommendationTab({ currentMonth }: Props) {
                 return (
                   <div key={rule.id} style={{
                     padding: '0.75rem',
-                    background: 'white',
-                    border: '1px solid #e0e0e0',
+                    background: 'var(--bg-primary)',
+                    border: '1px solid var(--border-primary)',
                     borderRadius: '6px',
                     marginBottom: '0.5rem',
                   }}>
@@ -351,9 +362,9 @@ export default function RecommendationTab({ currentMonth }: Props) {
                 onClick={() => setShowConfirmModal(false)}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  background: 'white',
-                  color: '#1a1a1a',
-                  border: '1px solid #e0e0e0',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-primary)',
                   borderRadius: '6px',
                   fontSize: '0.95rem',
                   fontWeight: '600',
@@ -416,19 +427,19 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '2rem',
   borderRadius: '12px',
   maxWidth: '600px',
   width: '90%',
   maxHeight: '90vh',
   overflowY: 'auto',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 20px 25px -5px var(--shadow), 0 10px 10px -5px var(--shadow)',
 };
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };

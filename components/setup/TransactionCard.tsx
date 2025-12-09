@@ -105,7 +105,7 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
 
 const cardStyle: React.CSSProperties = {
   padding: '1rem',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   borderRadius: '6px',
   display: 'flex',
   justifyContent: 'space-between',
@@ -116,16 +116,16 @@ const cardStyle: React.CSSProperties = {
 
 const dateStyle: React.CSSProperties = {
   fontSize: '0.75rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   fontWeight: '500',
 };
 
 const categoryBadgeStyle: React.CSSProperties = {
   fontSize: '0.625rem',
   padding: '0.125rem 0.5rem',
-  background: '#f5f5f5',
+  background: 'var(--bg-tertiary)',
   borderRadius: '4px',
-  color: '#666',
+  color: 'var(--text-secondary)',
 };
 
 const nameStyle: React.CSSProperties = {

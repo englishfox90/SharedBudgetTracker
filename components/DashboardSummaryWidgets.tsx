@@ -207,11 +207,11 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
           style={{
             ...widgetButtonStyle,
             background: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? '#fef2f2' : '#fef3c7')
-              : '#f9fafb',
+              ? (minBalanceAlert.severity === 'danger' ? '#fef2f2' : 'var(--warning-bg)')
+              : 'var(--bg-tertiary)',
             border: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? '1px solid #fca5a5' : '1px solid #fcd34d')
-              : '1px solid #e0e0e0',
+              ? (minBalanceAlert.severity === 'danger' ? '1px solid #fca5a5' : '1px solid var(--warning-border)')
+              : '1px solid var(--border-primary)',
           }}
         >
           <div style={widgetTitleStyle}>
@@ -270,8 +270,8 @@ const containerStyle: React.CSSProperties = {
 };
 
 const bannerStyle: React.CSSProperties = {
-  background: '#fef3c7',
-  border: '1px solid #fcd34d',
+  background: 'var(--warning-bg)',
+  border: '1px solid var(--warning-border)',
   borderRadius: '8px',
   padding: '1rem',
   marginBottom: '1.5rem',
@@ -315,10 +315,10 @@ const widgetsGridStyle: React.CSSProperties = {
 };
 
 const widgetButtonStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
   cursor: 'pointer',
   textAlign: 'left',
   width: '100%',
@@ -332,10 +332,18 @@ const widgetButtonStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 
+const headingStyle: React.CSSProperties = {
+  fontSize: '0.875rem',
+  fontWeight: '500',
+  color: 'var(--text-secondary)',
+  marginBottom: '0.5rem',
+  display: 'block',
+};
+
 const widgetTitleStyle: React.CSSProperties = {
   fontSize: '0.875rem',
   fontWeight: '500',
-  color: '#666',
+  color: 'var(--text-secondary)',
   marginBottom: '0.5rem',
   display: 'block',
 };
@@ -343,11 +351,11 @@ const widgetTitleStyle: React.CSSProperties = {
 const widgetValueStyle: React.CSSProperties = {
   fontSize: '1.75rem',
   fontWeight: '600',
-  color: '#1a1a1a',
+  color: 'var(--text-primary)',
   marginBottom: '0.25rem',
 };
 
 const widgetSubtitleStyle: React.CSSProperties = {
   fontSize: '0.75rem',
-  color: '#999',
+  color: 'var(--text-secondary)',
 };

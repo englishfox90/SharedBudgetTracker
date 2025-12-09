@@ -98,19 +98,19 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
   if (loading && !forecast) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ height: '40px', background: '#f0f0f0', borderRadius: '4px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '150px', background: '#f0f0f0', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '400px', background: '#f0f0f0', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '40px', background: 'var(--bg-tertiary)', borderRadius: '4px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '150px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+        <div style={{ height: '400px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
       </div>
     );
   }
 
   if (!accountId) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No account found. Please set up your account in the Setup tab first.</div>;
+    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No account found. Please set up your account in the Setup tab first.</div>;
   }
 
   if (!forecast || forecast.startingBalance === undefined || !forecast.overallStatus) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No forecast data available. Please set up income and expenses in the Setup tab.</div>;
+    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No forecast data available. Please set up income and expenses in the Setup tab.</div>;
   }
 
   const monthName = new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('default', {
@@ -131,7 +131,8 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(255, 255, 255, 0.7)',
+          background: 'var(--bg-primary)',
+          opacity: 0.7,
           zIndex: 10,
           borderRadius: '8px',
         }} />
@@ -157,7 +158,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
       <div style={summaryCardStyle}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem' }}>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               {forecast.isStartMonth ? 'Starting Balance' : 'Opening Balance'}
             </div>
             <div style={{ fontSize: '1.5rem', fontWeight: '600' }}>
@@ -165,7 +166,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               Lowest Balance
             </div>
             <div
@@ -180,7 +181,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               Safe Minimum
             </div>
             <div style={{ fontSize: '1.5rem', fontWeight: '600' }}>
@@ -194,10 +195,10 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
             style={{
               marginTop: '1.5rem',
               padding: '1rem',
-              background: forecast.overallStatus.minBalance < 0 ? '#fee' : '#fff7ed',
-              border: forecast.overallStatus.minBalance < 0 ? '1px solid #fcc' : '1px solid #fed7aa',
+              background: forecast.overallStatus.minBalance < 0 ? '#fee' : 'var(--warning-bg)',
+              border: forecast.overallStatus.minBalance < 0 ? '1px solid #fcc' : '1px solid var(--warning-border)',
               borderRadius: '6px',
-              color: forecast.overallStatus.minBalance < 0 ? '#dc2626' : '#f97316',
+              color: forecast.overallStatus.minBalance < 0 ? '#dc2626' : 'var(--warning-text)',
             }}
           >
             {forecast.overallStatus.minBalance < 0 ? '🚨' : '⚠️'} {forecast.overallStatus.minBalance < 0 ? 'Critical' : 'Warning'}: Your balance is projected to {forecast.overallStatus.minBalance < 0 ? 'go negative' : 'drop below your safe minimum'} on{' '}
@@ -235,7 +236,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                     <tr
                       key={day.date}
                       style={{
-                        background: isNegative ? '#fee' : isBelowSafe ? '#fff7ed' : 'transparent',
+                        background: isNegative ? '#fee' : isBelowSafe ? 'var(--warning-bg)' : 'transparent',
                       }}
                     >
                       <td style={tdStyle}>
@@ -355,17 +356,24 @@ const buttonStyle: React.CSSProperties = {
 };
 
 const summaryCardStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };
 
 const sectionStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
+};
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--bg-secondary)',
+  padding: '1.5rem',
+  borderRadius: '8px',
+  border: '1px solid var(--border-primary)',
 };
 
 const tableStyle: React.CSSProperties = {
@@ -377,12 +385,12 @@ const tableStyle: React.CSSProperties = {
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '0.75rem',
-  borderBottom: '2px solid #e0e0e0',
+  borderBottom: '2px solid var(--border-primary)',
   fontWeight: '600',
-  color: '#666',
+  color: 'var(--text-secondary)',
 };
 
 const tdStyle: React.CSSProperties = {
   padding: '0.75rem',
-  borderBottom: '1px solid #f0f0f0',
+  borderBottom: '1px solid var(--border-primary)',
 };

@@ -137,10 +137,10 @@ export default function TransactionsTab() {
 }
 
 const sectionStyle: React.CSSProperties = {
-  background: 'white',
+  background: 'var(--bg-secondary)',
   padding: '1.5rem',
   borderRadius: '8px',
-  border: '1px solid #e0e0e0',
+  border: '1px solid var(--border-primary)',
 };
 
 const headingStyle: React.CSSProperties = {
