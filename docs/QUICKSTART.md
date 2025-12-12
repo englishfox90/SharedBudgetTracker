@@ -28,8 +28,8 @@ Navigate to: http://localhost:3000
 ### Setup Tab
 - **Account Settings**: Shared checking account with $2,500 starting balance, $500 safe minimum
 - **Income Sources**: 
-  - Paul's Salary: $6,000/month, 25% contribution
-  - Jameson's Salary: $5,500/month, 25% contribution
+  - Person A's Salary: $5,400/month, 25% contribution
+  - Person B's Salary: $4,800/month, 25% contribution
   - Both paid semi-monthly (1st and 15th)
 - **Expenses**: Mortgage, HOA, utilities, credit card payment, etc.
 
@@ -79,7 +79,7 @@ Navigate to: http://localhost:3000
 
 The seed creates:
 - 1 shared checking account
-- 2 income sources (Paul & Jameson)
+- 2 income sources (Person A & Person B)
 - 6 recurring expenses
 - 9 historical transactions (for variable expense estimation)
 
