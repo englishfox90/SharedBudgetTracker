@@ -76,7 +76,7 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
                 onChange={(e) => setName(e.target.value)}
                 required
                 style={inputStyle}
-                placeholder="e.g., John's Salary"
+                placeholder="e.g., Person A Salary"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
                 onChange={handleSalaryChange}
                 required
                 style={inputStyle}
-                placeholder="e.g., 72000.00"
+                placeholder="e.g., 65000.00"
               />
             </div>
             <div>

@@ -152,21 +152,21 @@ The application has been updated from a percentage-based contribution model to a
 ## Example
 
 **Two People:**
-- Paul: $72,000/year salary
-- Jameson: $66,000/year salary
-- Total: $138,000
+- Person A: $65,000/year salary
+- Person B: $58,000/year salary
+- Total: $123,000
 
-**Annual Expenses:** $36,000
+**Annual Expenses:** $32,000
 **Inflation Rate:** 3%
-**Projected Next Year:** $37,080
+**Projected Next Year:** $32,960
 
 **Contribution Ratio:**
-- Paul: 72/138 = 52.17%
-- Jameson: 66/138 = 47.83%
+- Person A: 65/123 = 52.85%
+- Person B: 58/123 = 47.15%
 
 **Contribution Amounts (Semi-Monthly):**
-- Paul: $37,080 × 0.5217 ÷ 24 = $805.26 per paycheck
-- Jameson: $37,080 × 0.4783 ÷ 24 = $738.74 per paycheck
+- Person A: $32,960 × 0.5285 ÷ 24 = $725.32 per paycheck
+- Person B: $32,960 × 0.4715 ÷ 24 = $647.68 per paycheck
 
 ## Migration Steps (if you have existing data)
 

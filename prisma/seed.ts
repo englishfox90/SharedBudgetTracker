@@ -27,29 +27,29 @@ async function main() {
   console.log('✓ Created account:', sharedAccount.name);
 
   // Create income rules
-  const paulIncome = await prisma.incomeRule.create({
+  const personAIncome = await prisma.incomeRule.create({
     data: {
       accountId: sharedAccount.id,
-      name: 'Paul Salary',
-      annualSalary: 72000, // $6k/month
-      contributionAmount: 750, // Will be recalculated
+      name: 'Person A Salary',
+      annualSalary: 65000, // $5.4k/month
+      contributionAmount: 680, // Will be recalculated
       payFrequency: 'semi_monthly',
       payDays: JSON.stringify([1, 15]),
     },
   });
 
-  const jamesonIncome = await prisma.incomeRule.create({
+  const personBIncome = await prisma.incomeRule.create({
     data: {
       accountId: sharedAccount.id,
-      name: 'Jameson Salary',
-      annualSalary: 66000, // $5.5k/month
-      contributionAmount: 687.5, // Will be recalculated
+      name: 'Person B Salary',
+      annualSalary: 58000, // $4.8k/month
+      contributionAmount: 605, // Will be recalculated
       payFrequency: 'semi_monthly',
       payDays: JSON.stringify([1, 15]),
     },
   });
 
-  console.log('✓ Created income rules:', paulIncome.name, jamesonIncome.name);
+  console.log('✓ Created income rules:', personAIncome.name, personBIncome.name);
 
   // Create fixed recurring expenses
   const expenses = [
@@ -76,19 +76,19 @@ async function main() {
   const now = new Date();
   const historicalTransactions = [
     // 3 months ago
-    { date: new Date(now.getFullYear(), now.getMonth() - 3, 10), description: 'Credit Card Payment', amount: -850, category: 'credit_card_payment' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 3, 1), description: 'Paul Contribution', amount: 750, category: 'income' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 3, 15), description: 'Jameson Contribution', amount: 687.5, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 3, 10), description: 'Credit Card Payment', amount: -765, category: 'credit_card_payment' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 3, 1), description: 'Person A Contribution', amount: 680, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 3, 15), description: 'Person B Contribution', amount: 605, category: 'income' },
     
     // 2 months ago
-    { date: new Date(now.getFullYear(), now.getMonth() - 2, 10), description: 'Credit Card Payment', amount: -920, category: 'credit_card_payment' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 2, 1), description: 'Paul Contribution', amount: 750, category: 'income' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 2, 15), description: 'Jameson Contribution', amount: 687.5, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 2, 10), description: 'Credit Card Payment', amount: -825, category: 'credit_card_payment' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 2, 1), description: 'Person A Contribution', amount: 680, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 2, 15), description: 'Person B Contribution', amount: 605, category: 'income' },
     
     // 1 month ago
-    { date: new Date(now.getFullYear(), now.getMonth() - 1, 10), description: 'Credit Card Payment', amount: -780, category: 'credit_card_payment' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 1, 1), description: 'Paul Contribution', amount: 750, category: 'income' },
-    { date: new Date(now.getFullYear(), now.getMonth() - 1, 15), description: 'Jameson Contribution', amount: 687.5, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 1, 10), description: 'Credit Card Payment', amount: -710, category: 'credit_card_payment' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 1, 1), description: 'Person A Contribution', amount: 680, category: 'income' },
+    { date: new Date(now.getFullYear(), now.getMonth() - 1, 15), description: 'Person B Contribution', amount: 605, category: 'income' },
   ];
 
   for (const txn of historicalTransactions) {

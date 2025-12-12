@@ -1,10 +1,10 @@
 date,amount,description,category
-2024-09-10,-820.00,Credit Card Payment,credit_card_payment
-2024-09-01,750.00,Paul Contribution,income
-2024-09-15,687.50,Jameson Contribution,income
-2024-10-10,-890.00,Credit Card Payment,credit_card_payment
-2024-10-01,750.00,Paul Contribution,income
-2024-10-15,687.50,Jameson Contribution,income
-2024-11-10,-810.00,Credit Card Payment,credit_card_payment
-2024-11-01,750.00,Paul Contribution,income
-2024-11-15,687.50,Jameson Contribution,income
+2024-09-10,-740.00,Credit Card Payment,credit_card_payment
+2024-09-01,680.00,Person A Contribution,income
+2024-09-15,605.00,Person B Contribution,income
+2024-10-10,-800.00,Credit Card Payment,credit_card_payment
+2024-10-01,680.00,Person A Contribution,income
+2024-10-15,605.00,Person B Contribution,income
+2024-11-10,-730.00,Credit Card Payment,credit_card_payment
+2024-11-01,680.00,Person A Contribution,income
+2024-11-15,605.00,Person B Contribution,income
