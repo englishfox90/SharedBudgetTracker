@@ -35,6 +35,7 @@ async function importData() {
       await prisma.account.create({
         data: {
           id: account.id,
+          userId: account.userId || 1, // Link to default user if not present
           name: account.name,
           type: account.type,
           startingBalance: account.startingBalance,
