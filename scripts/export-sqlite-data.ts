@@ -1,16 +1,20 @@
 /**
  * Export SQLite data to JSON for migration to PostgreSQL
  * Run: npx tsx scripts/export-sqlite-data.ts
+ * 
+ * NOTE: This script requires Prisma to be configured for SQLite.
+ * If you get a connection error, the Prisma client may have been generated for PostgreSQL.
  */
 
 import { PrismaClient } from '@prisma/client';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
+// Force SQLite connection
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'file:./prisma/dev.db', // Explicit SQLite path
+      url: 'file:./dev.db', // Relative path from project root
     },
   },
 });
