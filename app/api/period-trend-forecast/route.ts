@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { calculatePeriodTrendForecast } from '@/lib/period-trend-forecast';
+import { validateAccountAccess } from '@/lib/auth-helpers';
+import { prisma } from '@/lib/prisma';
 
 /**
  * POST /api/period-trend-forecast
@@ -16,6 +18,19 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Verify the recurring expense belongs to the user's account
+    const expense = await prisma.recurringExpense.findUnique({
+      where: { id: parseInt(recurringExpenseId) },
+      select: { accountId: true }
+    });
+
+    if (!expense) {
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(expense.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
 
     const forecast = await calculatePeriodTrendForecast(
       parseInt(recurringExpenseId),

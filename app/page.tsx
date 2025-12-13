@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import * as Tabs from '@radix-ui/react-tabs';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import SetupTab from '@/components/SetupTab';
 import ForecastTab from '@/components/ForecastTab';
 import RecommendationTab from '@/components/RecommendationTab';
@@ -56,28 +58,99 @@ export default function Home() {
             Shared Balance Planner
           </h1>
           
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            style={{
-              padding: isMobile ? '0.375rem' : '0.5rem',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: isMobile ? '1rem' : '1.125rem',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: isMobile ? '36px' : '40px',
-              height: isMobile ? '36px' : '40px',
-              flexShrink: 0,
-            }}
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
+          {/* Profile Menu */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-primary)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: isMobile ? '1rem' : '1.125rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: 'var(--text-primary)',
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ fontSize: '1.25rem' }}>👤</span>
+                {!isMobile && <span style={{ fontSize: 'var(--font-body)' }}>Menu</span>}
+              </button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                align="end"
+                sideOffset={5}
+                style={{
+                  minWidth: '200px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-primary)',
+                  borderRadius: '8px',
+                  padding: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  zIndex: 1000,
+                }}
+              >
+                <DropdownMenu.Item
+                  onClick={toggleTheme}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    fontSize: 'var(--font-body)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-tertiary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span style={{ fontSize: '1.125rem' }}>{theme === 'light' ? '🌙' : '☀️'}</span>
+                  <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Separator style={{
+                  height: '1px',
+                  background: 'var(--border-primary)',
+                  margin: '0.5rem 0',
+                }} />
+
+                <DropdownMenu.Item
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    fontSize: 'var(--font-body)',
+                    color: 'var(--color-danger)',
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span style={{ fontSize: '1.125rem' }}>🚪</span>
+                  <span>Sign Out</span>
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
         
         <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '0.875rem' : '1rem' }}>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getVariableExpenseEstimates } from '@/lib/variable-expenses-advanced';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 /**
  * POST /api/contributions?accountId=X
@@ -11,11 +12,11 @@ export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
 
-    if (!accountId) {
-      return NextResponse.json({ error: 'accountId is required' }, { status: 400 });
-    }
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
 
-    const accountIdInt = parseInt(accountId);
+    const accountIdInt = validation.accountId;
 
     // Get all income rules
     const incomeRules = await prisma.incomeRule.findMany({

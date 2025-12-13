@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function PATCH(
   request: Request,
@@ -9,6 +10,19 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const { name, annualSalary, contributionAmount, payFrequency, payDays } = body;
+
+    // Verify income rule belongs to user's account
+    const existing = await prisma.incomeRule.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Income rule not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(existing.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
 
     const incomeRule = await prisma.incomeRule.update({
       where: { id: parseInt(id) },
@@ -39,6 +53,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // Verify income rule belongs to user's account
+    const existing = await prisma.incomeRule.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Income rule not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(existing.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
+
     await prisma.incomeRule.delete({
       where: { id: parseInt(id) },
     });

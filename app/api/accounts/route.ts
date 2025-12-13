@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
-    const accounts = await prisma.account.findMany({
+    // Validate user is authenticated and get their account
+    const validation = await validateAccountAccess();
+    if (validation instanceof NextResponse) return validation;
+
+    const account = await prisma.account.findUnique({
+      where: { id: validation.accountId },
       include: {
         incomeRules: true,
         recurringExpenses: true,
@@ -13,42 +19,16 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(accounts);
+    if (!account) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+    }
+
+    // Return as array for backwards compatibility with frontend
+    return NextResponse.json([account]);
   } catch (error) {
     console.error('Error fetching accounts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch accounts' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { name, type, startingBalance, safeMinBalance } = body;
-
-    if (!name || !type || startingBalance === undefined || safeMinBalance === undefined) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    const account = await prisma.account.create({
-      data: {
-        name,
-        type,
-        startingBalance: parseFloat(startingBalance),
-        safeMinBalance: parseFloat(safeMinBalance),
-      },
-    });
-
-    return NextResponse.json(account);
-  } catch (error) {
-    console.error('Error creating account:', error);
-    return NextResponse.json(
-      { error: 'Failed to create account' },
       { status: 500 }
     );
   }

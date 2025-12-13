@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
 
-    if (!accountId) {
-      return NextResponse.json(
-        { error: 'accountId is required' },
-        { status: 400 }
-      );
-    }
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
 
     const incomeRules = await prisma.incomeRule.findMany({
-      where: { accountId: parseInt(accountId) },
+      where: { accountId: validation.accountId },
     });
 
     return NextResponse.json(incomeRules);
@@ -38,6 +36,10 @@ export async function POST(request: Request) {
       payFrequency,
       payDays,
     } = body;
+
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId?.toString());
+    if (validation instanceof NextResponse) return validation;
 
     if (
       !accountId ||

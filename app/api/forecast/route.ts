@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateForecast } from '@/lib/forecast';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function GET(request: Request) {
   try {
@@ -8,15 +9,19 @@ export async function GET(request: Request) {
     const year = searchParams.get('year');
     const month = searchParams.get('month');
 
-    if (!accountId || !year || !month) {
+    if (!year || !month) {
       return NextResponse.json(
-        { error: 'accountId, year, and month are required' },
+        { error: 'year and month are required' },
         { status: 400 }
       );
     }
 
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
+
     const forecast = await generateForecast(
-      parseInt(accountId),
+      validation.accountId,
       parseInt(year),
       parseInt(month)
     );

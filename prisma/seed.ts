@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -10,10 +11,24 @@ async function main() {
   await prisma.recurringExpense.deleteMany();
   await prisma.incomeRule.deleteMany();
   await prisma.account.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Create a demo user
+  const hashedPassword = await hash('demo123', 10);
+  const demoUser = await prisma.user.create({
+    data: {
+      email: 'demo@example.com',
+      password: hashedPassword,
+      name: 'Demo User',
+    },
+  });
+
+  console.log('✓ Created user:', demoUser.email);
 
   // Create shared checking account
   const sharedAccount = await prisma.account.create({
     data: {
+      userId: demoUser.id,
       name: 'Shared Checking',
       type: 'checking',
       startingBalance: 2500,

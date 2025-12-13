@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Papa from 'papaparse';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function POST(request: Request) {
   try {
@@ -8,12 +9,16 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File;
     const accountId = formData.get('accountId') as string;
 
-    if (!file || !accountId) {
+    if (!file) {
       return NextResponse.json(
-        { error: 'File and accountId are required' },
+        { error: 'File is required' },
         { status: 400 }
       );
     }
+
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
 
     const text = await file.text();
     const results = Papa.parse(text, {
@@ -37,7 +42,7 @@ export async function POST(request: Request) {
       }
 
       transactions.push({
-        accountId: parseInt(accountId),
+        accountId: validation.accountId,
         date: new Date(date),
         amount: parseFloat(amount),
         description: description || '',

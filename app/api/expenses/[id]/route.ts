@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function PATCH(
   request: Request,
@@ -10,6 +11,19 @@ export async function PATCH(
     const body = await request.json();
     const { name, amount, dayOfMonth, category, frequency, isVariable, activeFrom, activeTo } =
       body;
+
+    // Verify expense belongs to user's account
+    const existing = await prisma.recurringExpense.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(existing.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
 
     const expense = await prisma.recurringExpense.update({
       where: { id: parseInt(id) },
@@ -45,6 +59,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // Verify expense belongs to user's account
+    const existing = await prisma.recurringExpense.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(existing.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
+
     await prisma.recurringExpense.delete({
       where: { id: parseInt(id) },
     });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateRecommendations } from '@/lib/recommendation-engine';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,15 +9,19 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year');
     const month = searchParams.get('month');
 
-    if (!accountId || !year || !month) {
+    if (!year || !month) {
       return NextResponse.json(
-        { error: 'Missing required parameters: accountId, year, month' },
+        { error: 'Missing required parameters: year, month' },
         { status: 400 }
       );
     }
 
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
+
     const recommendations = await generateRecommendations(
-      parseInt(accountId),
+      validation.accountId,
       parseInt(year),
       parseInt(month)
     );

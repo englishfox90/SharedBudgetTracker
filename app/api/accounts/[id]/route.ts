@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function GET(
   request: Request,
@@ -7,6 +8,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(id);
+    if (validation instanceof NextResponse) return validation;
     const account = await prisma.account.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -38,6 +43,10 @@ export async function PATCH(
     const body = await request.json();
     const { name, type, startingBalance, safeMinBalance, inflationRate, autoCalculateContrib, defaultPayFrequency } = body;
 
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(id);
+    if (validation instanceof NextResponse) return validation;
+
     const account = await prisma.account.update({
       where: { id: parseInt(id) },
       data: {
@@ -67,6 +76,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(id);
+    if (validation instanceof NextResponse) return validation;
+
     await prisma.account.delete({
       where: { id: parseInt(id) },
     });

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 export async function DELETE(
   request: Request,
@@ -7,6 +8,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // Verify transaction belongs to user's account
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!transaction) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(transaction.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
+
     await prisma.transaction.delete({
       where: { id: parseInt(id) },
     });
@@ -26,6 +41,19 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const { date, description, amount, category } = body;
+
+    // Verify transaction belongs to user's account
+    const existing = await prisma.transaction.findUnique({
+      where: { id: parseInt(id) },
+      select: { accountId: true }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+
+    const validation = await validateAccountAccess(existing.accountId.toString());
+    if (validation instanceof NextResponse) return validation;
 
     const transaction = await prisma.transaction.update({
       where: { id: parseInt(id) },

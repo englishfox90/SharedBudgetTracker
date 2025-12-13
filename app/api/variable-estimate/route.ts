@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getVariableExpenseEstimates } from '@/lib/variable-expenses-advanced';
+import { validateAccountAccess } from '@/lib/auth-helpers';
 
 /**
  * GET /api/variable-estimate?accountId=X&expenseId=Y&year=YYYY&month=MM
@@ -13,21 +14,24 @@ export async function GET(request: Request) {
     const year = searchParams.get('year');
     const month = searchParams.get('month');
 
-    if (!accountId || !expenseId || !year || !month) {
+    if (!expenseId || !year || !month) {
       return NextResponse.json(
-        { error: 'accountId, expenseId, year, and month are required' },
+        { error: 'expenseId, year, and month are required' },
         { status: 400 }
       );
     }
 
-    const accountIdInt = parseInt(accountId);
+    // Validate user has access to this account
+    const validation = await validateAccountAccess(accountId);
+    if (validation instanceof NextResponse) return validation;
+
     const expenseIdInt = parseInt(expenseId);
     const yearInt = parseInt(year);
     const monthInt = parseInt(month);
 
     // Get all estimates for the target month
     const estimates = await getVariableExpenseEstimates(
-      accountIdInt,
+      validation.accountId,
       yearInt,
       monthInt
     );
