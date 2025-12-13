@@ -23,6 +23,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!user) {
+          // Use a dummy hash comparison to prevent timing attacks
+          await compare(credentials.password as string, '$2a$10$dummyhashtopreventtimingattack1234567890123456');
           return null;
         }
 
