@@ -315,7 +315,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
 // Styles
 const widgetStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
   marginBottom: '1.5rem',
@@ -323,7 +323,7 @@ const widgetStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };

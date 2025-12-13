@@ -24,6 +24,11 @@
   --forecast-bg: #fefce8;
   --forecast-border: #fde047;
   --forecast-badge: #eab308;
+  
+  /* Font sizes - standardized */
+  --font-body: 0.875rem; /* 14px */
+  --font-label: 0.6875rem; /* 11px - smaller than body */
+  --font-small: 0.75rem; /* 12px - for compact text */
 }
 
 [data-theme='dark'] {
@@ -59,7 +64,16 @@ body {
   color: var(--text-primary);
   background: var(--bg-primary);
   font-family: inherit;
+  font-size: var(--font-body); /* 14px default */
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --font-body: 0.75rem; /* 12px on mobile */
+    --font-label: 0.625rem; /* 10px on mobile */
+    --font-small: 0.6875rem; /* 11px on mobile */
+  }
 }
 
 a {

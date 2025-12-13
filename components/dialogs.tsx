@@ -131,7 +131,6 @@ const primaryButtonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '4px',
-  fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
 };
@@ -142,7 +141,6 @@ const secondaryButtonStyle: React.CSSProperties = {
   color: '#1a1a1a',
   border: '1px solid #e0e0e0',
   borderRadius: '4px',
-  fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
 };
@@ -153,7 +151,6 @@ const dangerButtonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '4px',
-  fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
 };

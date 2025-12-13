@@ -37,6 +37,16 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
   const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
   const [missingTransactions, setMissingTransactions] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadDashboardData();
@@ -276,9 +286,11 @@ const bannerStyle: React.CSSProperties = {
   padding: '1rem',
   marginBottom: '1.5rem',
   display: 'flex',
+  flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: '1rem',
+  flexWrap: 'wrap',
 };
 
 const bannerContentStyle: React.CSSProperties = {
@@ -292,7 +304,6 @@ const bannerIconStyle: React.CSSProperties = {
 };
 
 const bannerTextStyle: React.CSSProperties = {
-  fontSize: '0.95rem',
   color: '#78350f',
 };
 
@@ -302,7 +313,6 @@ const bannerButtonStyle: React.CSSProperties = {
   border: 'none',
   borderRadius: '6px',
   padding: '0.5rem 1rem',
-  fontSize: '0.875rem',
   fontWeight: 500,
   cursor: 'pointer',
   whiteSpace: 'nowrap',
@@ -316,7 +326,7 @@ const widgetsGridStyle: React.CSSProperties = {
 
 const widgetButtonStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
   cursor: 'pointer',
@@ -333,7 +343,6 @@ const widgetButtonStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
   fontWeight: '500',
   color: 'var(--text-secondary)',
   marginBottom: '0.5rem',
@@ -341,7 +350,7 @@ const headingStyle: React.CSSProperties = {
 };
 
 const widgetTitleStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
   color: 'var(--text-secondary)',
   marginBottom: '0.5rem',
@@ -349,13 +358,13 @@ const widgetTitleStyle: React.CSSProperties = {
 };
 
 const widgetValueStyle: React.CSSProperties = {
-  fontSize: '1.75rem',
+  fontSize: '1.5rem',
   fontWeight: '600',
   color: 'var(--text-primary)',
   marginBottom: '0.25rem',
 };
 
 const widgetSubtitleStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   color: 'var(--text-secondary)',
 };

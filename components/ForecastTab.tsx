@@ -16,10 +16,20 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
   const [accountId, setAccountId] = useState<number | null>(null);
   const [account, setAccount] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   function formatCurrency(value: number): string {
     return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadAccountId();
@@ -106,11 +116,11 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
   }
 
   if (!accountId) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No account found. Please set up your account in the Setup tab first.</div>;
+    return <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No account found. Please set up your account in the Setup tab first.</div>;
   }
 
   if (!forecast || forecast.startingBalance === undefined || !forecast.overallStatus) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No forecast data available. Please set up income and expenses in the Setup tab.</div>;
+    return <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No forecast data available. Please set up income and expenses in the Setup tab.</div>;
   }
 
   const monthName = new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('default', {
@@ -139,39 +149,59 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
       )}
       {/* Month Selector */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{monthName}</h2>
+        <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600' }}>{monthName}</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button 
             onClick={handlePreviousMonth} 
             disabled={loading || isAtStartDate} 
-            style={{ ...buttonStyle, opacity: (loading || isAtStartDate) ? 0.5 : 1, cursor: (loading || isAtStartDate) ? 'not-allowed' : 'pointer' }}
+            style={{ 
+              ...buttonStyle, 
+              fontSize: isMobile ? '0.8125rem' : '0.875rem',
+              padding: isMobile ? '0.375rem 0.75rem' : '0.5rem 1rem',
+              opacity: (loading || isAtStartDate) ? 0.5 : 1, 
+              cursor: (loading || isAtStartDate) ? 'not-allowed' : 'pointer' 
+            }}
           >
-            ← Previous
+            {isMobile ? '←' : '← Previous'}
           </button>
-          <button onClick={handleNextMonth} disabled={loading} style={{ ...buttonStyle, opacity: loading ? 0.5 : 1, cursor: loading ? 'wait' : 'pointer' }}>
-            Next →
+          <button
+            onClick={handleNextMonth}
+            disabled={loading}
+            style={{ 
+              ...buttonStyle, 
+              padding: isMobile ? '0.375rem 0.75rem' : '0.5rem 1rem',
+              opacity: loading ? 0.5 : 1, 
+              cursor: loading ? 'wait' : 'pointer' 
+            }}
+          >
+            {isMobile ? '→' : 'Next →'}
           </button>
         </div>
       </div>
 
       {/* Summary Card */}
-      <div style={summaryCardStyle}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem' }}>
+      <div style={{
+        background: 'var(--bg-secondary)',
+        padding: '1rem',
+        borderRadius: '8px',
+        border: '1px solid var(--border-primary)',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? '1rem' : '2rem' }}>
           <div>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+            <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               {forecast.isStartMonth ? 'Starting Balance' : 'Opening Balance'}
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '600' }}>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600' }}>
               ${formatCurrency(forecast.startingBalance)}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+            <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               Lowest Balance
             </div>
             <div
               style={{
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.25rem' : '1.5rem',
                 fontWeight: '600',
                 color:
                   forecast.overallStatus.minBalance < 0 ? '#dc2626' : forecast.overallStatus.minBalance < forecast.safeMinBalance ? '#f97316' : '#16a34a',
@@ -184,7 +214,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
             <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
               Safe Minimum
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '600' }}>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600' }}>
               ${formatCurrency(forecast.safeMinBalance)}
             </div>
           </div>
@@ -208,21 +238,26 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
       </div>
 
       {/* Daily Forecast Table */}
-      <div style={sectionStyle}>
+      <div style={{
+        background: 'var(--bg-secondary)',
+        padding: '1rem',
+        borderRadius: '8px',
+        border: '1px solid var(--border-primary)',
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>
             Daily Breakdown
           </h3>
           {accountId && <AddTransactionDialog accountId={accountId} onAdded={loadForecast} />}
         </div>
-        <div style={{ overflow: 'auto' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Date</th>
                 <th style={thStyle}>Events</th>
-                <th style={thStyle}>Opening</th>
-                <th style={thStyle}>Change</th>
+                {!isMobile && <th style={thStyle}>Opening</th>}
+                {!isMobile && <th style={thStyle}>Change</th>}
                 <th style={thStyle}>Closing</th>
               </tr>
             </thead>
@@ -242,15 +277,14 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                       <td style={tdStyle}>
                         {formatUTCDate(day.date)}
                       </td>
-                    <td style={tdStyle}>
-                      {day.events.map((event, i) => (
+                      <td style={tdStyle}>
+                        {day.events.map((event, i) => (
                         <div key={i} style={{ marginBottom: i < day.events.length - 1 ? '0.5rem' : '0' }}>
                           {event.actualized ? (
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.5rem',
-                              fontSize: '0.875rem'
                             }}>
                               <div style={{ flex: 1 }}>
                                 {event.description}:{' '}
@@ -276,7 +310,6 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                                       background: isWorse ? '#fee2e2' : '#dcfce7',
                                       color: isWorse ? '#991b1b' : '#166534',
                                       borderRadius: '4px',
-                                      fontSize: '0.75rem',
                                       fontWeight: '600',
                                     }}>
                                       {arrow} ${formatCurrency(Math.abs(variance))}
@@ -312,16 +345,18 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                         </div>
                       ))}
                     </td>
-                    <td style={tdStyle}>${formatCurrency(day.openingBalance)}</td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color: day.netChange > 0 ? '#16a34a' : '#dc2626',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {day.netChange > 0 ? '+' : ''}${formatCurrency(Math.abs(day.netChange))}
-                    </td>
+                    {!isMobile && <td style={tdStyle}>${formatCurrency(day.openingBalance)}</td>}
+                    {!isMobile && (
+                      <td
+                        style={{
+                          ...tdStyle,
+                          color: day.netChange > 0 ? '#16a34a' : '#dc2626',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {day.netChange > 0 ? '+' : ''}${formatCurrency(Math.abs(day.netChange))}
+                      </td>
+                    )}
                     <td
                       style={{
                         ...tdStyle,
@@ -350,28 +385,27 @@ const buttonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '4px',
-  fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
 };
 
 const summaryCardStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };
 
 const sectionStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };
@@ -379,18 +413,18 @@ const cardStyle: React.CSSProperties = {
 const tableStyle: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
-  fontSize: '0.875rem',
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  padding: '0.75rem',
+  padding: '0.5rem',
   borderBottom: '2px solid var(--border-primary)',
   fontWeight: '600',
   color: 'var(--text-secondary)',
+  whiteSpace: 'nowrap',
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '0.75rem',
+  padding: '0.5rem',
   borderBottom: '1px solid var(--border-primary)',
 };

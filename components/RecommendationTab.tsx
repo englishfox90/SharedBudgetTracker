@@ -21,6 +21,16 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const [implementSuccess, setImplementSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [incomeRules, setIncomeRules] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadAccountId();
@@ -139,7 +149,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   if (!accountId) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
         No account found. Please set up your account in the Setup tab first.
       </div>
     );
@@ -147,7 +157,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   if (!data) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
         No recommendation data available. Please set up income and expenses in the Setup tab.
       </div>
     );
@@ -174,7 +184,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
         <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
           Financial Recommendations
         </h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
           6-month outlook starting {monthName}
         </p>
       </div>
@@ -190,7 +200,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
         }}>
           ℹ️ How This Works
         </summary>
-        <ul style={{ paddingLeft: '1.5rem', fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+        <ul style={{ paddingLeft: '1.5rem', fontSize: 'var(--font-body)', lineHeight: '1.6', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
           <li>Analyzes your forecasted income and expenses for the next 6 months</li>
           <li>Compares actual variable spending to estimates based on historical data</li>
           <li>Identifies spending trends and potential issues before they impact your balance</li>
@@ -210,14 +220,14 @@ export default function RecommendationTab({ currentMonth }: Props) {
               <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
                 ⚡ Action Required
               </h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--warning-text)' }}>
+              <p style={{ fontSize: 'var(--font-body)', color: 'var(--warning-text)' }}>
                 Increase contributions by {Math.round(data.contributionAnalysis.adjustmentPercentage)}% to maintain safe balance
               </p>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+              <div style={{ fontSize: 'var(--font-label)', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                 Current Annual
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
@@ -225,7 +235,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+              <div style={{ fontSize: 'var(--font-label)', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                 Recommended Annual
               </div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
@@ -243,7 +253,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
             flexDirection: 'column',
             gap: '0.75rem',
           }}>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
+            <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-primary)', lineHeight: '1.6' }}>
               Click below to automatically update your income rules to the recommended contribution amounts.
               This will increase your contributions proportionally across all income sources.
             </div>
@@ -301,11 +311,11 @@ export default function RecommendationTab({ currentMonth }: Props) {
             </h3>
             
             <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Annual Increase</div>
+              <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Annual Increase</div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 ${(data.contributionAnalysis.recommendedAnnualContribution! - data.contributionAnalysis.currentAnnualContribution).toLocaleString()}/year
               </div>
-              <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: 'var(--font-body)', color: '#666', marginTop: '0.25rem' }}>
                 (~${Math.round((data.contributionAnalysis.recommendedAnnualContribution! - data.contributionAnalysis.currentAnnualContribution) / 12).toLocaleString()}/month)
               </div>
             </div>
@@ -328,12 +338,12 @@ export default function RecommendationTab({ currentMonth }: Props) {
                     borderRadius: '6px',
                     marginBottom: '0.5rem',
                   }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{rule.name}</div>
-                    <div style={{ fontSize: '0.875rem', color: '#666', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.25rem' }}>{rule.name}</div>
+                    <div style={{ fontSize: 'var(--font-body)', color: '#666', display: 'flex', justifyContent: 'space-between' }}>
                       <span>Current: ${rule.contributionAmount.toFixed(2)} per paycheck</span>
                       <span style={{ color: '#dc2626', fontWeight: '600' }}>→ ${newContribution.toFixed(2)}</span>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: 'var(--font-label)', color: '#666', marginTop: '0.25rem' }}>
                       +${increase.toFixed(2)} per paycheck × {payPeriodsPerYear} = +${(increase * payPeriodsPerYear).toFixed(2)}/year
                     </div>
                   </div>
@@ -348,10 +358,10 @@ export default function RecommendationTab({ currentMonth }: Props) {
               borderRadius: '6px',
               marginBottom: '1.5rem',
             }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#0c4a6e' }}>
+              <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.5rem', color: '#0c4a6e' }}>
                 💡 Long-Term Impact
               </div>
-              <div style={{ fontSize: '0.875rem', color: '#0c4a6e', lineHeight: '1.6' }}>
+              <div style={{ fontSize: 'var(--font-body)', color: '#0c4a6e', lineHeight: '1.6' }}>
                 This increase will keep your balance above the safe minimum and maintain positive monthly growth,
                 preventing future cash flow issues and building a healthier financial cushion.
               </div>
@@ -439,7 +449,7 @@ const modalContentStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };

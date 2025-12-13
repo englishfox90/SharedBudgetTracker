@@ -16,6 +16,16 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [nextMonthEstimate, setNextMonthEstimate] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (expense.isVariable) {
@@ -89,31 +99,48 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
 
   return (
     <>
-      <div style={cardStyle}>
+      <div style={{
+        background: 'var(--bg-secondary)',
+        padding: '1rem',
+        borderRadius: '6px',
+        border: '1px solid var(--border-primary)',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center',
+        gap: '1rem',
+      }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{expense.name}</div>
-          <div style={{ fontSize: '0.875rem', color: '#666' }}>
+          <div style={{ fontSize: 'var(--font-body)', color: '#666' }}>
             {recurringText} on {dayLabel} • {categoryLabel}
             {expense.isVariable && ' • Variable'}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-            <span style={{ fontWeight: '600' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'row' : 'row',
+          gap: '0.5rem', 
+          alignItems: 'center',
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: '0.25rem' }}>
+            <span style={{ fontWeight: '600', fontSize: isMobile ? 'var(--font-body)' : '1rem' }}>
               ${expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{frequencyLabel}
             </span>
             {expense.isVariable && nextMonthEstimate !== null && (
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
+              <span style={{ fontSize: 'var(--font-label)', color: '#666' }}>
                 Next month: ${nextMonthEstimate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             )}
           </div>
-          <button onClick={() => setShowEditDialog(true)} style={buttonSecondaryStyle}>
-            Edit
-          </button>
-          <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
-            Delete
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setShowEditDialog(true)} style={buttonSecondaryStyle}>
+              Edit
+            </button>
+            <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
+              Delete
+            </button>
+          </div>
         </div>
       </div>
 
@@ -152,7 +179,7 @@ const buttonSecondaryStyle: React.CSSProperties = {
   border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   cursor: 'pointer',
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
   color: 'var(--text-primary)',
 };
@@ -164,6 +191,6 @@ const buttonDangerStyle: React.CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
 };

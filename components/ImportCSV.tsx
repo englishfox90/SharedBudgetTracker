@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Props {
   accountId: number;
@@ -11,6 +11,16 @@ export default function ImportCSV({ accountId, onImported }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string>('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   async function handleImport() {
     if (!file) return;
@@ -47,12 +57,21 @@ export default function ImportCSV({ accountId, onImported }: Props) {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: '0.5rem', 
+        alignItems: isMobile ? 'stretch' : 'center',
+      }}>
         <input
           type="file"
           accept=".csv"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
-          style={{ flex: 1 }}
+          style={{ 
+            flex: 1,
+            padding: '0.5rem',
+            fontSize: '0.875rem',
+          }}
         />
         <button
           onClick={handleImport}
@@ -61,13 +80,14 @@ export default function ImportCSV({ accountId, onImported }: Props) {
             ...buttonStyle,
             opacity: !file || importing ? 0.5 : 1,
             cursor: !file || importing ? 'not-allowed' : 'pointer',
+            width: isMobile ? '100%' : 'auto',
           }}
         >
           {importing ? 'Importing...' : 'Import CSV'}
         </button>
       </div>
       {result && (
-        <div style={{ marginTop: '0.75rem', fontSize: '0.875rem' }}>
+        <div style={{ marginTop: '0.75rem' }}>
           {result}
         </div>
       )}

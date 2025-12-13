@@ -22,6 +22,16 @@ export default function TransactionsTab() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -52,7 +62,7 @@ export default function TransactionsTab() {
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem' }}>
+      <div>
         <p>Loading...</p>
       </div>
     );
@@ -60,7 +70,7 @@ export default function TransactionsTab() {
 
   if (!account) {
     return (
-      <div style={{ padding: '2rem' }}>
+      <div>
         <p>No account found. Please set up an account in the Setup tab.</p>
       </div>
     );
@@ -77,21 +87,21 @@ export default function TransactionsTab() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <section style={sectionStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
             <div>
               <h2 style={headingStyle}>Transactions & Adjustments</h2>
               {pagination.totalCount > 0 && (
-                <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+                <p style={{ fontSize: 'var(--font-label)', color: '#999', marginTop: '0.25rem' }}>
                   Showing {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}
                 </p>
               )}
             </div>
             <AddTransactionDialog accountId={account.id} onAdded={handleReload} />
           </div>
-          <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '1rem' }}>
+          <p style={{ fontSize: 'var(--font-body)', color: '#666', marginBottom: '1rem' }}>
             One-time adjustments or historical transactions. Use this for unplanned expenses, deposits, or imported bank data.
             These appear in forecasts on their specific dates.
           </p>
@@ -100,7 +110,7 @@ export default function TransactionsTab() {
               <TransactionCard key={transaction.id} transaction={transaction} onUpdate={handleReload} onDelete={handleReload} />
             ))}
             {transactions.length === 0 && (
-              <p style={{ fontSize: '0.875rem', color: '#666' }}>No transactions yet. Add one if needed.</p>
+              <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No transactions yet. Add one if needed.</p>
             )}
           </div>
           {pagination.totalPages > 1 && (
@@ -115,7 +125,7 @@ export default function TransactionsTab() {
               >
                 ← Previous
               </button>
-              <span style={{ fontSize: '0.875rem', color: '#666' }}>
+              <span style={{ fontSize: 'var(--font-body)', color: '#666' }}>
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
@@ -138,7 +148,7 @@ export default function TransactionsTab() {
 
 const sectionStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };
@@ -165,7 +175,7 @@ const paginationButtonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '6px',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   fontWeight: '500',
   cursor: 'pointer',
   transition: 'background 0.2s',

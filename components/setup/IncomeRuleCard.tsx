@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
 import { IncomeRule } from '@/types';
@@ -21,6 +21,16 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   function formatCurrency(value: string): string {
     const num = value.replace(/[^0-9]/g, '');
@@ -94,24 +104,43 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
 
   return (
     <>
-      <div style={cardStyle}>
+      <div style={{
+        background: 'var(--bg-secondary)',
+        padding: '1rem',
+        borderRadius: '6px',
+        border: '1px solid var(--border-primary)',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center',
+        gap: '1rem',
+      }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {rule.name}
             <span style={percentageBadgeStyle}>{percentage}%</span>
           </div>
-          <div style={{ fontSize: '0.875rem', color: '#666' }}>
+          <div style={{ fontSize: 'var(--font-body)', color: '#666' }}>
             ${rule.annualSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/year • {payFrequencyLabel} • {payDaysText}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ fontWeight: '600' }}>${rule.contributionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{payFrequencyLabel}</span>
-          <button onClick={openEditDialog} style={buttonSecondaryStyle}>
-            Edit
-          </button>
-          <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
-            Delete
-          </button>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'row' : 'row',
+          gap: '0.5rem', 
+          alignItems: 'center',
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+        }}>
+          <span style={{ fontWeight: '600', fontSize: isMobile ? 'var(--font-body)' : '1rem' }}>
+            ${rule.contributionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{payFrequencyLabel}
+          </span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={openEditDialog} style={buttonSecondaryStyle}>
+              Edit
+            </button>
+            <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
+              Delete
+            </button>
+          </div>
         </div>
       </div>
 
@@ -220,7 +249,7 @@ const inputStyle: React.CSSProperties = {
   padding: '0.5rem',
   border: '1px solid var(--border-primary)',
   borderRadius: '4px',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   background: 'var(--bg-primary)',
   color: 'var(--text-primary)',
 };
@@ -231,7 +260,7 @@ const buttonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '4px',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   fontWeight: '500',
   cursor: 'pointer',
 };
@@ -242,7 +271,7 @@ const buttonSecondaryStyle: React.CSSProperties = {
   border: '1px solid var(--border-primary)',
   borderRadius: '4px',
   cursor: 'pointer',
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
   color: 'var(--text-primary)',
 };
@@ -254,7 +283,7 @@ const buttonDangerStyle: React.CSSProperties = {
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
 };
 
@@ -287,14 +316,14 @@ const titleStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
   marginBottom: '0.25rem',
   display: 'block',
 };
 
 const percentageBadgeStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '600',
   padding: '0.125rem 0.5rem',
   background: '#e0f2fe',

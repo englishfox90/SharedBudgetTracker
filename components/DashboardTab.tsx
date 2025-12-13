@@ -15,6 +15,16 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
   const [variableExpenses, setVariableExpenses] = useState<Array<{ id: number; name: string }>>([]);
   const [sixMonthData, setSixMonthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -59,7 +69,7 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem' }}>
+      <div>
         <p>Loading...</p>
       </div>
     );
@@ -67,7 +77,7 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
 
   if (!account) {
     return (
-      <div style={{ padding: '2rem' }}>
+      <div>
         <p>No account found. Please set up an account in the Setup tab.</p>
       </div>
     );
@@ -75,8 +85,8 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
 
   if (variableExpenses.length === 0) {
     return (
-      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <p style={{ fontSize: '0.875rem', color: '#666' }}>
+      <div>
+        <p style={{ color: '#666' }}>
           No variable expenses found. Add a variable expense in the Setup tab to use the Period Trend Forecast widget.
         </p>
       </div>
@@ -84,7 +94,7 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <DashboardSummaryWidgets accountId={account.id} onNavigate={onNavigate} />
       
       {/* 6-Month Trend Chart */}

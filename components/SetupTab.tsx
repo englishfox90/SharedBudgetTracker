@@ -16,6 +16,16 @@ export default function SetupTab() {
   const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -96,7 +106,7 @@ export default function SetupTab() {
       {/* Account Settings */}
       <section style={sectionStyle}>
         <h2 style={headingStyle}>Account Settings</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           <div>
             <Label.Root style={labelStyle}>Starting Balance ($)</Label.Root>
             <input
@@ -139,7 +149,7 @@ export default function SetupTab() {
             />
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
           <div>
             <Label.Root style={labelStyle}>Inflation Rate (%)</Label.Root>
             <input
@@ -169,7 +179,7 @@ export default function SetupTab() {
 
       {/* Income Sources */}
       <section style={sectionStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
           <h2 style={headingStyle}>Income Sources</h2>
           <AddIncomeDialog accountId={account.id} onAdded={loadData} />
         </div>
@@ -187,14 +197,14 @@ export default function SetupTab() {
             );
           })}
           {incomeRules.length === 0 && (
-            <p style={{ fontSize: '0.875rem', color: '#666' }}>No income sources yet. Add one to get started.</p>
+            <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No income sources yet. Add one to get started.</p>
           )}
         </div>
       </section>
 
       {/* Recurring Expenses */}
       <section style={sectionStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
           <h2 style={headingStyle}>Recurring Expenses</h2>
           <AddExpenseDialog accountId={account.id} onAdded={loadData} />
         </div>
@@ -203,7 +213,7 @@ export default function SetupTab() {
             <ExpenseCard key={expense.id} expense={expense} onUpdate={loadData} onDelete={loadData} />
           ))}
           {expenses.length === 0 && (
-            <p style={{ fontSize: '0.875rem', color: '#666' }}>No recurring expenses yet. Add one to get started.</p>
+            <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No recurring expenses yet. Add one to get started.</p>
           )}
         </div>
       </section>
@@ -211,7 +221,7 @@ export default function SetupTab() {
       {/* Import Transactions */}
       <section style={sectionStyle}>
         <h2 style={headingStyle}>Import Historical Data</h2>
-        <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '1rem' }}>
+        <p style={{ fontSize: 'var(--font-body)', color: '#666', marginBottom: '1rem' }}>
           Import CSV transactions to improve variable expense estimates. Format: date, amount, description, category
         </p>
         <ImportCSV accountId={account.id} onImported={loadData} />
@@ -231,7 +241,7 @@ export default function SetupTab() {
 
 const sectionStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',
-  padding: '1.5rem',
+  padding: '1rem',
   borderRadius: '8px',
   border: '1px solid var(--border-primary)',
 };
@@ -243,7 +253,7 @@ const headingStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-label)',
   fontWeight: '500',
   marginBottom: '0.25rem',
   display: 'block',
@@ -254,7 +264,7 @@ const inputStyle: React.CSSProperties = {
   padding: '0.5rem',
   border: '1px solid var(--border-primary)',
   borderRadius: '4px',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   background: 'var(--bg-primary)',
   color: 'var(--text-primary)',
 };
@@ -265,7 +275,7 @@ const buttonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   borderRadius: '4px',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   fontWeight: '500',
   cursor: 'pointer',
 };
