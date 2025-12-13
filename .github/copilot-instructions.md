@@ -7,7 +7,7 @@ Full-stack TypeScript app for forecasting daily balances in a shared checking ac
 ## Technology Stack
 
 - **Next.js 16** (App Router) + **TypeScript** (strict mode) + **React 19**
-- **SQLite** via **Prisma 5.x** (⚠️ NOT 7.x - breaking changes)
+- **PostgreSQL** via **Prisma 5.x** (⚠️ NOT 7.x - breaking changes)
 - **Radix UI** for all interactive components
 - **date-fns** for date operations
 - **Inline React.CSSProperties** for styling (no CSS-in-JS)
@@ -57,7 +57,7 @@ Orchestrates 6-month lookahead with variance analysis:
 
 ### Date Handling - UTC Everywhere
 
-**Why**: SQLite stores dates as strings; mixing local/UTC causes off-by-one day errors.
+**Why**: PostgreSQL stores timestamps natively, but mixing local/UTC in application code causes off-by-one day errors.
 
 **Rule**: Always use `lib/date-utils.ts` functions:
 ```typescript
@@ -242,7 +242,12 @@ useEffect(() => {
 
 ### Database Reset (Common During Development)
 ```powershell
-Remove-Item prisma\dev.db; npm run db:push; npm run db:seed
+# Drop all data and recreate tables
+npx prisma migrate reset
+
+# Or manually reset + seed:
+npx prisma migrate reset --skip-seed
+npm run db:seed
 ```
 
 ### Running Utility Scripts
@@ -263,13 +268,13 @@ npx tsx scripts/test-variable-expenses.ts  # Validates estimation algorithm
 ### Schema Changes
 ```powershell
 # 1. Edit prisma/schema.prisma
-# 2. Push to SQLite
-npm run db:push
+# 2. Create migration
+npx prisma migrate dev --name description_of_change
 # 3. Regenerate Prisma client
 npm run db:generate
 # 4. Update seed data if needed
 # 5. Test with fresh database
-Remove-Item prisma\dev.db; npm run db:push; npm run db:seed
+npx prisma migrate reset
 ```
 
 ## Project-Specific Conventions
@@ -340,11 +345,13 @@ When changing forecast logic:
 - Co-located with component logic
 - Fast iteration for MVP
 
-**Why SQLite instead of PostgreSQL?**
-- Zero-config local development
-- Single file backup (just copy `dev.db`)
-- Sufficient for 2-person use case
-- Easy to migrate later if needed
+**Why PostgreSQL instead of SQLite?**
+- Production-ready for cloud deployment
+- Persistent storage on Railway/Vercel
+- Native timestamp types (better than strings)
+- ACID compliance and concurrent access
+- Easy backups and point-in-time recovery
+- Sufficient free tier (512MB on Railway)
 
 **Why separate `variable-expenses-advanced.ts`?**
 - Algorithm is complex (inflation + seasonality + recency + trend)
@@ -363,6 +370,7 @@ When changing forecast logic:
 - `docs/VARIABLE_EXPENSE_ALGORITHM.md` → Mathematical model details
 - `docs/FORECASTING_APPROACH.md` → Historical tracking architecture
 - `docs/MIGRATION_NOTES.md` → Schema evolution history
+- `docs/POSTGRESQL_MIGRATION.md` → SQLite to PostgreSQL migration guide
 - `docs/QUICKSTART.md` → Setup guide
 
 ## Quick Reference

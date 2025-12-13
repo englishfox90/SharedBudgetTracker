@@ -16,13 +16,14 @@ A full-stack TypeScript application for managing a shared checking account betwe
 
 ## Technology Stack
 
-- **Framework**: Next.js 14+ (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript (strict mode)
-- **Database**: SQLite with Prisma 5.x ORM
+- **Database**: PostgreSQL with Prisma 5.x ORM
 - **UI Components**: Radix UI
-- **Styling**: Inline React styles
-- **Date Handling**: date-fns
+- **Styling**: Inline React styles with responsive CSS custom properties
+- **Date Handling**: date-fns (UTC-first approach)
 - **Font**: Space Grotesk (Google Fonts)
+- **Deployment**: Railway-ready with persistent storage
 
 ## Getting Started
 
@@ -30,6 +31,7 @@ A full-stack TypeScript application for managing a shared checking account betwe
 
 - Node.js 18+
 - npm or yarn
+- **PostgreSQL 14+** (for local development)
 
 ### Installation
 
@@ -44,14 +46,35 @@ A full-stack TypeScript application for managing a shared checking account betwe
    npm install
    ```
 
-3. **Set up the database**:
-   ```bash
-   # Push the schema to create the database
-   npm run db:push
+3. **Set up PostgreSQL**:
+   
+   **If migrating from SQLite** (existing users):
+   - See **[PostgreSQL Migration Guide](docs/POSTGRESQL_MIGRATION.md)** for complete instructions
+   - Your existing data will be preserved!
 
+   **New installation**:
+   ```bash
+   # Install PostgreSQL (Windows with Chocolatey)
+   choco install postgresql
+   
+   # Create database
+   psql -U postgres
+   CREATE DATABASE shared_budget_tracker;
+   \q
+   
+   # Create .env file
+   Copy-Item .env.example .env
+   # Edit .env and set your PostgreSQL password
+   ```
+
+4. **Set up the database**:
+   ```bash
+   # Run migrations to create tables
+   npx prisma migrate dev --name init
+   
    # Generate Prisma client
    npm run db:generate
-
+   
    # Seed the database with initial data
    npm run db:seed
    ```
@@ -62,12 +85,12 @@ A full-stack TypeScript application for managing a shared checking account betwe
    - Recurring expenses (fixed and variable)
    - Historical daily spending patterns for trend analysis
 
-4. **Run the development server**:
+5. **Run the development server**:
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**:
+6. **Open your browser**:
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Available Scripts
