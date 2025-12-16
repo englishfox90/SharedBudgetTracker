@@ -10,6 +10,7 @@ import ForecastTab from '@/components/ForecastTab';
 import RecommendationTab from '@/components/RecommendationTab';
 import TransactionsTab from '@/components/TransactionsTab';
 import DashboardTab from '@/components/DashboardTab';
+import BudgetAdvisorTab from '@/components/BudgetAdvisorTab';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -242,6 +243,23 @@ export default function Home() {
             Transactions
           </Tabs.Trigger>
           <Tabs.Trigger
+            value="budget"
+            style={{
+              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
+              fontSize: isMobile ? '0.875rem' : '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              borderBottom: '2px solid transparent',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Budget
+          </Tabs.Trigger>
+          <Tabs.Trigger
             value="setup"
             style={{
               padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
@@ -274,6 +292,13 @@ export default function Home() {
 
         <Tabs.Content value="transactions">
           <TransactionsTab />
+        </Tabs.Content>
+
+        <Tabs.Content value="budget">
+          <BudgetAdvisorTab 
+            year={currentMonth.year} 
+            month={currentMonth.month} 
+          />
         </Tabs.Content>
 
         <Tabs.Content value="setup">

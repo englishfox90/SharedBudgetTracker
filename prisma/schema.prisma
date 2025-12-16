@@ -69,6 +69,7 @@ model RecurringExpense {
   frequency             String                  @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
   isVariable            Boolean                 @default(false)
   budgetGoal            Float?                  // Optional monthly budget target for variable expenses
+  billingCycleDay       Int?                    // For credit cards: day of month billing cycle starts (e.g., 16 = Nov 16 to Dec 15)
   activeFrom            DateTime?
   activeTo              DateTime?
   createdAt             DateTime                @default(now())

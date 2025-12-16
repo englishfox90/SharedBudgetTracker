@@ -19,6 +19,12 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
   const [category, setCategory] = useState(expense.category);
   const [frequency, setFrequency] = useState(expense.frequency || 'monthly');
   const [isVariable, setIsVariable] = useState(expense.isVariable);
+  const [budgetGoal, setBudgetGoal] = useState(
+    expense.budgetGoal ? expense.budgetGoal.toLocaleString() : ''
+  );
+  const [billingCycleDay, setBillingCycleDay] = useState(
+    expense.billingCycleDay ? expense.billingCycleDay.toString() : ''
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isWeeklyBased = frequency === 'weekly' || frequency === 'bi_weekly';
@@ -41,6 +47,8 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
     e.preventDefault();
 
     const amountValue = parseFloat(amount.replace(/,/g, ''));
+    const budgetGoalValue = budgetGoal ? parseFloat(budgetGoal.replace(/,/g, '')) : null;
+    const billingCycleDayValue = billingCycleDay ? parseInt(billingCycleDay) : null;
 
     setIsSubmitting(true);
     try {
@@ -54,6 +62,8 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
           category,
           frequency,
           isVariable,
+          budgetGoal: budgetGoalValue,
+          billingCycleDay: billingCycleDayValue,
         }),
       });
 
@@ -172,6 +182,42 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                 Variable amount (estimated from history)
               </Label.Root>
             </div>
+            {isVariable && (
+              <>
+                <div>
+                  <Label.Root style={labelStyle}>
+                    Budget Goal (optional)
+                    <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
+                      Track spending vs goal in Budget tab
+                    </span>
+                  </Label.Root>
+                  <input
+                    type="text"
+                    value={budgetGoal}
+                    onChange={(e) => setBudgetGoal(formatCurrency(e.target.value))}
+                    style={inputStyle}
+                    placeholder="e.g., 2,500"
+                  />
+                </div>
+                <div>
+                  <Label.Root style={labelStyle}>
+                    Billing Cycle Day (optional)
+                    <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
+                      For credit cards: day of month billing cycle starts (e.g., 16)
+                    </span>
+                  </Label.Root>
+                  <input
+                    type="number"
+                    value={billingCycleDay}
+                    onChange={(e) => setBillingCycleDay(e.target.value)}
+                    style={inputStyle}
+                    min="1"
+                    max="31"
+                    placeholder="e.g., 16 (analyzes 16th to 16th)"
+                  />
+                </div>
+              </>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
               <Dialog.Close asChild>
                 <button type="button" style={buttonSecondaryStyle}>

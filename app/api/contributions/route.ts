@@ -131,11 +131,10 @@ export async function POST(request: Request) {
 
       const roundedAmount = Math.round(perPaycheckAmount * 100) / 100;
       
-      await prisma.$executeRaw`
-        UPDATE income_rules 
-        SET contributionAmount = ${roundedAmount}
-        WHERE id = ${rule.id}
-      `;
+      await prisma.incomeRule.update({
+        where: { id: rule.id },
+        data: { contributionAmount: roundedAmount },
+      });
     }
 
     return NextResponse.json({

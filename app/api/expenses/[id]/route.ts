@@ -9,7 +9,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, dayOfMonth, category, frequency, isVariable, activeFrom, activeTo } =
+    const { name, amount, dayOfMonth, category, frequency, isVariable, activeFrom, activeTo, budgetGoal, billingCycleDay } =
       body;
 
     // Verify expense belongs to user's account
@@ -39,6 +39,12 @@ export async function PATCH(
         }),
         ...(activeTo !== undefined && {
           activeTo: activeTo ? new Date(activeTo) : null,
+        }),
+        ...(budgetGoal !== undefined && {
+          budgetGoal: budgetGoal ? parseFloat(budgetGoal) : null,
+        }),
+        ...(billingCycleDay !== undefined && {
+          billingCycleDay: billingCycleDay ? parseInt(billingCycleDay) : null,
         }),
       },
     });

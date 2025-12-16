@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PeriodTrendForecast } from '@/lib/period-trend-forecast';
 
 interface Props {
   accountId: number;
-  variableExpenses: Array<{ id: number; name: string }>;
+  variableExpenses: Array<{ id: number; name: string; billingCycleDay?: number | null }>;
 }
 
 export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
@@ -18,6 +18,48 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
   const [forecast, setForecast] = useState<PeriodTrendForecast | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-populate dates when expense changes or expenses load
+  useEffect(() => {
+    if (selectedExpenseId && variableExpenses.length > 0) {
+      const expense = variableExpenses.find(e => e.id === selectedExpenseId);
+      
+      if (expense?.billingCycleDay) {
+        // Auto-populate billing period based on today
+        const now = new Date();
+        const today = now.getDate();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        const cycleDay = expense.billingCycleDay;
+
+        let startMonth, startYear, endMonth, endYear;
+        
+        if (today >= cycleDay) {
+          // Current period: this month's cycle day to next month's cycle day
+          startMonth = currentMonth;
+          startYear = currentYear;
+          endMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+          endYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+        } else {
+          // Still in previous period: last month's cycle day to this month's cycle day
+          startMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+          startYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+          endMonth = currentMonth;
+          endYear = currentYear;
+        }
+
+        const start = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(cycleDay).padStart(2, '0')}`;
+        const end = `${endYear}-${String(endMonth).padStart(2, '0')}-${String(cycleDay).padStart(2, '0')}`;
+        
+        setPeriodStart(start);
+        setPeriodEnd(end);
+      } else {
+        // Clear dates if no billing cycle
+        setPeriodStart('');
+        setPeriodEnd('');
+      }
+    }
+  }, [selectedExpenseId, variableExpenses]);
 
   async function handleCalculate() {
     if (!selectedExpenseId || !periodStart || !periodEnd || !currentBalance) {

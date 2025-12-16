@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       isVariable,
       activeFrom,
       activeTo,
+      budgetGoal,
     } = body;
 
     // Validate user has access to this account
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
         isVariable: isVariable || false,
         activeFrom: activeFrom ? new Date(activeFrom) : null,
         activeTo: activeTo ? new Date(activeTo) : null,
+        budgetGoal: budgetGoal ? parseFloat(budgetGoal) : null,
       },
     });
 

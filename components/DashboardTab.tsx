@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PeriodTrendWidget } from './PeriodTrendWidget';
 import { DashboardSummaryWidgets } from './DashboardSummaryWidgets';
 import SixMonthTrendChart from './dashboard/SixMonthTrendChart';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
@@ -101,8 +100,6 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
       {sixMonthData && sixMonthData.months && sixMonthData.months.length > 0 && (
         <SixMonthTrendChart months={sixMonthData.months} />
       )}
-      
-      <PeriodTrendWidget accountId={account.id} variableExpenses={variableExpenses} />
     </div>
   );
 }

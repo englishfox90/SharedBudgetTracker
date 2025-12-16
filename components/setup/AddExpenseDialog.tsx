@@ -17,6 +17,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
   const [category, setCategory] = useState('rent');
   const [frequency, setFrequency] = useState('monthly');
   const [isVariable, setIsVariable] = useState(false);
+  const [budgetGoal, setBudgetGoal] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isWeeklyBased = frequency === 'weekly' || frequency === 'bi_weekly';
@@ -32,10 +33,18 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
     }
   }
 
+  function handleBudgetGoalChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+      setBudgetGoal(value);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     const amountValue = parseFloat(amount.replace(/,/g, ''));
+    const budgetGoalValue = budgetGoal ? parseFloat(budgetGoal.replace(/,/g, '')) : null;
 
     setIsSubmitting(true);
     try {
@@ -50,6 +59,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
           category,
           frequency,
           isVariable,
+          budgetGoal: budgetGoalValue,
         }),
       });
 
@@ -60,6 +70,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
       setCategory('rent');
       setFrequency('monthly');
       setIsVariable(false);
+      setBudgetGoal('');
       onAdded();
     } catch (error) {
       console.error('Error adding expense:', error);
@@ -175,6 +186,23 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
                 onChange={(e) => setIsVariable(e.target.checked)}
               />
               <Label.Root htmlFor="isVariable" style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
+            {isVariable && (
+              <div>
+                <Label.Root style={labelStyle}>
+                  Budget Goal (optional)
+                  <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
+                    Track spending vs goal in Budget tab
+                  </span>
+                </Label.Root>
+                <input
+                  type="text"
+                  value={budgetGoal}
+                  onChange={handleBudgetGoalChange}
+                  style={inputStyle}
+                  placeholder="e.g., 2500"
+                />
+              </div>
+            )}
                 Variable amount (estimated from history)
               </Label.Root>
             </div>
