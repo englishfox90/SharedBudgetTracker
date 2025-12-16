@@ -68,6 +68,7 @@ model RecurringExpense {
   category              String
   frequency             String                  @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
   isVariable            Boolean                 @default(false)
+  budgetGoal            Float?                  // Optional monthly budget target for variable expenses
   activeFrom            DateTime?
   activeTo              DateTime?
   createdAt             DateTime                @default(now())
