@@ -5,6 +5,7 @@ import { ForecastResult } from '@/types';
 import { formatDateShortUTC } from '@/lib/date-utils';
 import AddTransactionDialog from './setup/AddTransactionDialog';
 import ActualizeEventDialog from './forecast/ActualizeEventDialog';
+import EditActualizedEventDialog from './forecast/EditActualizedEventDialog';
 
 interface Props {
   currentMonth: { year: number; month: number };
@@ -280,59 +281,69 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                       <td style={tdStyle}>
                         {day.events.map((event, i) => (
                         <div key={i} style={{ marginBottom: i < day.events.length - 1 ? '0.5rem' : '0' }}>
-                          {event.actualized ? (
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                            }}>
-                              <div style={{ flex: 1 }}>
-                                {event.description}:{' '}
-                                <span style={{
-                                  fontWeight: '600',
-                                  color: event.amount > 0 ? '#16a34a' : '#dc2626',
-                                }}>
-                                  {event.amount > 0 ? '+' : ''}${formatCurrency(Math.abs(event.amount))}
-                                </span>
-                                {event.forecastedAmount !== undefined && Math.abs(event.amount - event.forecastedAmount) >= 1 && (() => {
-                                  const variance = event.amount - event.forecastedAmount;
-                                  // For expenses (negative amounts): worse = more negative (higher spending) = ↑
-                                  // For income (positive amounts): worse = less positive (lower income) = ↓
-                                  const isWorse = variance < 0;
-                                  const arrow = event.amount < 0 
-                                    ? (variance < 0 ? '↑' : '↓')  // Expense: up = overspent, down = saved
-                                    : (variance < 0 ? '↓' : '↑'); // Income: down = less income, up = more income
-                                  
-                                  return (
-                                    <span style={{
-                                      marginLeft: '0.5rem',
-                                      padding: '0.125rem 0.375rem',
-                                      background: isWorse ? '#fee2e2' : '#dcfce7',
-                                      color: isWorse ? '#991b1b' : '#166534',
-                                      borderRadius: '4px',
-                                      fontWeight: '600',
-                                    }}>
-                                      {arrow} ${formatCurrency(Math.abs(variance))}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
+                          {event.actualized && event.transactionId ? (
+                            <EditActualizedEventDialog event={event} onUpdated={loadForecast}>
                               <div style={{
-                                padding: '0.25rem 0.5rem',
-                                background: '#16a34a',
-                                color: 'white',
-                                borderRadius: '4px',
-                                fontSize: '0.625rem',
-                                fontWeight: '700',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.25rem',
-                                letterSpacing: '0.05em'
-                              }}>
-                                <span>✓</span>
-                                <span>ACTUAL</span>
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                padding: '0.25rem',
+                                margin: '-0.25rem',
+                                borderRadius: '4px',
+                                transition: 'background 0.15s',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <div style={{ flex: 1 }}>
+                                  {event.description}:{' '}
+                                  <span style={{
+                                    fontWeight: '600',
+                                    color: event.amount > 0 ? '#16a34a' : '#dc2626',
+                                  }}>
+                                    {event.amount > 0 ? '+' : ''}${formatCurrency(Math.abs(event.amount))}
+                                  </span>
+                                  {event.forecastedAmount !== undefined && Math.abs(event.amount - event.forecastedAmount) >= 1 && (() => {
+                                    const variance = event.amount - event.forecastedAmount;
+                                    // For expenses (negative amounts): worse = more negative (higher spending) = ↑
+                                    // For income (positive amounts): worse = less positive (lower income) = ↓
+                                    const isWorse = variance < 0;
+                                    const arrow = event.amount < 0 
+                                      ? (variance < 0 ? '↑' : '↓')  // Expense: up = overspent, down = saved
+                                      : (variance < 0 ? '↓' : '↑'); // Income: down = less income, up = more income
+                                    
+                                    return (
+                                      <span style={{
+                                        marginLeft: '0.5rem',
+                                        padding: '0.125rem 0.375rem',
+                                        background: isWorse ? '#fee2e2' : '#dcfce7',
+                                        color: isWorse ? '#991b1b' : '#166534',
+                                        borderRadius: '4px',
+                                        fontWeight: '600',
+                                      }}>
+                                        {arrow} ${formatCurrency(Math.abs(variance))}
+                                      </span>
+                                    );
+                                  })()}
+                                </div>
+                                <div style={{
+                                  padding: '0.25rem 0.5rem',
+                                  background: '#16a34a',
+                                  color: 'white',
+                                  borderRadius: '4px',
+                                  fontSize: '0.625rem',
+                                  fontWeight: '700',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  letterSpacing: '0.05em'
+                                }}>
+                                  <span>✓</span>
+                                  <span>ACTUAL</span>
+                                </div>
                               </div>
-                            </div>
+                            </EditActualizedEventDialog>
                           ) : (
                             accountId && (
                               <ActualizeEventDialog

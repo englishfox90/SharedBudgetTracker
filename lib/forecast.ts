@@ -111,17 +111,49 @@ async function generateCashEvents(
         }
       }
     } else if (frequency === 'bi_weekly') {
-      // For bi-weekly, we'd need a start date reference
-      // For now, get weeks that match the day of week
-      const dayOfWeek = expense.dayOfMonth;
-      let weekCount = 0;
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(Date.UTC(year, month - 1, day));
-        if (date.getUTCDay() === dayOfWeek) {
-          if (weekCount % 2 === 0) {
-            expenseDates.push(date);
+      // For bi-weekly, calculate every 14 days from anchor date
+      // This properly handles crossing month boundaries
+      if (expense.anchorDate) {
+        const anchor = new Date(expense.anchorDate);
+        const monthStart = new Date(Date.UTC(year, month - 1, 1));
+        const monthEnd = new Date(Date.UTC(year, month - 1, daysInMonth));
+        
+        // Calculate how many 14-day periods from anchor to reach this month
+        const anchorTime = Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), anchor.getUTCDate());
+        const monthStartTime = monthStart.getTime();
+        
+        // Find the first occurrence at or after month start
+        const daysSinceAnchor = Math.floor((monthStartTime - anchorTime) / (1000 * 60 * 60 * 24));
+        let periodsToAdd = Math.floor(daysSinceAnchor / 14);
+        if (daysSinceAnchor < 0) {
+          // Anchor is in the future - still need to check if it falls in this month
+          periodsToAdd = 0;
+        }
+        
+        // Start from that occurrence and add all that fall in this month
+        for (let p = periodsToAdd; p <= periodsToAdd + 3; p++) { // Check up to 3 periods to cover edge cases
+          const occurrenceTime = anchorTime + (p * 14 * 24 * 60 * 60 * 1000);
+          const occurrence = new Date(occurrenceTime);
+          
+          if (occurrence >= monthStart && occurrence <= monthEnd) {
+            expenseDates.push(occurrence);
+          } else if (occurrence > monthEnd) {
+            break; // Past this month, stop checking
           }
-          weekCount++;
+        }
+      } else {
+        // Fallback: if no anchor date, use day of week starting from first occurrence in month
+        // (legacy behavior for existing expenses without anchor date)
+        const dayOfWeek = expense.dayOfMonth;
+        let weekCount = 0;
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(Date.UTC(year, month - 1, day));
+          if (date.getUTCDay() === dayOfWeek) {
+            if (weekCount % 2 === 0) {
+              expenseDates.push(date);
+            }
+            weekCount++;
+          }
         }
       }
     } else if (frequency === 'semi_monthly') {

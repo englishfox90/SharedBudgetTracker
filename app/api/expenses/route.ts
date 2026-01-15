@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { parseDateUTC } from '@/lib/date-utils';
 
 export async function GET(request: Request) {
   try {
@@ -35,10 +36,12 @@ export async function POST(request: Request) {
       amount,
       dayOfMonth,
       category,
+      frequency,
       isVariable,
       activeFrom,
       activeTo,
       budgetGoal,
+      anchorDate,
     } = body;
 
     // Validate user has access to this account
@@ -65,10 +68,12 @@ export async function POST(request: Request) {
         amount: parseFloat(amount),
         dayOfMonth: parseInt(dayOfMonth),
         category,
+        frequency: frequency || 'monthly',
         isVariable: isVariable || false,
-        activeFrom: activeFrom ? new Date(activeFrom) : null,
-        activeTo: activeTo ? new Date(activeTo) : null,
+        activeFrom: activeFrom ? parseDateUTC(activeFrom) : null,
+        activeTo: activeTo ? parseDateUTC(activeTo) : null,
         budgetGoal: budgetGoal ? parseFloat(budgetGoal) : null,
+        anchorDate: anchorDate ? parseDateUTC(anchorDate) : null,
       },
     });
 

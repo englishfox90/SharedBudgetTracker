@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Papa from 'papaparse';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { parseDateUTC } from '@/lib/date-utils';
 
 export async function POST(request: Request) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
 
       transactions.push({
         accountId: validation.accountId,
-        date: new Date(date),
+        date: parseDateUTC(date),
         amount: parseFloat(amount),
         description: description || '',
         category: category || null,

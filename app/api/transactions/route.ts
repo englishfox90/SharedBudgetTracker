@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { parseDateUTC } from '@/lib/date-utils';
 
 export async function GET(request: Request) {
   try {
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     const transaction = await prisma.transaction.create({
       data: {
         accountId: parseInt(accountId),
-        date: new Date(date),
+        date: parseDateUTC(date),
         description,
         amount: parseFloat(amount),
         category: category || null,

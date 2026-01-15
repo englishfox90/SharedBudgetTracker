@@ -35,6 +35,7 @@ export interface RecurringExpense {
   isVariable: boolean;
   budgetGoal: number | null;
   billingCycleDay: number | null;
+  anchorDate: Date | null;
   activeFrom: Date | null;
   activeTo: Date | null;
   createdAt: Date;

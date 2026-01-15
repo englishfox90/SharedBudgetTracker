@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PeriodTrendForecast } from '@/lib/period-trend-forecast';
+import { formatDateShortUTC, parseDateUTC } from '@/lib/date-utils';
 
 interface Props {
   accountId: number;
@@ -333,10 +334,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                         borderBottom: idx < forecast.dailyForecasts.length - 1 ? '1px solid #f3f4f6' : 'none' 
                       }}>
                         <td style={{ padding: '0.5rem' }}>
-                          {new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
+                          {formatDateShortUTC(parseDateUTC(day.date))}
                         </td>
                         <td style={{ padding: '0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>
                           ${day.predictedSpend.toFixed(2)}

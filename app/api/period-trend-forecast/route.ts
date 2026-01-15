@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { calculatePeriodTrendForecast } from '@/lib/period-trend-forecast';
 import { validateAccountAccess } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { parseDateUTC } from '@/lib/date-utils';
 
 /**
  * POST /api/period-trend-forecast
@@ -34,10 +35,10 @@ export async function POST(request: Request) {
 
     const forecast = await calculatePeriodTrendForecast(
       parseInt(recurringExpenseId),
-      new Date(periodStart),
-      new Date(periodEnd),
+      parseDateUTC(periodStart),
+      parseDateUTC(periodEnd),
       parseFloat(currentBalance),
-      asOfDate ? new Date(asOfDate) : undefined
+      asOfDate ? parseDateUTC(asOfDate) : undefined
     );
 
     return NextResponse.json(forecast);

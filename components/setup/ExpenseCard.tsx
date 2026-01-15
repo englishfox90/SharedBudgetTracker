@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { RecurringExpense } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 import { EditExpenseDialog } from './EditExpenseDialog';
+import { formatDateLongUTC } from '@/lib/date-utils';
 
 interface Props {
   expense: RecurringExpense;
@@ -83,6 +84,13 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
     ? '2x per month'
     : 'Monthly';
 
+  // Format anchor date for bi-weekly display
+  const anchorDateText = expense.frequency === 'bi_weekly' && expense.anchorDate
+    ? ` (from ${formatDateLongUTC(expense.anchorDate)})`
+    : expense.frequency === 'bi_weekly'
+    ? ' (no anchor set)'
+    : '';
+
   async function handleDelete() {
     setIsDeleting(true);
     try {
@@ -112,7 +120,7 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{expense.name}</div>
           <div style={{ fontSize: 'var(--font-body)', color: '#666' }}>
-            {recurringText} on {dayLabel} • {categoryLabel}
+            {recurringText}{anchorDateText} on {dayLabel} • {categoryLabel}
             {expense.isVariable && ' • Variable'}
           </div>
         </div>

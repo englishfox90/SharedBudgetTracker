@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { parseDateUTC } from '@/lib/date-utils';
 
 export async function DELETE(
   request: Request,
@@ -58,7 +59,7 @@ export async function PATCH(
     const transaction = await prisma.transaction.update({
       where: { id: parseInt(id) },
       data: {
-        ...(date && { date: new Date(date) }),
+        ...(date && { date: parseDateUTC(date) }),
         ...(description && { description }),
         ...(amount !== undefined && { amount: parseFloat(amount) }),
         ...(category !== undefined && { category }),

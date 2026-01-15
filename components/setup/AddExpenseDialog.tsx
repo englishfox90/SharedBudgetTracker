@@ -18,9 +18,11 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
   const [frequency, setFrequency] = useState('monthly');
   const [isVariable, setIsVariable] = useState(false);
   const [budgetGoal, setBudgetGoal] = useState('');
+  const [anchorDate, setAnchorDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isWeeklyBased = frequency === 'weekly' || frequency === 'bi_weekly';
+  const isBiWeekly = frequency === 'bi_weekly';
   const dayLabel = isWeeklyBased ? 'Day of Week' : 'Day of Month';
   const dayMax = isWeeklyBased ? 6 : 31;
   const dayPlaceholder = isWeeklyBased ? '0 = Sunday, 6 = Saturday' : '1-31 (adjusted if month is shorter)';
@@ -60,6 +62,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
           frequency,
           isVariable,
           budgetGoal: budgetGoalValue,
+          anchorDate: anchorDate || null,
         }),
       });
 
@@ -71,6 +74,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
       setFrequency('monthly');
       setIsVariable(false);
       setBudgetGoal('');
+      setAnchorDate('');
       onAdded();
     } catch (error) {
       console.error('Error adding expense:', error);
@@ -178,6 +182,26 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
                 <option value="monthly">Monthly</option>
               </select>
             </div>
+            {isBiWeekly && (
+              <div>
+                <Label.Root style={labelStyle}>
+                  Anchor Date (Starting Reference)
+                  <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
+                    When did/will the first payment occur?
+                  </span>
+                </Label.Root>
+                <input
+                  type="date"
+                  value={anchorDate}
+                  onChange={(e) => setAnchorDate(e.target.value)}
+                  required
+                  style={inputStyle}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                  Expense will recur every 14 days from this date
+                </div>
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="checkbox"

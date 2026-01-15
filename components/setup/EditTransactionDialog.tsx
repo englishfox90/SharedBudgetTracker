@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
-import { format } from 'date-fns';
+import { formatDateUTC } from '@/lib/date-utils';
 
 interface Transaction {
   id: number;
@@ -22,9 +22,10 @@ interface Props {
 
 export default function EditTransactionDialog({ transaction, onUpdated }: Props) {
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(format(new Date(transaction.date), 'yyyy-MM-dd'));
+  const [date, setDate] = useState(formatDateUTC(transaction.date));
   const [description, setDescription] = useState(transaction.description);
-  const [amount, setAmount] = useState(transaction.amount.toString());
+  const [amount, setAmount] = useState(Math.abs(transaction.amount).toString());
+  const [isExpense, setIsExpense] = useState(transaction.amount < 0);
   const [category, setCategory] = useState(transaction.category || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,8 +33,8 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
-    // Allow negative sign, numbers, and optional decimal point with up to 2 decimal places
-    if (value === '' || value === '-' || /^-?\d*\.?\d{0,2}$/.test(value)) {
+    // Allow numbers and optional decimal point with up to 2 decimal places (no negative sign needed)
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
       setAmount(value);
     }
   }
@@ -43,13 +44,15 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
     setIsSubmitting(true);
 
     try {
+      const finalAmount = isExpense ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
+      
       const res = await fetch(`/api/transactions/${transaction.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date,
           description,
-          amount: parseFloat(amount),
+          amount: finalAmount,
           category: category || null,
         }),
       });
@@ -118,17 +121,25 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>
-                Amount ($) - Negative for expenses, positive for deposits
-              </Label.Root>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={handleAmountChange}
-                required
-                style={inputStyle}
-              />
+              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select
+                  value={isExpense ? 'expense' : 'income'}
+                  onChange={(e) => setIsExpense(e.target.value === 'expense')}
+                  style={{ ...selectStyle, width: 'auto', minWidth: '110px', flex: 'none' }}
+                >
+                  <option value="expense">Expense (−)</option>
+                  <option value="income">Income (+)</option>
+                </select>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  required
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>

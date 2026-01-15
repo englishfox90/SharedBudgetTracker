@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { parseDateUTC } from '@/lib/date-utils';
 
 export async function PATCH(
   request: Request,
@@ -9,7 +10,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, dayOfMonth, category, frequency, isVariable, activeFrom, activeTo, budgetGoal, billingCycleDay } =
+    const { name, amount, dayOfMonth, category, frequency, isVariable, activeFrom, activeTo, budgetGoal, billingCycleDay, anchorDate } =
       body;
 
     // Verify expense belongs to user's account
@@ -35,16 +36,19 @@ export async function PATCH(
         ...(frequency && { frequency }),
         ...(isVariable !== undefined && { isVariable }),
         ...(activeFrom !== undefined && {
-          activeFrom: activeFrom ? new Date(activeFrom) : null,
+          activeFrom: activeFrom ? parseDateUTC(activeFrom) : null,
         }),
         ...(activeTo !== undefined && {
-          activeTo: activeTo ? new Date(activeTo) : null,
+          activeTo: activeTo ? parseDateUTC(activeTo) : null,
         }),
         ...(budgetGoal !== undefined && {
           budgetGoal: budgetGoal ? parseFloat(budgetGoal) : null,
         }),
         ...(billingCycleDay !== undefined && {
           billingCycleDay: billingCycleDay ? parseInt(billingCycleDay) : null,
+        }),
+        ...(anchorDate !== undefined && {
+          anchorDate: anchorDate ? parseDateUTC(anchorDate) : null,
         }),
       },
     });

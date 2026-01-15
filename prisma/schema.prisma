@@ -64,12 +64,13 @@ model RecurringExpense {
   accountId             Int
   name                  String
   amount                Float
-  dayOfMonth            Int                     // 1-31
+  dayOfMonth            Int                     // 1-31 for monthly/semi_monthly, 0-6 (day of week) for weekly/bi_weekly
   category              String
   frequency             String                  @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
   isVariable            Boolean                 @default(false)
   budgetGoal            Float?                  // Optional monthly budget target for variable expenses
   billingCycleDay       Int?                    // For credit cards: day of month billing cycle starts (e.g., 16 = Nov 16 to Dec 15)
+  anchorDate            DateTime?               // Reference date for bi-weekly expenses (calculates every 14 days from this date)
   activeFrom            DateTime?
   activeTo              DateTime?
   createdAt             DateTime                @default(now())

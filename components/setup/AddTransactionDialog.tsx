@@ -14,6 +14,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [isExpense, setIsExpense] = useState(true);
   const [category, setCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,6 +22,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
     setDate('');
     setDescription('');
     setAmount('');
+    setIsExpense(true);
     setCategory('');
   }
 
@@ -29,6 +31,8 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
     setIsSubmitting(true);
 
     try {
+      const finalAmount = isExpense ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
+      
       const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,7 +40,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
           accountId,
           date,
           description,
-          amount: parseFloat(amount),
+          amount: finalAmount,
           category: category || null,
         }),
       });
@@ -56,8 +60,8 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
-    // Allow negative sign, numbers, and optional decimal point with up to 2 decimal places
-    if (value === '' || value === '-' || /^-?\d*\.?\d{0,2}$/.test(value)) {
+    // Allow numbers and optional decimal point with up to 2 decimal places (no negative sign needed)
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
       setAmount(value);
     }
   }
@@ -101,18 +105,26 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>
-                Amount ($) - Use negative for expenses, positive for deposits
-              </Label.Root>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={handleAmountChange}
-                placeholder="e.g., -500 or 1000"
-                required
-                style={inputStyle}
-              />
+              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select
+                  value={isExpense ? 'expense' : 'income'}
+                  onChange={(e) => setIsExpense(e.target.value === 'expense')}
+                  style={{ ...selectStyle, width: 'auto', minWidth: '110px', flex: 'none' }}
+                >
+                  <option value="expense">Expense (−)</option>
+                  <option value="income">Income (+)</option>
+                </select>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  placeholder="0.00"
+                  required
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
