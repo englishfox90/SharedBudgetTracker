@@ -20,6 +20,21 @@
   --warning-border: #fcd34d;
   --warning-text: #92400e;
   
+  /* Safe/success colors */
+  --safe-bg: #d1fae5;
+  --safe-border: #6ee7b7;
+  --safe-text: #065f46;
+  
+  /* Danger/critical colors */
+  --danger-bg: #fee2e2;
+  --danger-border: #fca5a5;
+  --danger-text: #991b1b;
+  
+  /* Info colors */
+  --info-bg: #dbeafe;
+  --info-border: #93c5fd;
+  --info-text: #1e40af;
+  
   /* Forecast colors - lighter yellow */
   --forecast-bg: #fefce8;
   --forecast-border: #fde047;
@@ -46,6 +61,21 @@
   --warning-bg: #854d0e;
   --warning-border: #ca8a04;
   --warning-text: #fef3c7;
+  
+  /* Safe/success colors - darker green with better contrast */
+  --safe-bg: #065f46;
+  --safe-border: #10b981;
+  --safe-text: #d1fae5;
+  
+  /* Danger/critical colors - darker red with better contrast */
+  --danger-bg: #991b1b;
+  --danger-border: #f87171;
+  --danger-text: #fee2e2;
+  
+  /* Info colors - darker blue with better contrast */
+  --info-bg: #1e3a5f;
+  --info-border: #3b82f6;
+  --info-text: #bfdbfe;
   
   /* Forecast colors - lighter brown, distinct from warning */
   --forecast-bg: #713f12;

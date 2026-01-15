@@ -17,9 +17,9 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         {months.map((month, idx) => {
           const statusColors = {
-            safe: { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' },
+            safe: { bg: 'var(--safe-bg)', border: 'var(--safe-border)', text: 'var(--safe-text)' },
             warning: { bg: 'var(--warning-bg)', border: 'var(--warning-border)', text: 'var(--warning-text)' },
-            danger: { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' },
+            danger: { bg: 'var(--danger-bg)', border: 'var(--danger-border)', text: 'var(--danger-text)' },
           };
           const colors = statusColors[month.status];
 
@@ -34,26 +34,26 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
               }}
             >
               {/* Month Name */}
-              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.text, marginBottom: '0.75rem' }}>
                 {month.monthName.split(' ')[0]} {/* Just the month name */}
               </div>
 
               {/* Opening Balance */}
               <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Opening</div>
-                <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Opening</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: '500', color: colors.text }}>
                   ${month.openingBalance.toLocaleString()}
                 </div>
               </div>
 
               {/* Net Change */}
               <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Net Change</div>
+                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Net Change</div>
                 <div
                   style={{
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: month.closingBalance >= month.openingBalance ? '#16a34a' : '#dc2626',
+                    color: colors.text,
                   }}
                 >
                   {month.closingBalance >= month.openingBalance ? '+' : ''}
@@ -63,12 +63,12 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
 
               {/* Lowest Balance */}
               <div>
-                <div style={{ fontSize: '0.75rem', color: month.status === 'warning' ? 'var(--warning-text)' : 'var(--text-secondary)' }}>Lowest</div>
+                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Lowest</div>
                 <div style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.text }}>
                   ${month.lowestBalance.toLocaleString()}
                 </div>
                 {month.status !== 'safe' && (
-                  <div style={{ fontSize: '0.7rem', color: colors.text, marginTop: '0.25rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: colors.text, opacity: 0.9, marginTop: '0.25rem' }}>
                     Day {month.lowestBalanceDay} • {month.daysBelowSafeMin}d below min
                   </div>
                 )}
@@ -81,7 +81,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
       {/* Legend */}
       <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#d1fae5', border: '1px solid #6ee7b7' }} />
+          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--safe-bg)', border: '1px solid var(--safe-border)' }} />
           <span>Safe</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -89,7 +89,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
           <span>Warning (&lt;7 days)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#fee2e2', border: '1px solid #fca5a5' }} />
+          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)' }} />
           <span>Critical (7+ days)</span>
         </div>
       </div>

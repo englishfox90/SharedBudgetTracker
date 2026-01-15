@@ -29,22 +29,22 @@ export default function SuggestionCards({ suggestions }: Props) {
       {suggestions.map((suggestion, idx) => {
         const severityStyles = {
           critical: {
-            bg: '#fee2e2',
-            border: '#fca5a5',
+            bg: 'var(--danger-bg)',
+            border: 'var(--danger-border)',
             icon: '🚨',
-            iconColor: '#991b1b',
+            textColor: 'var(--danger-text)',
           },
           warning: {
             bg: 'var(--warning-bg)',
             border: 'var(--warning-border)',
             icon: '⚠️',
-            iconColor: 'var(--warning-text)',
+            textColor: 'var(--warning-text)',
           },
           info: {
-            bg: '#dbeafe',
-            border: '#93c5fd',
+            bg: 'var(--info-bg)',
+            border: 'var(--info-border)',
             icon: 'ℹ️',
-            iconColor: '#1e40af',
+            textColor: 'var(--info-text)',
           },
         };
 
@@ -65,10 +65,10 @@ export default function SuggestionCards({ suggestions }: Props) {
 
               {/* Content */}
               <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: style.textColor, marginBottom: '0.5rem' }}>
                   {suggestion.title}
                 </h4>
-                <p style={{ fontSize: '0.875rem', color: suggestion.severity === 'warning' ? 'var(--warning-text)' : '#4a5568', lineHeight: '1.5', marginBottom: suggestion.actionable ? '0.75rem' : 0 }}>
+                <p style={{ fontSize: '0.875rem', color: style.textColor, opacity: 0.9, lineHeight: '1.5', marginBottom: suggestion.actionable ? '0.75rem' : 0 }}>
                   {suggestion.description}
                 </p>
 
