@@ -45,7 +45,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
               <div className="kv"><span className="kv__label">Lowest</span><span className="kv__value">{formatMoney(month.lowestBalance)}</span></div>
               {month.status !== 'safe' && (
                 <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  Day {month.lowestBalanceDay} · {month.daysBelowSafeMin}d below minimum
+                  Lowest on day {month.lowestBalanceDay} · {month.daysBelowSafeMin} day{month.daysBelowSafeMin === 1 ? '' : 's'} under
                 </div>
               )}
             </div>
