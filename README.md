@@ -310,6 +310,18 @@ See `prisma/schema.prisma` for full schema.
 - "On Track" when contributions are sufficient
 - Navigate to Recommendations tab for details
 
+## Design System
+
+All visual tokens live in `app/globals.css`: surfaces, ink, accent, status
+colours, radii and type sizes are CSS custom properties with light and dark
+values, and every component is styled through a small set of primitives
+(`.card`, `.btn`, `.input`, `.select`, `.pill`, `.alert`, `.dialog-*`). Change a
+token there and the whole app follows. Charts are drawn by
+`components/charts/LineChart.tsx` (responsive, crosshair tooltip on hover and
+touch) and `components/charts/Sparkline.tsx`; their series colours were
+validated for colour-vision deficiency in both themes. Icons are inline SVGs in
+`components/icons.tsx`, so nothing depends on platform emoji rendering.
+
 ## Design Principles
 
 ### Styling

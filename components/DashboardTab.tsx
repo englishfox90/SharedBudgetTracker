@@ -50,28 +50,30 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
 
   if (loading || accountLoading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div className="skeleton" style={{ height: '110px' }} />
-        <div className="skeleton" style={{ height: '110px' }} />
-        <div className="skeleton" style={{ height: '110px' }} />
-        <div className="skeleton" style={{ height: '320px', marginTop: '1rem' }} />
+      <div className="stack">
+        <div className="skeleton" style={{ height: '230px' }} />
+        <div className="tile-grid">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton" style={{ height: '110px' }} />
+          ))}
+        </div>
+        <div className="skeleton" style={{ height: '320px' }} />
       </div>
     );
   }
 
   if (!account) {
     return (
-      <div>
+      <div className="card">
         <p>No account found. Please set up an account in the Setup tab.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="stack" style={{ gap: '1.25rem' }}>
       <DashboardSummaryWidgets accountId={account.id} recommendations={recommendations} onNavigate={onNavigate} />
       
-      {/* 6-Month Trend Chart */}
       {sixMonthData && sixMonthData.months && sixMonthData.months.length > 0 && (
         <SixMonthTrendChart months={sixMonthData.months} />
       )}

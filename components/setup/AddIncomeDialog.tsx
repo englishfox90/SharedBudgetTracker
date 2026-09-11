@@ -62,42 +62,42 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button style={buttonStyle}>+ Add Income Source</button>
+        <button className="btn btn-primary">+ Add Income Source</button>
       </Dialog.Trigger>
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-          <Dialog.Title style={titleStyle}>Add Income Source</Dialog.Title>
+          <Dialog.Title className="dialog-title">Add Income Source</Dialog.Title>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <Label.Root style={labelStyle}>Name</Label.Root>
+              <Label.Root className="label">Name</Label.Root>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
                 placeholder="e.g., Person A Salary"
               />
             </div>
             <div>
-              <Label.Root style={labelStyle}>Annual Salary ($)</Label.Root>
+              <Label.Root className="label">Annual Salary ($)</Label.Root>
               <input
                 type="text"
                 inputMode="decimal"
                 value={annualSalary}
                 onChange={handleSalaryChange}
                 required
-                style={inputStyle}
+                className="input"
                 placeholder="e.g., 65000.00"
               />
             </div>
             <div>
-              <Label.Root style={labelStyle}>Pay Frequency</Label.Root>
+              <Label.Root className="label">Pay Frequency</Label.Root>
               <select
                 value={payFrequency}
                 onChange={(e) => setPayFrequency(e.target.value)}
-                style={selectStyle}
+                className="select"
               >
                 <option value="monthly">Monthly</option>
                 <option value="semi_monthly">Semi-Monthly (2x/month)</option>
@@ -107,26 +107,26 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: payFrequency === 'monthly' ? '1fr' : '1fr 1fr', gap: '1rem' }}>
               <div>
-                <Label.Root style={labelStyle}>Pay Day {payFrequency === 'monthly' ? '' : '1'}</Label.Root>
+                <Label.Root className="label">Pay Day {payFrequency === 'monthly' ? '' : '1'}</Label.Root>
                 <input
                   type="number"
                   value={payDay1}
                   onChange={(e) => setPayDay1(e.target.value)}
                   required
-                  style={inputStyle}
+                  className="input"
                   min="1"
                   max="31"
                 />
               </div>
               {payFrequency !== 'monthly' && (
                 <div>
-                  <Label.Root style={labelStyle}>Pay Day 2</Label.Root>
+                  <Label.Root className="label">Pay Day 2</Label.Root>
                   <input
                     type="number"
                     value={payDay2}
                     onChange={(e) => setPayDay2(e.target.value)}
                     required
-                    style={inputStyle}
+                    className="input"
                     min="1"
                     max="31"
                   />
@@ -135,11 +135,11 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
             </div>
             <div className="dialog-actions" style={{ marginTop: '1rem' }}>
               <Dialog.Close asChild>
-                <button type="button" style={buttonSecondaryStyle}>
+                <button type="button" className="btn btn-secondary">
                   Cancel
                 </button>
               </Dialog.Close>
-              <button type="submit" disabled={isSubmitting} style={{ ...buttonStyle, opacity: isSubmitting ? 0.5 : 1 }}>
+              <button type="submit" disabled={isSubmitting} className="btn btn-primary" style={{ opacity: isSubmitting ? 0.5 : 1 }}>
                 {isSubmitting ? 'Adding...' : 'Add'}
               </button>
             </div>
@@ -150,57 +150,3 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
   );
 }
 
-const buttonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const buttonSecondaryStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--bg-secondary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '1.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-  display: 'block',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};

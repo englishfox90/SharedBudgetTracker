@@ -22,7 +22,7 @@ export default function VarianceSummary({ months }: Props) {
   const isPositive = netChange >= 0;
 
   return (
-    <div style={cardStyle}>
+    <div className="card">
       <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
         6-Month Financial Summary
       </h3>
@@ -114,13 +114,6 @@ export default function VarianceSummary({ months }: Props) {
     </div>
   );
 }
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};
 
 const tableHeaderStyle: React.CSSProperties = {
   textAlign: 'left',

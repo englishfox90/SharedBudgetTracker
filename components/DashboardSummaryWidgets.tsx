@@ -1,11 +1,11 @@
 'use client';
 
-import { IconLabel, AlertTriangleIcon, CheckCircleIcon } from './icons';
-
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 import { addMonths } from 'date-fns';
 import { formatDateUTC, parseDateUTC, formatDateLongUTC } from '@/lib/date-utils';
+import { formatMoney } from '@/lib/actualize';
+import Sparkline from './charts/Sparkline';
+import { IconLabel, AlertTriangleIcon, AlertOctagonIcon, CheckCircleIcon, CheckIcon, LightbulbIcon, ArrowRightIcon } from './icons';
 
 interface DashboardSummaryProps {
   accountId: number;
@@ -13,12 +13,14 @@ interface DashboardSummaryProps {
   onNavigate: (tab: string) => void;
 }
 
+interface ForecastDay {
+  date: string;
+  closingBalance: number;
+  events?: Array<{ actualized?: boolean; amount: number }>;
+}
+
 interface ForecastData {
-  days: Array<{ 
-    date: string; 
-    closingBalance: number;
-    events?: Array<{ actualized?: boolean; amount: number }>;
-  }>;
+  days: ForecastDay[];
   overallStatus: {
     minBalance: number;
     daysBelowSafeMin: number;
@@ -36,65 +38,59 @@ export interface RecommendationData {
   adjustmentNeeded: boolean;
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function shortDate(dateStr: string) {
+  const d = parseDateUTC(dateStr);
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
+
 export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate }: DashboardSummaryProps) {
   const [todayBalance, setTodayBalance] = useState<number | null>(null);
-  const [monthEndBalance, setMonthEndBalance] = useState<number | null>(null);
-  const [minBalanceAlert, setMinBalanceAlert] = useState<{ amount: number; date: string; severity: 'warning' | 'danger' } | null>(null);
+  const [monthEnd, setMonthEnd] = useState<{ balance: number; date: string } | null>(null);
+  const [monthDays, setMonthDays] = useState<ForecastDay[]>([]);
+  const [safeMin, setSafeMin] = useState<number>(0);
+  const [minBalanceAlert, setMinBalanceAlert] = useState<{ amount: number; date: string; balance: number; severity: 'warning' | 'danger' } | null>(null);
   const [missingTransactions, setMissingTransactions] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
 
   async function loadDashboardData() {
     try {
       // The forecast API works in UTC calendar days (YYYY-MM-DD strings), so
-      // compare those strings directly instead of converting through local
-      // Date objects, which drifts by a day in the evening in western zones.
+      // compare those strings directly rather than through local Date objects.
       const todayStr = formatDateUTC(new Date());
-      const { year: currentYear, month: currentMonth } = (() => {
-        const now = new Date();
-        return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1 };
-      })();
+      const now = new Date();
+      const currentYear = now.getUTCFullYear();
+      const currentMonth = now.getUTCMonth() + 1;
 
-      // Get current month forecast
       const currentForecastRes = await fetch(
         `/api/forecast?accountId=${accountId}&year=${currentYear}&month=${currentMonth}`
       );
       const currentForecast: ForecastData = await currentForecastRes.json();
+      setMonthDays(currentForecast.days);
+      setSafeMin(currentForecast.safeMinBalance);
 
-      // Find today's balance
       const todayData = currentForecast.days.find((d) => d.date === todayStr);
-      if (todayData) {
-        setTodayBalance(todayData.closingBalance);
-      }
+      if (todayData) setTodayBalance(todayData.closingBalance);
 
-      // Get month-end balance (last day of current forecast)
       if (currentForecast.days.length > 0) {
         const lastDay = currentForecast.days[currentForecast.days.length - 1];
-        setMonthEndBalance(lastDay.closingBalance);
+        setMonthEnd({ balance: lastDay.closingBalance, date: lastDay.date });
       }
 
-      // Count past days (before today) that still have unconfirmed forecast expenses
-      const daysWithMissingTransactions = currentForecast.days.filter(
+      // Past days that still have unconfirmed forecast expenses
+      const daysWithMissing = currentForecast.days.filter(
         (d) => d.date < todayStr && d.events?.some((e) => !e.actualized && e.amount < 0)
       );
-      setMissingTransactions(daysWithMissingTransactions.length);
+      setMissingTransactions(daysWithMissing.length);
 
-      // Get next month forecast for lookahead
       const nextMonth = addMonths(parseDateUTC(todayStr), 1);
-      const nextYear = nextMonth.getUTCFullYear();
-      const nextMonthNum = nextMonth.getUTCMonth() + 1;
-
       const nextForecastRes = await fetch(
-        `/api/forecast?accountId=${accountId}&year=${nextYear}&month=${nextMonthNum}`
+        `/api/forecast?accountId=${accountId}&year=${nextMonth.getUTCFullYear()}&month=${nextMonth.getUTCMonth() + 1}`
       );
       const nextForecast: ForecastData = await nextForecastRes.json();
 
-      // Combine forecasts to check for minimum balance violations from today onwards
-      const allDays = [...currentForecast.days, ...nextForecast.days];
       const minimumBalance = currentForecast.safeMinBalance;
-      const futureDays = allDays.filter((d) => d.date >= todayStr);
-
-      // Find the EARLIEST/SOONEST violation (not the worst)
+      const futureDays = [...currentForecast.days, ...nextForecast.days].filter((d) => d.date >= todayStr);
       const belowMinimum = futureDays
         .filter((d) => d.closingBalance < minimumBalance)
         .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
@@ -102,8 +98,9 @@ export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate
         const earliest = belowMinimum[0];
         setMinBalanceAlert({
           amount: minimumBalance - earliest.closingBalance,
+          balance: earliest.closingBalance,
           date: earliest.date,
-          severity: earliest.closingBalance < 0 ? 'danger' : 'warning', // Red if negative, orange if below minimum
+          severity: earliest.closingBalance < 0 ? 'danger' : 'warning',
         });
       } else {
         setMinBalanceAlert(null);
@@ -117,13 +114,14 @@ export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate
 
   useEffect(() => {
     loadDashboardData();
-  }, [accountId]);
+  }, [accountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
-      <div style={containerStyle}>
-        <div style={widgetsGridStyle}>
-          {[0, 1, 2, 3].map((i) => (
+      <div className="stack">
+        <div className="skeleton" style={{ height: '230px' }} />
+        <div className="tile-grid">
+          {[0, 1, 2].map((i) => (
             <div key={i} className="skeleton" style={{ height: '110px' }} />
           ))}
         </div>
@@ -131,217 +129,113 @@ export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate
     );
   }
 
+  const todayStr = formatDateUTC(new Date());
+  const todayIndex = monthDays.findIndex((d) => d.date === todayStr);
+  const closingSeries = monthDays.map((d) => d.closingBalance);
+  const heroStatus: 'danger' | 'warning' | 'safe' = minBalanceAlert ? minBalanceAlert.severity : 'safe';
+  const heroColor = heroStatus === 'danger' ? 'var(--color-danger)' : heroStatus === 'warning' ? 'var(--color-warning)' : 'var(--accent)';
+
   return (
-    <div style={containerStyle}>
-      {/* Missing Transactions Banner */}
+    <div className="stack">
       {missingTransactions > 0 && (
-        <div style={bannerStyle}>
-          <div style={bannerContentStyle}>
-            <div style={bannerIconStyle}><AlertTriangleIcon size={22} /></div>
-            <div style={bannerTextStyle}>
-              <strong>{missingTransactions}</strong> past transaction{missingTransactions > 1 ? 's' : ''} need to be updated with actual amounts
-            </div>
+        <div className="alert alert--warning" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+          <AlertTriangleIcon size={18} />
+          <div style={{ flex: '1 1 200px' }}>
+            <strong>{missingTransactions}</strong> past day{missingTransactions > 1 ? 's have' : ' has'} transactions waiting to be confirmed.
           </div>
-          <button
-            onClick={() => onNavigate('forecast')}
-            style={bannerButtonStyle}
-          >
-            Update Transactions
+          <button onClick={() => onNavigate('forecast')} className="btn btn-primary btn-sm">
+            Review <ArrowRightIcon size={14} />
           </button>
         </div>
       )}
 
-      <div style={widgetsGridStyle}>
-        {/* Predicted Balance Today */}
-        <button
-          onClick={() => onNavigate('forecast')}
-          style={widgetButtonStyle}
-        >
-          <div style={widgetTitleStyle}>Predicted Balance Today</div>
-          <div style={widgetValueStyle}>
-            {todayBalance !== null ? formatMoney(todayBalance) : '$--'}
+      {/* Hero: balance today */}
+      <div className="card card--interactive" role="button" tabIndex={0} onClick={() => onNavigate('forecast')} onKeyDown={(e) => e.key === 'Enter' && onNavigate('forecast')}>
+        <div className="row row--between" style={{ marginBottom: '0.5rem' }}>
+          <span className="stat-label">Balance today</span>
+          <span className={`pill pill--${heroStatus}`}>
+            {heroStatus === 'safe' ? <CheckIcon size={11} strokeWidth={3} /> : heroStatus === 'warning' ? <AlertTriangleIcon size={11} /> : <AlertOctagonIcon size={11} />}
+            {heroStatus === 'safe' ? 'On track' : heroStatus === 'warning' ? 'Dips below minimum' : 'Goes negative'}
+          </span>
+        </div>
+        <div className={`hero-figure ${todayBalance !== null && todayBalance < 0 ? 'money-neg' : ''}`}>
+          {todayBalance !== null ? formatMoney(todayBalance) : '—'}
+        </div>
+        <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
+          Predicted for {formatDateLongUTC(new Date())}
+        </div>
+        {closingSeries.length > 1 && (
+          <div style={{ marginTop: '1rem' }}>
+            <Sparkline values={closingSeries} reference={safeMin} markerIndex={todayIndex >= 0 ? todayIndex : null} height={56} color={heroColor} />
+            <div className="row row--between" style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              <span>{shortDate(monthDays[0].date)}</span>
+              <span>dashed = safe minimum</span>
+              <span>{shortDate(monthDays[monthDays.length - 1].date)}</span>
+            </div>
           </div>
-          <div style={widgetSubtitleStyle}>{formatDateLongUTC(new Date())}</div>
-        </button>
+        )}
+        <div className="stat-row" style={{ marginTop: '0.875rem', paddingTop: '0.875rem', borderTop: '1px solid var(--border-secondary)', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+          <div>
+            <div className="stat-row__label">Month end{monthEnd ? ` · ${shortDate(monthEnd.date)}` : ''}</div>
+            <div className={`stat-row__value ${monthEnd && monthEnd.balance < 0 ? 'money-neg' : ''}`}>{monthEnd ? formatMoney(monthEnd.balance) : '—'}</div>
+          </div>
+          <div>
+            <div className="stat-row__label">Safe minimum</div>
+            <div className="stat-row__value">{formatMoney(safeMin)}</div>
+          </div>
+        </div>
+      </div>
 
-        {/* Estimated Month End Balance */}
+      {/* Tiles */}
+      <div className="tile-grid">
         <button
           onClick={() => onNavigate('forecast')}
-          style={widgetButtonStyle}
+          className="card card--interactive tile"
+          style={minBalanceAlert ? { borderColor: minBalanceAlert.severity === 'danger' ? 'var(--danger-border)' : 'var(--warning-border)' } : undefined}
         >
-          <div style={widgetTitleStyle}>Estimated Month End Balance</div>
-          <div style={widgetValueStyle}>
-            {monthEndBalance !== null ? formatMoney(monthEndBalance) : '$--'}
-          </div>
-          <div style={widgetSubtitleStyle}>
-            {formatDateLongUTC(new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 0)))}
-          </div>
-        </button>
-
-        {/* Minimum Balance Alert */}
-        <button
-          onClick={() => onNavigate('forecast')}
-          style={{
-            ...widgetButtonStyle,
-            background: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? 'var(--danger-bg)' : 'var(--warning-bg)')
-              : 'var(--bg-tertiary)',
-            border: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? '1px solid var(--danger-border)' : '1px solid var(--warning-border)')
-              : '1px solid var(--border-primary)',
-          }}
-        >
-          <div style={widgetTitleStyle}>
+          <span className="stat-label">
             {minBalanceAlert ? (
-              <IconLabel icon={<AlertTriangleIcon size={14} />}>Transfer Needed</IconLabel>
+              <IconLabel icon={<AlertTriangleIcon size={14} />}>Transfer needed</IconLabel>
             ) : (
-              <IconLabel icon={<CheckCircleIcon size={14} />}>Safe Balance</IconLabel>
+              <IconLabel icon={<CheckCircleIcon size={14} />}>No shortfall</IconLabel>
             )}
-          </div>
+          </span>
           {minBalanceAlert ? (
             <>
-              <div style={{ 
-                ...widgetValueStyle, 
-                color: minBalanceAlert.severity === 'danger' ? 'var(--color-danger)' : 'var(--color-warning)'
-              }}>
+              <span className="tile__value" style={{ color: minBalanceAlert.severity === 'danger' ? 'var(--color-danger)' : 'var(--color-warning)' }}>
                 {formatMoney(minBalanceAlert.amount)}
-              </div>
-              <div style={widgetSubtitleStyle}>
-                By {formatDateLongUTC(parseDateUTC(minBalanceAlert.date))}
-              </div>
+              </span>
+              <span className="tile__sub">to stay above minimum by {formatDateLongUTC(parseDateUTC(minBalanceAlert.date))}</span>
             </>
           ) : (
             <>
-              <div style={{ ...widgetValueStyle, color: 'var(--color-success)' }}>$0.00</div>
-              <div style={widgetSubtitleStyle}>No shortfall expected</div>
+              <span className="tile__value money-pos">{formatMoney(0)}</span>
+              <span className="tile__sub">Next two months stay above your minimum</span>
             </>
           )}
         </button>
 
-        {/* Recommendations Summary */}
-        <button
-          onClick={() => onNavigate('recommendation')}
-          style={widgetButtonStyle}
-        >
-          <div style={widgetTitleStyle}>Contribution Insights</div>
+        <button onClick={() => onNavigate('recommendation')} className="card card--interactive tile">
+          <span className="stat-label"><IconLabel icon={<LightbulbIcon size={14} />}>Contributions</IconLabel></span>
           {recommendations && recommendations.adjustmentNeeded ? (
             <>
-              <div style={widgetValueStyle}>
-                Action Required
-              </div>
-              <div style={widgetSubtitleStyle}>
-                Review recommendations
-              </div>
+              <span className="tile__value" style={{ color: 'var(--color-warning)' }}>Action needed</span>
+              <span className="tile__sub">Review the recommended increase</span>
             </>
           ) : (
             <>
-              <div style={{ ...widgetValueStyle, color: 'var(--color-success)' }}>On Track</div>
-              <div style={widgetSubtitleStyle}>No adjustments needed</div>
+              <span className="tile__value money-pos">On track</span>
+              <span className="tile__sub">No adjustments needed</span>
             </>
           )}
+        </button>
+
+        <button onClick={() => onNavigate('budget')} className="card card--interactive tile">
+          <span className="stat-label"><IconLabel icon={<CheckIcon size={14} />}>Insights</IconLabel></span>
+          <span className="tile__value">{recommendations ? recommendations.insights.length : 0}</span>
+          <span className="tile__sub">{recommendations && recommendations.insights.length === 1 ? 'suggestion to review' : 'suggestions to review'}</span>
         </button>
       </div>
     </div>
   );
 }
-
-function formatMoney(value: number): string {
-  const sign = value < 0 ? '-' : '';
-  return `${sign}$${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-// Styles
-const containerStyle: React.CSSProperties = {
-  marginBottom: '2rem',
-};
-
-const bannerStyle: React.CSSProperties = {
-  background: 'var(--warning-bg)',
-  border: '1px solid var(--warning-border)',
-  borderRadius: '8px',
-  padding: '1rem',
-  marginBottom: '1.5rem',
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '1rem',
-  flexWrap: 'wrap',
-};
-
-const bannerContentStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-};
-
-const bannerIconStyle: React.CSSProperties = {
-  display: 'flex',
-  color: 'var(--warning-text)',
-};
-
-const bannerTextStyle: React.CSSProperties = {
-  color: 'var(--warning-text)',
-};
-
-const bannerButtonStyle: React.CSSProperties = {
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  padding: '0.5rem 1rem',
-  fontWeight: 500,
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-};
-
-const widgetsGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-  gap: '1rem',
-};
-
-const widgetButtonStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-  cursor: 'pointer',
-  textAlign: 'left',
-  width: '100%',
-  transition: 'all 0.2s',
-  fontFamily: 'inherit',
-  fontSize: 'inherit',
-  margin: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'stretch',
-  boxSizing: 'border-box',
-};
-
-const headingStyle: React.CSSProperties = {
-  fontWeight: '500',
-  color: 'var(--text-secondary)',
-  marginBottom: '0.5rem',
-  display: 'block',
-};
-
-const widgetTitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-  color: 'var(--text-secondary)',
-  marginBottom: '0.5rem',
-  display: 'block',
-};
-
-const widgetValueStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
-  fontWeight: '600',
-  color: 'var(--text-primary)',
-  marginBottom: '0.25rem',
-};
-
-const widgetSubtitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-label)',
-  color: 'var(--text-secondary)',
-};

@@ -5,61 +5,40 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
 import { formatDateUTC } from '@/lib/date-utils';
 import { isTouchDevice } from '@/lib/useIsMobile';
-
-interface CashEvent {
-  date: Date;
-  description: string;
-  amount: number;
-  type: string;
-  incomeRuleId?: number;
-  recurringExpenseId?: number;
-  category?: string;
-}
+import { actualizeEvent, cleanDescription, formatMoney } from '@/lib/actualize';
+import type { CashEvent } from '@/types';
+import { AlertOctagonIcon } from '../icons';
 
 interface Props {
   event: CashEvent;
   accountId: number;
   onActualized: () => void;
+  /** The element that opens the dialog */
+  children: React.ReactNode;
 }
 
-/** Fallback for events that don't carry a category (older forecasts). */
-function guessCategory(event: CashEvent): string {
-  if (event.type === 'income') return 'income';
-  const desc = event.description.toLowerCase();
-  if (desc.includes('credit card')) return 'credit_card_payment';
-  if (desc.includes('rent') || desc.includes('mortgage')) return 'rent';
-  if (desc.includes('loan')) return 'loan_payment';
-  if (desc.includes('insurance')) return 'insurance';
-  if (desc.includes('utilit') || desc.includes('electric') || desc.includes('water') || desc.includes('gas')) return 'utilities';
-  if (desc.includes('auto') || desc.includes('car')) return 'auto';
-  if (desc.includes('subscription')) return 'subscription';
-  if (desc.includes('bill')) return 'bills';
-  return 'other';
-}
-
-export default function ActualizeEventDialog({ event, accountId, onActualized }: Props) {
+export default function ActualizeEventDialog({ event, accountId, onActualized, children }: Props) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(Math.abs(event.amount).toString());
-  const [description, setDescription] = useState(event.description.replace(/ \(estimated\)$/i, ''));
+  const [description, setDescription] = useState(cleanDescription(event.description));
   const [date, setDate] = useState(formatDateUTC(event.date));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setAmount(Math.abs(event.amount).toString());
-      setDescription(event.description.replace(/ \(estimated\)$/i, ''));
+      setDescription(cleanDescription(event.description));
       setDate(formatDateUTC(event.date));
+      setError(null);
     }
   }, [open, event]);
 
   /**
-   * Radix focuses the first field on open. That used to be the date input,
-   * which on phones pops the calendar picker before the user has done
-   * anything. Instead: on desktop, focus and select the amount so it can be
-   * overtyped; on touch devices, focus nothing so the user can simply tap
-   * "Confirm" (the amount is already pre-filled).
+   * On desktop, focus and select the amount so it can be overtyped. On touch
+   * devices focus nothing, so no keyboard or date picker pops up on open.
    */
   function handleOpenAutoFocus(e: Event) {
     e.preventDefault();
@@ -70,8 +49,7 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
   }
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value.replace(/,/g, ''); // Remove existing commas
-    // Allow numbers with optional decimal point and up to 2 decimal places
+    const value = e.target.value.replace(/,/g, '');
     if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
       setAmount(value);
     }
@@ -80,7 +58,6 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
   function formatAmountDisplay(value: string): string {
     if (value === '' || value === '.') return value;
     const parts = value.split('.');
-    // Add thousand separators to whole number part
     parts[0] = parseFloat(parts[0] || '0').toLocaleString('en-US');
     return parts.join('.');
   }
@@ -88,107 +65,36 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
-
+    setError(null);
     try {
-      const category = event.category || guessCategory(event);
-
-      // Preserve the original sign from the event type
-      const finalAmount = event.amount < 0 ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
-
-      const res = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId,
-          date,
-          description,
-          amount: finalAmount,
-          category,
-          incomeRuleId: event.incomeRuleId || null,
-          recurringExpenseId: event.recurringExpenseId || null,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed to actualize transaction');
-
+      await actualizeEvent(event, accountId, { amount: parseFloat(amount), description, date });
       setOpen(false);
       onActualized();
-    } catch (error) {
-      console.error('Error actualizing transaction:', error);
+    } catch (err) {
+      console.error('Error actualizing transaction:', err);
+      setError('Could not record the transaction. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  const forecastedDisplay = Math.abs(event.amount).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const forecastedDisplay = formatMoney(Math.abs(event.amount));
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <div
-          role="button"
-          tabIndex={0}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem',
-            minHeight: '44px',
-            background: 'var(--forecast-bg)',
-            border: '1px solid var(--forecast-border)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: 'var(--font-body)',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '1';
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {event.description}:{' '}
-            <span style={{
-              fontWeight: '600',
-              whiteSpace: 'nowrap',
-              color: event.amount > 0 ? 'var(--color-success)' : 'var(--color-danger)',
-            }}>
-              {event.amount > 0 ? '+' : ''}${forecastedDisplay}
-            </span>
-          </div>
-          <div style={{
-            flexShrink: 0,
-            padding: '0.25rem 0.5rem',
-            background: 'var(--forecast-badge)',
-            color: 'white',
-            borderRadius: '4px',
-            fontSize: '0.625rem',
-            fontWeight: '700',
-            letterSpacing: '0.05em'
-          }}>
-            FORECAST
-          </div>
-        </div>
-      </Dialog.Trigger>
+      <Dialog.Trigger asChild>{children}</Dialog.Trigger>
 
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={handleOpenAutoFocus}>
-          <Dialog.Title style={titleStyle}>Confirm Transaction</Dialog.Title>
-          <Dialog.Description style={descriptionStyle}>
-            Confirm this transaction happened. Adjust the amount if it differs from the forecast.
+          <Dialog.Title className="dialog-title">Confirm transaction</Dialog.Title>
+          <Dialog.Description className="dialog-description">
+            Adjust the amount if it differs from the forecast, then confirm.
           </Dialog.Description>
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <Label.Root htmlFor="actualize-amount" style={labelStyle}>
-                Actual Amount ($)
-              </Label.Root>
+          <form onSubmit={handleSubmit} className="stack">
+            <div>
+              <Label.Root htmlFor="actualize-amount" className="label">Actual amount ($)</Label.Root>
               <input
                 id="actualize-amount"
                 ref={amountInputRef}
@@ -198,45 +104,50 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
                 onChange={handleAmountChange}
                 placeholder="0.00"
                 required
-                style={{ ...inputStyle, fontSize: '1.125rem', fontWeight: 600 }}
+                className="input input--lg"
               />
-              <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                Forecasted: ${forecastedDisplay}
-              </div>
+              <span className="hint">Forecast: {forecastedDisplay}</span>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <Label.Root htmlFor="actualize-description" style={labelStyle}>Description</Label.Root>
+            <div>
+              <Label.Root htmlFor="actualize-description" className="label">Description</Label.Root>
               <input
                 id="actualize-description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <Label.Root htmlFor="actualize-date" style={labelStyle}>Date</Label.Root>
+            <div>
+              <Label.Root htmlFor="actualize-date" className="label">Date</Label.Root>
               <input
                 id="actualize-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
-            <div className="dialog-actions">
+            {error && (
+              <div className="alert alert--danger">
+                <AlertOctagonIcon size={18} />
+                <div>{error}</div>
+              </div>
+            )}
+
+            <div className="dialog-actions" style={{ marginTop: '0.5rem' }}>
               <Dialog.Close asChild>
-                <button type="button" style={cancelButtonStyle} disabled={isSubmitting}>
+                <button type="button" className="btn btn-secondary" disabled={isSubmitting}>
                   Cancel
                 </button>
               </Dialog.Close>
-              <button type="submit" style={submitButtonStyle} disabled={isSubmitting}>
-                {isSubmitting ? 'Confirming...' : 'Confirm Transaction'}
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Confirming…' : 'Confirm transaction'}
               </button>
             </div>
           </form>
@@ -245,54 +156,3 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
     </Dialog.Root>
   );
 }
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-};
-
-const descriptionStyle: React.CSSProperties = {
-  fontSize: 'var(--font-body)',
-  color: 'var(--text-secondary)',
-  marginBottom: '1.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 'var(--font-body)',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem 0.75rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const cancelButtonStyle: React.CSSProperties = {
-  padding: '0.625rem 1rem',
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-body)',
-  fontWeight: '500',
-};
-
-const submitButtonStyle: React.CSSProperties = {
-  padding: '0.625rem 1.25rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-body)',
-  fontWeight: '600',
-};

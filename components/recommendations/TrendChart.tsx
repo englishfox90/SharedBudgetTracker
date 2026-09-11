@@ -11,7 +11,7 @@ interface Props {
 export default function TrendChart({ trends }: Props) {
   if (trends.length === 0) {
     return (
-      <div style={cardStyle}>
+      <div className="card">
         <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
           Variable Expense Trends
         </h3>
@@ -23,7 +23,7 @@ export default function TrendChart({ trends }: Props) {
   }
 
   return (
-    <div style={cardStyle}>
+    <div className="card">
       <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
         Variable Expense Trends
       </h3>
@@ -118,9 +118,3 @@ export default function TrendChart({ trends }: Props) {
   );
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};

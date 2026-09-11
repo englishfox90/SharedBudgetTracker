@@ -27,16 +27,16 @@ export function ConfirmDialog({
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="dialog-overlay" />
         <AlertDialog.Content className="dialog-content dialog-content--narrow">
-          <AlertDialog.Title style={titleStyle}>{title}</AlertDialog.Title>
-          <AlertDialog.Description style={descriptionStyle}>
+          <AlertDialog.Title className="dialog-title">{title}</AlertDialog.Title>
+          <AlertDialog.Description className="dialog-description">
             {description}
           </AlertDialog.Description>
           <div className="dialog-actions">
             <AlertDialog.Cancel asChild>
-              <button style={secondaryButtonStyle}>{cancelText}</button>
+              <button className="btn btn-secondary">{cancelText}</button>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <button onClick={onConfirm} style={dangerButtonStyle}>
+              <button onClick={onConfirm} className="btn btn-danger">
                 {confirmText}
               </button>
             </AlertDialog.Action>
@@ -69,13 +69,13 @@ export function MessageDialog({
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="dialog-overlay" />
         <AlertDialog.Content className="dialog-content dialog-content--narrow">
-          <AlertDialog.Title style={{ ...titleStyle, color: titleColor }}>
+          <AlertDialog.Title className="dialog-title" style={{ color: titleColor }}>
             {title}
           </AlertDialog.Title>
-          <AlertDialog.Description style={descriptionStyle}>{message}</AlertDialog.Description>
+          <AlertDialog.Description className="dialog-description">{message}</AlertDialog.Description>
           <div className="dialog-actions">
             <AlertDialog.Action asChild>
-              <button style={primaryButtonStyle}>OK</button>
+              <button className="btn btn-primary">OK</button>
             </AlertDialog.Action>
           </div>
         </AlertDialog.Content>
@@ -83,17 +83,6 @@ export function MessageDialog({
     </AlertDialog.Root>
   );
 }
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.125rem',
-  fontWeight: '600',
-  marginBottom: '0.75rem',
-};
-
-const descriptionStyle: React.CSSProperties = {
-  color: 'var(--text-secondary)',
-  lineHeight: '1.5',
-};
 
 const buttonBase: React.CSSProperties = {
   padding: '0.625rem 1rem',
@@ -103,23 +92,3 @@ const buttonBase: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-const primaryButtonStyle: React.CSSProperties = {
-  ...buttonBase,
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  ...buttonBase,
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-};
-
-const dangerButtonStyle: React.CSSProperties = {
-  ...buttonBase,
-  background: '#dc2626',
-  color: 'white',
-  border: 'none',
-};

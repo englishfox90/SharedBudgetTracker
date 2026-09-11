@@ -125,10 +125,10 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
             )}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={() => setShowEditDialog(true)} style={buttonSecondaryStyle}>
+            <button onClick={() => setShowEditDialog(true)} className="btn btn-secondary btn-sm">
               Edit
             </button>
-            <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
+            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger-soft btn-sm">
               Delete
             </button>
           </div>
@@ -154,34 +154,3 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
   );
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '6px',
-  border: '1px solid var(--border-primary)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-};
-
-const buttonSecondaryStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--bg-tertiary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-  color: 'var(--text-primary)',
-};
-
-const buttonDangerStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--danger-bg)',
-  color: 'var(--color-danger)',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-};

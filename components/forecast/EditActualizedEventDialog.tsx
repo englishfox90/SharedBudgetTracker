@@ -118,7 +118,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-          <Dialog.Title style={titleStyle}>Edit Actual Transaction</Dialog.Title>
+          <Dialog.Title className="dialog-title">Edit Actual Transaction</Dialog.Title>
           
           {isLinked && (
             <div style={{
@@ -137,34 +137,34 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Date</Label.Root>
+              <Label.Root className="label">Date</Label.Root>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Description</Label.Root>
+              <Label.Root className="label">Description</Label.Root>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <Label.Root className="label">Amount ($)</Label.Root>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <select
                   value={isExpense ? 'expense' : 'income'}
                   onChange={(e) => setIsExpense(e.target.value === 'expense')}
-                  style={{ ...inputStyle, width: 'auto', minWidth: '0', flex: '0 0 auto' }}
+                  className="input" style={{ width: 'auto', minWidth: '0', flex: '0 0 auto' }}
                 >
                   <option value="expense">Expense (−)</option>
                   <option value="income">Income (+)</option>
@@ -175,7 +175,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                   value={amount}
                   onChange={handleAmountChange}
                   required
-                  style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                  className="input" style={{ flex: 1, minWidth: 0 }}
                   placeholder="0.00"
                 />
               </div>
@@ -196,21 +196,18 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
               </div>
             )}
 
-            {error && <div style={errorBoxStyle}>{error}</div>}
+            {error && <div className="alert alert--danger">{error}</div>}
 
             <div className="dialog-actions">
               <Dialog.Close asChild>
-                <button type="button" style={cancelButtonStyle}>
+                <button type="button" className="btn btn-secondary">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                style={{
-                  ...submitButtonStyle,
-                  opacity: isSubmitting ? 0.5 : 1,
-                }}
+                className="btn btn-primary" style={{ opacity: isSubmitting ? 0.5 : 1, }}
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
@@ -229,7 +226,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  style={deleteButtonStyle}
+                  className="btn btn-danger-soft"
                 >
                   Delete this transaction
                 </button>
@@ -240,14 +237,14 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                     type="button"
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    style={{ ...deleteButtonStyle, background: '#dc2626', color: 'white' }}
+                    className="btn btn-danger-soft" style={{ background: '#dc2626', color: 'white' }}
                   >
                     {isDeleting ? 'Deleting...' : 'Yes, Delete'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(false)}
-                    style={cancelButtonStyle}
+                    className="btn btn-secondary"
                   >
                     No
                   </button>
@@ -261,68 +258,3 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
   );
 }
 
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '1rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-  display: 'block',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const cancelButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const submitButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const deleteButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'transparent',
-  color: 'var(--color-danger)',
-  border: '1px solid var(--color-danger)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const errorBoxStyle: React.CSSProperties = {
-  marginTop: '0.5rem',
-  padding: '0.75rem',
-  background: 'var(--danger-bg)',
-  border: '1px solid var(--danger-border)',
-  color: 'var(--danger-text)',
-  borderRadius: '6px',
-  fontSize: 'var(--font-body)',
-};

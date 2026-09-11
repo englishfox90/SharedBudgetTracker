@@ -73,48 +73,48 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button style={triggerButtonStyle}>+ Add Transaction</button>
+        <button className="btn btn-primary btn-sm">+ Add Transaction</button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-          <Dialog.Title style={titleStyle}>Add One-Time Transaction</Dialog.Title>
-          <Dialog.Description style={descriptionStyle}>
+          <Dialog.Title className="dialog-title">Add One-Time Transaction</Dialog.Title>
+          <Dialog.Description className="dialog-description">
             Add an unplanned expense or transfer to adjust the account balance for a specific date.
           </Dialog.Description>
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Date</Label.Root>
+              <Label.Root className="label">Date</Label.Root>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Description</Label.Root>
+              <Label.Root className="label">Description</Label.Root>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g., Emergency car repair"
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <Label.Root className="label">Amount ($)</Label.Root>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <select
                   value={isExpense ? 'expense' : 'income'}
                   onChange={(e) => setIsExpense(e.target.value === 'expense')}
-                  style={{ ...selectStyle, width: 'auto', minWidth: 0, flex: '0 0 auto' }}
+                  className="select" style={{ width: 'auto', minWidth: 0, flex: '0 0 auto' }}
                 >
                   <option value="expense">Expense (−)</option>
                   <option value="income">Income (+)</option>
@@ -126,14 +126,14 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
                   onChange={handleAmountChange}
                   placeholder="0.00"
                   required
-                  style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                  className="input" style={{ flex: 1, minWidth: 0 }}
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Category (Optional)</Label.Root>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} style={selectStyle}>
+              <Label.Root className="label">Category (Optional)</Label.Root>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="select">
                 <option value="">-- Select Category --</option>
                 <optgroup label="Income & Transfers">
                   {INCOME_CATEGORIES.map((c) => (
@@ -148,15 +148,15 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
               </select>
             </div>
 
-            {error && <div style={errorBoxStyle}>{error}</div>}
+            {error && <div className="alert alert--danger">{error}</div>}
 
             <div className="dialog-actions">
               <Dialog.Close asChild>
-                <button type="button" style={cancelButtonStyle} disabled={isSubmitting}>
+                <button type="button" className="btn btn-secondary" disabled={isSubmitting}>
                   Cancel
                 </button>
               </Dialog.Close>
-              <button type="submit" style={submitButtonStyle} disabled={isSubmitting}>
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Adding...' : 'Add Transaction'}
               </button>
             </div>
@@ -167,82 +167,3 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
   );
 }
 
-const triggerButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-};
-
-const descriptionStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  color: 'var(--text-secondary)',
-  marginBottom: '1.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const cancelButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-};
-
-const submitButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-};
-
-const errorBoxStyle: React.CSSProperties = {
-  marginTop: '0.5rem',
-  padding: '0.75rem',
-  background: 'var(--danger-bg)',
-  border: '1px solid var(--danger-border)',
-  color: 'var(--danger-text)',
-  borderRadius: '6px',
-  fontSize: 'var(--font-body)',
-};

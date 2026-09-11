@@ -183,7 +183,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
       </div>
 
       {/* How This Works - Moved to top */}
-      <details open style={{ ...cardStyle, background: 'var(--bg-tertiary)' }}>
+      <details open className="card" style={{ background: 'var(--bg-tertiary)' }}>
         <summary style={{ 
           fontSize: '1rem', 
           fontWeight: '600', 
@@ -203,11 +203,8 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
       {/* Quick Action Button */}
       {data.contributionAnalysis.adjustmentNeeded && (
-        <div style={{
-          ...cardStyle,
-          background: 'var(--warning-bg)',
-          border: '2px solid var(--warning-border)',
-        }}>
+        <div className="card" style={{ background: 'var(--warning-bg)',
+          border: '2px solid var(--warning-border)', }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
             <div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
@@ -430,9 +427,3 @@ function getPayPeriodsPerYear(payFrequency: string): number {
   }
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};

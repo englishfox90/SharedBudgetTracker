@@ -133,20 +133,20 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
   };
 
   return (
-    <div style={widgetStyle}>
-      <h3 style={headingStyle}>Period Trend Forecast</h3>
-      <p style={descriptionStyle}>
+    <div className="card">
+      <h3 className="section-title">Period Trend Forecast</h3>
+      <p className="dialog-description">
         Track your spending cycle and predict where you&apos;ll end up based on current trends.
       </p>
 
       {/* Input Section */}
       <div style={inputSectionStyle}>
         <div style={inputGroupStyle}>
-          <label style={labelStyle}>Variable Expense</label>
+          <label className="label">Variable Expense</label>
           <select
             value={selectedExpenseId || ''}
             onChange={(e) => setSelectedExpenseId(Number(e.target.value))}
-            style={selectStyle}
+            className="select"
           >
             {variableExpenses.map((exp) => (
               <option key={exp.id} value={exp.id}>
@@ -158,44 +158,44 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div style={inputGroupStyle}>
-            <label style={labelStyle}>Period Start</label>
+            <label className="label">Period Start</label>
             <input
               type="date"
               value={periodStart}
               onChange={(e) => setPeriodStart(e.target.value)}
-              style={inputStyle}
+              className="input"
             />
           </div>
 
           <div style={inputGroupStyle}>
-            <label style={labelStyle}>Period End</label>
+            <label className="label">Period End</label>
             <input
               type="date"
               value={periodEnd}
               onChange={(e) => setPeriodEnd(e.target.value)}
-              style={inputStyle}
+              className="input"
             />
           </div>
         </div>
 
         <div style={inputGroupStyle}>
-          <label style={labelStyle}>Current Balance ($)</label>
+          <label className="label">Current Balance ($)</label>
           <input
             type="number"
             step="0.01"
             value={currentBalance}
             onChange={(e) => setCurrentBalance(e.target.value)}
             placeholder="e.g., 2453.67"
-            style={inputStyle}
+            className="input"
           />
         </div>
 
-        <button onClick={handleCalculate} disabled={loading} style={buttonStyle}>
+        <button onClick={handleCalculate} disabled={loading} className="btn btn-primary">
           {loading ? 'Calculating...' : 'Calculate Forecast'}
         </button>
 
         {error && (
-          <div style={errorStyle}>{error}</div>
+          <div className="alert alert--danger">{error}</div>
         )}
       </div>
 
@@ -353,32 +353,6 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
 }
 
 // Styles
-const widgetStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-  marginBottom: '1.5rem',
-};
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};
-
-const headingStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-};
-
-const descriptionStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  color: 'var(--text-secondary)',
-  marginBottom: '1.5rem',
-};
 
 const inputSectionStyle: React.CSSProperties = {
   display: 'flex',
@@ -393,45 +367,6 @@ const inputGroupStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: '0.25rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  color: 'var(--text-primary)',
-};
-
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const selectStyle: React.CSSProperties = {
-  ...inputStyle,
-  background: 'var(--bg-primary)',
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '0.75rem 1.5rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  fontSize: '0.875rem',
-  fontWeight: '600',
-  cursor: 'pointer',
-};
-
-const errorStyle: React.CSSProperties = {
-  padding: '0.75rem',
-  background: 'var(--danger-bg)',
-  color: 'var(--danger-text)',
-  borderRadius: '6px',
-  fontSize: '0.875rem',
 };
 
 const resultsStyle: React.CSSProperties = {

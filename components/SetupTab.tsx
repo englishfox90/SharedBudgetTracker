@@ -160,14 +160,14 @@ export default function SetupTab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Account Settings */}
-      <section style={sectionStyle}>
-        <h2 style={headingStyle}>Account Settings</h2>
+      <section className="card">
+        <h2 className="section-title">Account Settings</h2>
         <p style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Changes save when you leave a field.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           <div>
-            <Label.Root htmlFor="account-startingBalance" style={labelStyle}>{numericFields[0].label}</Label.Root>
+            <Label.Root htmlFor="account-startingBalance" className="label">{numericFields[0].label}</Label.Root>
             <input
               id="account-startingBalance"
               type="text"
@@ -176,25 +176,25 @@ export default function SetupTab() {
               onChange={(e) => setDrafts((d) => ({ ...d, startingBalance: e.target.value }))}
               onBlur={() => commitNumericField('startingBalance')}
               onKeyDown={blurOnEnter}
-              style={inputStyle}
+              className="input"
             />
             {savingField === 'startingBalance' && <SavingHint />}
           </div>
           <div>
-            <Label.Root htmlFor="account-startDate" style={labelStyle}>Start Date</Label.Root>
+            <Label.Root htmlFor="account-startDate" className="label">Start Date</Label.Root>
             <input
               id="account-startDate"
               type="date"
               value={startDateDraft}
               onChange={(e) => setStartDateDraft(e.target.value)}
               onBlur={commitStartDate}
-              style={inputStyle}
+              className="input"
             />
             {savingField === 'startDate' && <SavingHint />}
           </div>
           {numericFields.slice(1).map((field) => (
             <div key={field.key}>
-              <Label.Root htmlFor={`account-${field.key}`} style={labelStyle}>{field.label}</Label.Root>
+              <Label.Root htmlFor={`account-${field.key}`} className="label">{field.label}</Label.Root>
               <input
                 id={`account-${field.key}`}
                 type="text"
@@ -203,17 +203,17 @@ export default function SetupTab() {
                 onChange={(e) => setDrafts((d) => ({ ...d, [field.key]: e.target.value }))}
                 onBlur={() => commitNumericField(field.key)}
                 onKeyDown={blurOnEnter}
-                style={inputStyle}
+                className="input"
               />
               {savingField === field.key && <SavingHint />}
             </div>
           ))}
         </div>
         <div>
-          <Label.Root style={labelStyle}>Auto-Calculate Contributions</Label.Root>
+          <Label.Root className="label">Auto-Calculate Contributions</Label.Root>
           <button
             onClick={handleCalculateContributions}
-            style={buttonStyle}
+            className="btn btn-primary"
           >
             Calculate Contributions
           </button>
@@ -221,9 +221,9 @@ export default function SetupTab() {
       </section>
 
       {/* Income Sources */}
-      <section style={sectionStyle}>
+      <section className="card">
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
-          <h2 style={headingStyle}>Income Sources</h2>
+          <h2 className="section-title">Income Sources</h2>
           <AddIncomeDialog accountId={account.id} onAdded={loadData} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -246,9 +246,9 @@ export default function SetupTab() {
       </section>
 
       {/* Recurring Expenses */}
-      <section style={sectionStyle}>
+      <section className="card">
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
-          <h2 style={headingStyle}>Recurring Expenses</h2>
+          <h2 className="section-title">Recurring Expenses</h2>
           <AddExpenseDialog accountId={account.id} onAdded={loadData} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -262,8 +262,8 @@ export default function SetupTab() {
       </section>
 
       {/* Import Transactions */}
-      <section style={sectionStyle}>
-        <h2 style={headingStyle}>Import Historical Data</h2>
+      <section className="card">
+        <h2 className="section-title">Import Historical Data</h2>
         <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Import CSV transactions to improve variable expense estimates. Format: date, amount, description, category
         </p>
@@ -296,43 +296,3 @@ function SavingHint() {
   );
 }
 
-const sectionStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};
-
-const headingStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-  display: 'block',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: 'var(--font-body)',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: 'var(--font-body)',
-  fontWeight: '500',
-  cursor: 'pointer',
-};

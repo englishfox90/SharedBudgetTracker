@@ -127,10 +127,10 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
             ${rule.contributionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{payFrequencyLabel}
           </span>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={openEditDialog} style={buttonSecondaryStyle}>
+            <button onClick={openEditDialog} className="btn btn-secondary btn-sm">
               Edit
             </button>
-            <button onClick={() => setShowDeleteConfirm(true)} style={buttonDangerStyle}>
+            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger-soft btn-sm">
               Delete
             </button>
           </div>
@@ -141,59 +141,59 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
         <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
           <Dialog.Overlay className="dialog-overlay" />
           <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-            <Dialog.Title style={titleStyle}>Edit Income Source</Dialog.Title>
+            <Dialog.Title className="section-title">Edit Income Source</Dialog.Title>
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <Label.Root style={labelStyle}>Name</Label.Root>
+                <Label.Root className="label">Name</Label.Root>
                 <input
                   type="text"
                   value={rule.name}
                   disabled
-                  style={{ ...inputStyle, background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
+                  className="input" style={{ background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
                 />
               </div>
               <div>
-                <Label.Root style={labelStyle}>Annual Salary ($)</Label.Root>
+                <Label.Root className="label">Annual Salary ($)</Label.Root>
                 <input
                   type="text"
                   value={annualSalary}
                   onChange={(e) => handleSalaryChange(e.target.value)}
                   required
-                  style={inputStyle}
+                  className="input"
                   placeholder="e.g., 72,000"
                 />
               </div>
               <div>
-                <Label.Root style={labelStyle}>Pay Frequency</Label.Root>
+                <Label.Root className="label">Pay Frequency</Label.Root>
                 <input
                   type="text"
                   value={payFrequencyLabel}
                   disabled
-                  style={{ ...inputStyle, background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
+                  className="input" style={{ background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: rule.payFrequency === 'monthly' ? '1fr' : '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <Label.Root style={labelStyle}>Pay Day {rule.payFrequency === 'monthly' ? '' : '1'}</Label.Root>
+                  <Label.Root className="label">Pay Day {rule.payFrequency === 'monthly' ? '' : '1'}</Label.Root>
                   <input
                     type="number"
                     value={payDay1}
                     onChange={(e) => setPayDay1(e.target.value)}
                     required
-                    style={inputStyle}
+                    className="input"
                     min="1"
                     max="31"
                   />
                 </div>
                 {rule.payFrequency !== 'monthly' && (
                   <div>
-                    <Label.Root style={labelStyle}>Pay Day 2</Label.Root>
+                    <Label.Root className="label">Pay Day 2</Label.Root>
                     <input
                       type="number"
                       value={payDay2}
                       onChange={(e) => setPayDay2(e.target.value)}
                       required
-                      style={inputStyle}
+                      className="input"
                       min="1"
                       max="31"
                     />
@@ -202,11 +202,11 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
               </div>
               <div className="dialog-actions" style={{ marginTop: '1rem' }}>
                 <Dialog.Close asChild>
-                  <button type="button" style={buttonSecondaryStyle}>
+                  <button type="button" className="btn btn-secondary btn-sm">
                     Cancel
                   </button>
                 </Dialog.Close>
-                <button type="submit" disabled={isUpdating} style={{ ...buttonStyle, opacity: isUpdating ? 0.5 : 1 }}>
+                <button type="submit" disabled={isUpdating} className="btn btn-primary" style={{ opacity: isUpdating ? 0.5 : 1 }}>
                   {isUpdating ? 'Saving...' : 'Save'}
                 </button>
               </div>
@@ -226,72 +226,6 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
     </>
   );
 }
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '6px',
-  border: '1px solid var(--border-primary)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: 'var(--font-body)',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: 'var(--font-body)',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const buttonSecondaryStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--bg-tertiary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-  color: 'var(--text-primary)',
-};
-
-const buttonDangerStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--danger-bg)',
-  color: 'var(--color-danger)',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '1.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-label)',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-  display: 'block',
-};
 
 const percentageBadgeStyle: React.CSSProperties = {
   fontSize: 'var(--font-label)',

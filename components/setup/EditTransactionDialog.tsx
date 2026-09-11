@@ -78,13 +78,13 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button style={triggerButtonStyle}>Edit</button>
+        <button className="btn btn-secondary btn-sm">Edit</button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-          <Dialog.Title style={titleStyle}>Edit Transaction</Dialog.Title>
+          <Dialog.Title className="dialog-title">Edit Transaction</Dialog.Title>
           
           {isActualized && (
             <div style={{
@@ -105,34 +105,34 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Date</Label.Root>
+              <Label.Root className="label">Date</Label.Root>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Description</Label.Root>
+              <Label.Root className="label">Description</Label.Root>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <Label.Root className="label">Amount ($)</Label.Root>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <select
                   value={isExpense ? 'expense' : 'income'}
                   onChange={(e) => setIsExpense(e.target.value === 'expense')}
-                  style={{ ...selectStyle, width: 'auto', minWidth: 0, flex: '0 0 auto' }}
+                  className="select" style={{ width: 'auto', minWidth: 0, flex: '0 0 auto' }}
                 >
                   <option value="expense">Expense (−)</option>
                   <option value="income">Income (+)</option>
@@ -143,14 +143,14 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
                   value={amount}
                   onChange={handleAmountChange}
                   required
-                  style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                  className="input" style={{ flex: 1, minWidth: 0 }}
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Category</Label.Root>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} style={selectStyle}>
+              <Label.Root className="label">Category</Label.Root>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="select">
                 <option value="">-- Select Category --</option>
                 <optgroup label="Income & Transfers">
                   {INCOME_CATEGORIES.map((c) => (
@@ -165,15 +165,15 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
               </select>
             </div>
 
-            {error && <div style={errorBoxStyle}>{error}</div>}
+            {error && <div className="alert alert--danger">{error}</div>}
 
             <div className="dialog-actions">
               <Dialog.Close asChild>
-                <button type="button" style={cancelButtonStyle} disabled={isSubmitting}>
+                <button type="button" className="btn btn-secondary" disabled={isSubmitting}>
                   Cancel
                 </button>
               </Dialog.Close>
-              <button type="submit" style={submitButtonStyle} disabled={isSubmitting}>
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
@@ -184,76 +184,3 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
   );
 }
 
-const triggerButtonStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--bg-tertiary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '0.75rem',
-  fontWeight: '500',
-  color: 'var(--text-primary)',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '1.5rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const cancelButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-};
-
-const submitButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-};
-
-const errorBoxStyle: React.CSSProperties = {
-  marginTop: '0.5rem',
-  padding: '0.75rem',
-  background: 'var(--danger-bg)',
-  border: '1px solid var(--danger-border)',
-  color: 'var(--danger-text)',
-  borderRadius: '6px',
-  fontSize: 'var(--font-body)',
-};

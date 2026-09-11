@@ -9,7 +9,7 @@ interface Props {
 
 export default function SixMonthOverview({ months, safeMinBalance }: Props) {
   return (
-    <div style={cardStyle}>
+    <div className="card">
       <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
         6-Month Forecast Overview
       </h3>
@@ -97,9 +97,3 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
   );
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};

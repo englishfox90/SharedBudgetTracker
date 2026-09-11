@@ -69,7 +69,7 @@ export default function Home() {
       }}
     >
       <header style={{ 
-        marginBottom: isMobile ? '0.75rem' : '2rem', 
+        marginBottom: isMobile ? '1rem' : '1.75rem', 
       }}> 
         <div style={{ 
           display: 'flex', 
@@ -77,99 +77,31 @@ export default function Home() {
           alignItems: 'center',
           marginBottom: '0.5rem',
         }}>
-          <h1 style={{ fontSize: isMobile ? '1.25rem' : '2rem', fontWeight: '700', margin: 0 }}>
+          <h1 className="page-title" style={{ fontSize: isMobile ? '1.25rem' : '1.75rem' }}>
             Shared Balance Planner
           </h1>
           
           {/* Profile Menu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button
-                style={{
-                  padding: isMobile ? '0.375rem 0.625rem' : '0.5rem 0.75rem',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-primary)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? '1rem' : '1.125rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: 'var(--text-primary)',
-                  fontWeight: 500,
-                }}
-              >
-                <UserIcon size={20} />
-                {!isMobile && <span style={{ fontSize: 'var(--font-body)' }}>Menu</span>}
+              <button className={isMobile ? 'btn btn-secondary btn-icon' : 'btn btn-secondary'} aria-label="Account menu">
+                <UserIcon size={18} />
+                {!isMobile && <span>Menu</span>}
               </button>
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                align="end"
-                sideOffset={5}
-                style={{
-                  minWidth: '200px',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-primary)',
-                  borderRadius: '8px',
-                  padding: '0.5rem',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  zIndex: 1000,
-                }}
-              >
-                <DropdownMenu.Item
-                  onClick={toggleTheme}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: 'var(--font-body)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    borderRadius: '4px',
-                    outline: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--bg-tertiary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
+              <DropdownMenu.Content align="end" sideOffset={6} className="menu-content">
+                <DropdownMenu.Item onClick={toggleTheme} className="menu-item">
                   {theme === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
-                  <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                  <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                 </DropdownMenu.Item>
 
-                <DropdownMenu.Separator style={{
-                  height: '1px',
-                  background: 'var(--border-primary)',
-                  margin: '0.5rem 0',
-                }} />
+                <DropdownMenu.Separator className="menu-separator" />
 
-                <DropdownMenu.Item
-                  onClick={() => signOut({ callbackUrl: '/login' })}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: 'var(--font-body)',
-                    color: 'var(--color-danger)',
-                    cursor: 'pointer',
-                    borderRadius: '4px',
-                    outline: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
+                <DropdownMenu.Item onClick={() => signOut({ callbackUrl: '/login' })} className="menu-item menu-item--danger">
                   <LogOutIcon size={18} />
-                  <span>Sign Out</span>
+                  <span>Sign out</span>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
@@ -177,7 +109,7 @@ export default function Home() {
         </div>
         
         {!isMobile && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Manage your shared checking account and forecast balances
           </p>
         )}

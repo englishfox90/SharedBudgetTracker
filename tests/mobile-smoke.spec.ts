@@ -9,7 +9,7 @@ async function login(page: Page) {
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
   await page.click('button[type=submit]');
-  await page.waitForSelector('text=Daily Breakdown', { timeout: 30_000 });
+  await page.waitForSelector('text=Daily breakdown', { timeout: 30_000 });
 }
 
 /** Any element wider than the viewport that is not inside a horizontal scroller. */
@@ -65,12 +65,26 @@ test('form controls never trigger mobile zoom', async ({ page, isMobile }) => {
   expect(smallInputs).toEqual([]);
 });
 
+test('one-tap confirm records the forecast amount', async ({ page }) => {
+  await login(page);
+  const quick = page.getByRole('button', { name: /^Confirm .* for \$/ }).first();
+  await quick.click();
+  const actual = page.getByRole('button', { name: /^Edit (?!and confirm)/ }).first();
+  await expect(actual).toBeVisible({ timeout: 15_000 });
+  await actual.click();
+  await page.getByRole('button', { name: 'Delete this transaction' }).click();
+  await page.getByRole('button', { name: 'Yes, Delete' }).click();
+  await expect(page.getByRole('heading', { name: 'Edit Actual Transaction' })).toBeHidden({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /^Edit (?!and confirm)/ })).toHaveCount(0);
+});
+
 test('confirming a forecast transaction works and can be undone', async ({ page, isMobile }) => {
   await login(page);
 
-  const chip = page.getByRole('button', { name: /FORECAST/ }).first();
+  // Tapping the row body opens the dialog; the check button beside it confirms in one tap
+  const chip = page.getByRole('button', { name: /^Edit and confirm/ }).first();
   await chip.click();
-  await expect(page.getByRole('heading', { name: 'Confirm Transaction' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Confirm transaction' })).toBeVisible();
 
   // On touch devices nothing should be auto-focused (no keyboard or date picker popping up)
   const focusedTag = await page.evaluate(() => document.activeElement?.tagName);
@@ -80,15 +94,16 @@ test('confirming a forecast transaction works and can be undone', async ({ page,
     expect(focusedTag).toBe('INPUT');
   }
 
-  // Dialog must fit within the viewport
+  // Dialog must fit within the viewport (wait for the open animation to finish first)
+  await page.locator('.dialog-content').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   const box = await page.locator('.dialog-content').boundingBox();
   const viewport = page.viewportSize()!;
   expect(box!.x).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 1);
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 1);
 
-  await page.getByRole('button', { name: 'Confirm Transaction' }).click();
-  const actual = page.getByRole('button', { name: /ACTUAL/ }).first();
+  await page.getByRole('button', { name: 'Confirm transaction' }).click();
+  const actual = page.getByRole('button', { name: /^Edit (?!and confirm)/ }).first();
   await expect(actual).toBeVisible({ timeout: 15_000 });
 
   // Undo through the edit dialog so the test leaves the data as it found it
@@ -97,5 +112,5 @@ test('confirming a forecast transaction works and can be undone', async ({ page,
   await page.getByRole('button', { name: 'Delete this transaction' }).click();
   await page.getByRole('button', { name: 'Yes, Delete' }).click();
   await expect(page.getByRole('heading', { name: 'Edit Actual Transaction' })).toBeHidden({ timeout: 15_000 });
-  await expect(page.getByRole('button', { name: /ACTUAL/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Edit (?!and confirm)/ })).toHaveCount(0);
 });

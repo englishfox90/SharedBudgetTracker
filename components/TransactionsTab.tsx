@@ -54,7 +54,7 @@ export default function TransactionsTab() {
 
   if (loading || accountLoading) {
     return (
-      <section style={sectionStyle}>
+      <section className="card">
         <div className="skeleton" style={{ height: '28px', width: '60%', marginBottom: '1.5rem' }} />
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="skeleton" style={{ height: '96px', marginBottom: '0.75rem' }} />
@@ -84,10 +84,10 @@ export default function TransactionsTab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <section style={sectionStyle}>
+        <section className="card">
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
             <div>
-              <h2 style={headingStyle}>Transactions & Adjustments</h2>
+              <h2 className="section-title">Transactions & Adjustments</h2>
               {pagination.totalCount > 0 && (
                 <p style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Showing {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}
@@ -113,10 +113,7 @@ export default function TransactionsTab() {
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
-                style={{
-                  ...paginationButtonStyle,
-                  ...(pagination.page === 1 ? disabledButtonStyle : {}),
-                }}
+                className="btn btn-secondary btn-sm"
               >
                 <IconLabel icon={<ChevronLeftIcon size={16} />}>Previous</IconLabel>
               </button>
@@ -126,10 +123,7 @@ export default function TransactionsTab() {
               <button
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page === pagination.totalPages}
-                style={{
-                  ...paginationButtonStyle,
-                  ...(pagination.page === pagination.totalPages ? disabledButtonStyle : {}),
-                }}
+                className="btn btn-secondary btn-sm"
               >
                 <IconLabel icon={<ChevronRightIcon size={16} />} style={{ flexDirection: 'row-reverse' }}>Next</IconLabel>
               </button>
@@ -141,43 +135,13 @@ export default function TransactionsTab() {
   );
 }
 
-const sectionStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};
-
-const headingStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '0rem',
-};
-
 const paginationStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   gap: '1rem',
   marginTop: '1.5rem',
-  paddingTop: '1.5rem',
+  paddingTop: '1.25rem',
   borderTop: '1px solid var(--border-primary)',
 };
 
-const paginationButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '6px',
-  fontSize: 'var(--font-body)',
-  fontWeight: '500',
-  cursor: 'pointer',
-  transition: 'background 0.2s',
-};
-
-const disabledButtonStyle: React.CSSProperties = {
-  background: 'var(--bg-tertiary)',
-  color: 'var(--text-secondary)',
-  cursor: 'not-allowed',
-};

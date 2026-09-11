@@ -70,12 +70,9 @@ export default function ImportCSV({ accountId, onImported }: Props) {
         <button
           onClick={handleImport}
           disabled={!file || importing}
-          style={{
-            ...buttonStyle,
-            opacity: !file || importing ? 0.5 : 1,
+          className="btn btn-primary" style={{ opacity: !file || importing ? 0.5 : 1,
             cursor: !file || importing ? 'not-allowed' : 'pointer',
-            width: isMobile ? '100%' : 'auto',
-          }}
+            width: isMobile ? '100%' : 'auto', }}
         >
           {importing ? 'Importing...' : 'Import CSV'}
         </button>
@@ -89,13 +86,3 @@ export default function ImportCSV({ accountId, onImported }: Props) {
   );
 }
 
-const buttonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};

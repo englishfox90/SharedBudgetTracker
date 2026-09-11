@@ -11,7 +11,7 @@ interface Props {
 export default function SuggestionCards({ suggestions }: Props) {
   if (suggestions.length === 0) {
     return (
-      <div style={cardStyle}>
+      <div className="card">
         <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--color-success)' }}>
           <IconLabel icon={<CheckCircleIcon size={18} />}>All Clear!</IconLabel>
         </h3>
@@ -55,11 +55,8 @@ export default function SuggestionCards({ suggestions }: Props) {
         return (
           <div
             key={idx}
-            style={{
-              ...cardStyle,
-              background: style.bg,
-              border: `2px solid ${style.border}`,
-            }}
+            className="card" style={{ background: style.bg,
+              border: `2px solid ${style.border}`, }}
           >
             <div style={{ display: 'flex', gap: '1rem' }}>
               {/* Icon */}
@@ -100,9 +97,3 @@ export default function SuggestionCards({ suggestions }: Props) {
   );
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  border: '1px solid var(--border-primary)',
-};

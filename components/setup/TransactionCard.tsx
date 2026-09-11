@@ -47,8 +47,8 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
 
   return (
     <>
-      <div style={cardStyle}>
-        <div style={{ flex: 1 }}>
+      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', padding: '1rem' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span style={dateStyle}>{formatDateLongUTC(new Date(transaction.date))}</span>
             <span style={categoryBadgeStyle}>{formatCategory(transaction.category)}</span>
@@ -67,7 +67,7 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isDeleting}
-            style={{ ...deleteButtonStyle, opacity: isDeleting ? 0.5 : 1 }}
+            className="btn btn-danger-soft btn-sm" style={{ opacity: isDeleting ? 0.5 : 1 }}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
@@ -84,17 +84,6 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
     </>
   );
 }
-
-const cardStyle: React.CSSProperties = {
-  padding: '1rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '6px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  gap: '1rem',
-  marginBottom: '0.75rem',
-};
 
 const dateStyle: React.CSSProperties = {
   fontSize: '0.75rem',
@@ -121,13 +110,3 @@ const amountStyle: React.CSSProperties = {
   fontWeight: '600',
 };
 
-const deleteButtonStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
-  background: 'var(--danger-bg)',
-  color: 'var(--color-danger)',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '0.75rem',
-  fontWeight: '500',
-};

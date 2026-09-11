@@ -88,36 +88,36 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-          <Dialog.Title style={titleStyle}>Edit Recurring Expense</Dialog.Title>
+          <Dialog.Title className="dialog-title">Edit Recurring Expense</Dialog.Title>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <Label.Root style={labelStyle}>Name</Label.Root>
+              <Label.Root className="label">Name</Label.Root>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
                 placeholder="e.g., Rent"
               />
             </div>
             <div>
-              <Label.Root style={labelStyle}>Amount ($)</Label.Root>
+              <Label.Root className="label">Amount ($)</Label.Root>
               <input
                 type="text"
                 value={amount}
                 onChange={(e) => handleAmountChange(e.target.value)}
                 required
-                style={inputStyle}
+                className="input"
                 placeholder="e.g., 1,200"
               />
             </div>
             <div>
-              <Label.Root style={labelStyle}>Frequency</Label.Root>
+              <Label.Root className="label">Frequency</Label.Root>
               <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                style={selectStyle}
+                className="select"
               >
                 <option value="weekly">Weekly</option>
                 <option value="bi_weekly">Bi-Weekly (Every 2 weeks)</option>
@@ -127,16 +127,16 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
             </div>
             {isBiWeekly && (
               <div>
-                <Label.Root style={labelStyle}>
+                <Label.Root className="label">
                   Anchor Date (Starting Reference)
-                  <span style={hintStyle}>When did/will the first payment occur?</span>
+                  <span className="hint">When did/will the first payment occur?</span>
                 </Label.Root>
                 <input
                   type="date"
                   value={anchorDate}
                   onChange={(e) => setAnchorDate(e.target.value)}
                   required
-                  style={inputStyle}
+                  className="input"
                 />
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Expense will recur every 14 days from this date
@@ -144,13 +144,13 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
               </div>
             )}
             <div>
-              <Label.Root style={labelStyle}>{dayLabel}</Label.Root>
+              <Label.Root className="label">{dayLabel}</Label.Root>
               {isWeeklyBased ? (
                 <select
                   value={dayOfMonth}
                   onChange={(e) => setDayOfMonth(e.target.value)}
                   required
-                  style={selectStyle}
+                  className="select"
                 >
                   <option value="0">Sunday</option>
                   <option value="1">Monday</option>
@@ -167,7 +167,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                     value={dayOfMonth}
                     onChange={(e) => setDayOfMonth(e.target.value)}
                     required
-                    style={inputStyle}
+                    className="input"
                     min="1"
                     max="31"
                     placeholder={dayPlaceholder}
@@ -179,11 +179,11 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
               )}
             </div>
             <div>
-              <Label.Root style={labelStyle}>Category</Label.Root>
+              <Label.Root className="label">Category</Label.Root>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                style={selectStyle}
+                className="select"
               >
                 {withCurrentOption(EXPENSE_CATEGORIES, expense.category).map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -204,28 +204,28 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
             {isVariable && (
               <>
                 <div>
-                  <Label.Root style={labelStyle}>
+                  <Label.Root className="label">
                     Budget Goal (optional)
-                    <span style={hintStyle}>Track spending vs goal in Budget tab</span>
+                    <span className="hint">Track spending vs goal in Budget tab</span>
                   </Label.Root>
                   <input
                     type="text"
                     value={budgetGoal}
                     onChange={(e) => setBudgetGoal(formatCurrency(e.target.value))}
-                    style={inputStyle}
+                    className="input"
                     placeholder="e.g., 2,500"
                   />
                 </div>
                 <div>
-                  <Label.Root style={labelStyle}>
+                  <Label.Root className="label">
                     Billing Cycle Day (optional)
-                    <span style={hintStyle}>For credit cards: day of month billing cycle starts (e.g., 16)</span>
+                    <span className="hint">For credit cards: day of month billing cycle starts (e.g., 16)</span>
                   </Label.Root>
                   <input
                     type="number"
                     value={billingCycleDay}
                     onChange={(e) => setBillingCycleDay(e.target.value)}
-                    style={inputStyle}
+                    className="input"
                     min="1"
                     max="31"
                     placeholder="e.g., 16 (analyzes 16th to 16th)"
@@ -235,11 +235,11 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
             )}
             <div className="dialog-actions" style={{ marginTop: '1rem' }}>
               <Dialog.Close asChild>
-                <button type="button" style={buttonSecondaryStyle}>
+                <button type="button" className="btn btn-secondary">
                   Cancel
                 </button>
               </Dialog.Close>
-              <button type="submit" disabled={isSubmitting} style={{ ...buttonStyle, opacity: isSubmitting ? 0.5 : 1 }}>
+              <button type="submit" disabled={isSubmitting} className="btn btn-primary" style={{ opacity: isSubmitting ? 0.5 : 1 }}>
                 {isSubmitting ? 'Saving...' : 'Save'}
               </button>
             </div>
@@ -250,65 +250,3 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
   );
 }
 
-const buttonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--button-bg)',
-  color: 'var(--button-text)',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const buttonSecondaryStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'var(--bg-secondary)',
-  color: 'var(--text-primary)',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  cursor: 'pointer',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.25rem',
-  fontWeight: '600',
-  marginBottom: '1.5rem',
-};
-
-const hintStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 'var(--font-small)',
-  fontWeight: '400',
-  color: 'var(--text-secondary)',
-  marginTop: '0.125rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-  display: 'block',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem',
-  border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
-  fontSize: '0.875rem',
-  background: 'var(--bg-primary)',
-  color: 'var(--text-primary)',
-};
