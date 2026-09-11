@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Shared Balance Planner',
     short_name: 'Balance',
     description: 'Manage your shared checking account and forecast balances',
-    start_url: '/?tab=forecast',
+    start_url: '/',
     display: 'standalone',
     background_color: '#fafafa',
     theme_color: '#1a1a1a',

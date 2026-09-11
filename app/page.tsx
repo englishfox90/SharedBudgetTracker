@@ -29,12 +29,16 @@ const TABS = [
   { value: 'setup', label: 'Setup', shortLabel: 'Setup', Icon: SettingsIcon },
 ];
 
+const DEFAULT_TAB = 'dashboard';
+const VALID_TABS = new Set(TABS.map((t) => t.value));
+
 export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [currentMonth, setCurrentMonth] = useState<{ year: number; month: number }>(getCurrentMonthUTC());
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'forecast');
+  const requestedTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(requestedTab && VALID_TABS.has(requestedTab) ? requestedTab : DEFAULT_TAB);
   const isMobile = useIsMobile();
   const tabsListRef = useRef<HTMLDivElement>(null);
 
@@ -48,9 +52,11 @@ export default function Home() {
 
   useEffect(() => {
     // Update URL when tab changes
-    const currentTab = searchParams.get('tab') || 'forecast';
+    // Keep the URL in sync with the tab, but leave it bare on the default
+    // tab so bookmarks and home-screen shortcuts open on the Dashboard.
+    const currentTab = searchParams.get('tab') || DEFAULT_TAB;
     if (currentTab !== activeTab) {
-      router.push(`/?tab=${activeTab}`, { scroll: false });
+      router.push(activeTab === DEFAULT_TAB ? '/' : `/?tab=${activeTab}`, { scroll: false });
     }
   }, [activeTab, router, searchParams]);
 

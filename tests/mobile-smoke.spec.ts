@@ -9,6 +9,12 @@ async function login(page: Page) {
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
   await page.click('button[type=submit]');
+  // The app opens on the Dashboard; wait for the tab bar, then go where the test needs
+  await page.waitForSelector('[role=tablist]', { timeout: 30_000 });
+}
+
+async function openForecast(page: Page) {
+  await page.getByRole('tab', { name: 'Forecast' }).click();
   await page.waitForSelector('text=Daily breakdown', { timeout: 30_000 });
 }
 
@@ -41,6 +47,8 @@ async function overflowingElements(page: Page) {
 
 test('every tab fits the screen width', async ({ page }) => {
   await login(page);
+  expect(new URL(page.url()).searchParams.get('tab'), 'app opens on the Dashboard with a bare URL').toBeNull();
+  await expect(page.getByRole('tab', { name: 'Dashboard' })).toHaveAttribute('data-state', 'active');
 
   for (const tab of TABS) {
     await page.getByRole('tab', { name: new RegExp(`^(${tab})$`) }).click();
@@ -67,6 +75,7 @@ test('form controls never trigger mobile zoom', async ({ page, isMobile }) => {
 
 test('one-tap confirm records the forecast amount', async ({ page }) => {
   await login(page);
+  await openForecast(page);
   const quick = page.getByRole('button', { name: /^Confirm .* for \$/ }).first();
   await quick.click();
   const actual = page.getByRole('button', { name: /^Edit (?!and confirm)/ }).first();
@@ -80,6 +89,7 @@ test('one-tap confirm records the forecast amount', async ({ page }) => {
 
 test('confirming a forecast transaction works and can be undone', async ({ page, isMobile }) => {
   await login(page);
+  await openForecast(page);
 
   // Tapping the row body opens the dialog; the check button beside it confirms in one tap
   const chip = page.getByRole('button', { name: /^Edit and confirm/ }).first();
