@@ -1,99 +1,57 @@
 'use client';
 
-import { IconLabel, CheckCircleIcon, AlertOctagonIcon, AlertTriangleIcon, InfoIcon } from '../icons';
-
 import { Suggestion } from '@/lib/recommendation-engine';
+import { CheckCircleIcon, AlertOctagonIcon, AlertTriangleIcon, InfoIcon, ArrowRightIcon } from '../icons';
 
 interface Props {
   suggestions: Suggestion[];
 }
 
+const SEVERITY = {
+  critical: { cls: 'alert--danger', icon: <AlertOctagonIcon size={20} /> },
+  warning: { cls: 'alert--warning', icon: <AlertTriangleIcon size={20} /> },
+  info: { cls: 'alert--info', icon: <InfoIcon size={20} /> },
+} as const;
+
 export default function SuggestionCards({ suggestions }: Props) {
-  if (suggestions.length === 0) {
-    return (
-      <div className="card">
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--color-success)' }}>
-          <IconLabel icon={<CheckCircleIcon size={18} />}>All Clear!</IconLabel>
-        </h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          Your finances are looking good. No immediate recommendations at this time.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>
-        Recommendations & Insights
-      </h3>
+    <div className="card">
+      <div className="section-head">
+        <div>
+          <h3 className="section-title">Suggestions</h3>
+          <p>{suggestions.length === 0 ? 'Nothing needs your attention right now.' : `${suggestions.length} item${suggestions.length === 1 ? '' : 's'} to review`}</p>
+        </div>
+      </div>
 
-      {suggestions.map((suggestion, idx) => {
-        const severityStyles = {
-          critical: {
-            bg: 'var(--danger-bg)',
-            border: 'var(--danger-border)',
-            icon: <AlertOctagonIcon size={22} />,
-            textColor: 'var(--danger-text)',
-          },
-          warning: {
-            bg: 'var(--warning-bg)',
-            border: 'var(--warning-border)',
-            icon: <AlertTriangleIcon size={22} />,
-            textColor: 'var(--warning-text)',
-          },
-          info: {
-            bg: 'var(--info-bg)',
-            border: 'var(--info-border)',
-            icon: <InfoIcon size={22} />,
-            textColor: 'var(--info-text)',
-          },
-        };
-
-        const style = severityStyles[suggestion.severity];
-
-        return (
-          <div
-            key={idx}
-            className="card" style={{ background: style.bg,
-              border: `2px solid ${style.border}`, }}
-          >
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              {/* Icon */}
-              <div style={{ flexShrink: 0, color: style.textColor, display: 'flex', paddingTop: '0.125rem' }}>{style.icon}</div>
-
-              {/* Content */}
-              <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: style.textColor, marginBottom: '0.5rem' }}>
-                  {suggestion.title}
-                </h4>
-                <p style={{ fontSize: '0.875rem', color: style.textColor, opacity: 0.9, lineHeight: '1.5', marginBottom: suggestion.actionable ? '0.75rem' : 0 }}>
-                  {suggestion.description}
-                </p>
-
+      {suggestions.length === 0 ? (
+        <div className="alert alert--safe">
+          <CheckCircleIcon size={20} />
+          <div><strong>All clear.</strong> Your balance stays above the safe minimum for the next six months.</div>
+        </div>
+      ) : (
+        <div className="stack" style={{ gap: '0.75rem' }}>
+          {suggestions.map((suggestion, idx) => {
+            const sev = SEVERITY[suggestion.severity];
+            return (
+              <div key={idx} className={`alert ${sev.cls}`} style={{ flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                  {sev.icon}
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: '0.125rem' }}>{suggestion.title}</div>
+                    <div style={{ fontSize: 'var(--font-label)', opacity: 0.9 }}>{suggestion.description}</div>
+                  </div>
+                </div>
                 {suggestion.actionable && suggestion.recommendedAction && (
-                  <div
-                    style={{
-                      padding: '0.75rem',
-                      background: 'var(--bg-primary)',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-primary)',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: '600' }}>
-                      RECOMMENDED ACTION
-                    </div>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                      {suggestion.recommendedAction}
-                    </div>
+                  <div style={{ marginLeft: 'calc(20px + 0.75rem)', display: 'flex', gap: '0.5rem', alignItems: 'flex-start', fontSize: 'var(--font-label)', fontWeight: 600 }}>
+                    <ArrowRightIcon size={14} style={{ marginTop: '0.2rem' }} />
+                    <span>{suggestion.recommendedAction}</span>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-

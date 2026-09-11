@@ -1,6 +1,7 @@
 'use client';
 
-import { IconLabel, InfoIcon, ZapIcon, CheckIcon, LightbulbIcon } from './icons';
+import { IconLabel, InfoIcon, ZapIcon, CheckIcon, LightbulbIcon, AlertTriangleIcon } from './icons';
+import { formatMoney } from '@/lib/actualize';
 
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
@@ -27,6 +28,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const [implementing, setImplementing] = useState(false);
   const [implementSuccess, setImplementSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showHow, setShowHow] = useState(false);
   const [incomeRules, setIncomeRules] = useState<any[]>([]);
   const isMobile = useIsMobile();
 
@@ -132,17 +134,18 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   if ((loading || accountLoading) && !data) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ height: '200px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '300px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
-        <div style={{ height: '250px', background: 'var(--bg-tertiary)', borderRadius: '8px', animation: 'pulse 2s infinite' }} />
+      <div className="stack">
+        <div className="skeleton" style={{ height: '36px', width: '50%' }} />
+        <div className="skeleton" style={{ height: '140px' }} />
+        <div className="skeleton" style={{ height: '320px' }} />
+        <div className="skeleton" style={{ height: '260px' }} />
       </div>
     );
   }
 
   if (!accountId) {
     return (
-      <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div className="card" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
         No account found. Please set up your account in the Setup tab first.
       </div>
     );
@@ -150,7 +153,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   if (!data) {
     return (
-      <div style={{ padding: isMobile ? '1rem' : '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div className="card" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
         No recommendation data available. Please set up income and expenses in the Setup tab.
       </div>
     );
@@ -159,143 +162,103 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const monthName = new Date(Date.UTC(currentMonth.year, currentMonth.month - 1, 1))
     .toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
+  const analysis = data.contributionAnalysis;
+  const recommended = analysis.recommendedAnnualContribution ?? analysis.currentAnnualContribution;
+  const annualIncrease = recommended - analysis.currentAnnualContribution;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', position: 'relative' }}>
+    <div className="stack" style={{ gap: '1.25rem', position: 'relative' }}>
       {loading && (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'var(--bg-primary)',
-          opacity: 0.7,
-          zIndex: 10,
-          borderRadius: '8px',
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-primary)', opacity: 0.6, zIndex: 10, borderRadius: 'var(--radius)' }} />
       )}
 
       {/* Header */}
-      <div>
-        <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-          Financial Recommendations
-        </h2>
-        <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
-          6-month outlook starting {monthName}
-        </p>
+      <div className="section-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="page-title" style={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}>Insights</h2>
+          <p>6-month outlook from {monthName}</p>
+        </div>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHow((v) => !v)} aria-expanded={showHow}>
+          <InfoIcon size={16} /> How this works
+        </button>
       </div>
 
-      {/* How This Works - Moved to top */}
-      <details open className="card" style={{ background: 'var(--bg-tertiary)' }}>
-        <summary style={{ 
-          fontSize: '1rem', 
-          fontWeight: '600', 
-          marginBottom: '0.5rem',
-          cursor: 'pointer',
-          listStyle: 'none',
-        }}>
-          <IconLabel icon={<InfoIcon size={16} />}>How This Works</IconLabel>
-        </summary>
-        <ul style={{ paddingLeft: '1.5rem', fontSize: 'var(--font-body)', lineHeight: '1.6', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-          <li>Analyzes your forecasted income and expenses for the next 6 months</li>
-          <li>Compares actual variable spending to estimates based on historical data</li>
-          <li>Identifies spending trends and potential issues before they impact your balance</li>
-          <li>Provides actionable recommendations to maintain financial stability</li>
-        </ul>
-      </details>
-
-      {/* Quick Action Button */}
-      {data.contributionAnalysis.adjustmentNeeded && (
-        <div className="card" style={{ background: 'var(--warning-bg)',
-          border: '2px solid var(--warning-border)', }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                <IconLabel icon={<ZapIcon size={18} />}>Action Required</IconLabel>
-              </h3>
-              <p style={{ fontSize: 'var(--font-body)', color: 'var(--warning-text)' }}>
-                Increase contributions by {Math.round(data.contributionAnalysis.adjustmentPercentage)}% to maintain safe balance
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '1rem' : '1.5rem', marginBottom: '1rem' }}>
-            <div>
-              <div style={{ fontSize: 'var(--font-label)', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
-                Current Annual
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
-                ${data.contributionAnalysis.currentAnnualContribution.toLocaleString()}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 'var(--font-label)', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
-                Recommended Annual
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--color-danger)' }}>
-                ${data.contributionAnalysis.recommendedAnnualContribution?.toLocaleString() || 'N/A'}
-              </div>
-            </div>
-          </div>
-          <div style={{
-            padding: '1rem',
-            background: 'var(--bg-secondary)',
-            borderRadius: '6px',
-            border: '1px solid var(--warning-border)',
-            marginTop: '1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-          }}>
-            <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-primary)', lineHeight: '1.6' }}>
-              Click below to automatically update your income rules to the recommended contribution amounts.
-              This will increase your contributions proportionally across all income sources.
-            </div>
-            <button
-              onClick={showImplementationModal}
-              disabled={implementing || implementSuccess}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: implementSuccess ? '#16a34a' : (implementing ? 'var(--text-secondary)' : 'var(--button-bg)'),
-                color: implementSuccess || implementing ? 'white' : 'var(--button-text)',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                fontWeight: '600',
-                cursor: (implementing || implementSuccess) ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              {implementSuccess ? (
-                <IconLabel icon={<CheckIcon size={16} />}>Implemented Successfully!</IconLabel>
-              ) : implementing ? (
-                'Updating...'
-              ) : (
-                <IconLabel icon={<ZapIcon size={16} />}>Implement Recommendation</IconLabel>
-              )}
-            </button>
-          </div>
-
-          {/* Comparison Chart - inside action required box */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <ComparisonChart
-              currentAnnual={data.contributionAnalysis.currentAnnualContribution}
-              recommendedAnnual={data.contributionAnalysis.recommendedAnnualContribution || data.contributionAnalysis.currentAnnualContribution}
-              months={data.sixMonthForecast.months}
-            />
+      {showHow && (
+        <div className="alert alert--info">
+          <InfoIcon size={18} />
+          <div>
+            The next six months of income and expenses are projected from your Setup. Variable expenses use your
+            history, spending trends are compared against three- and six-month averages, and suggestions are
+            raised when your balance is heading towards the safe minimum.
           </div>
         </div>
       )}
 
-      {/* Suggestions */}
+      {/* Action required */}
+      {analysis.adjustmentNeeded && (
+        <div className="card" style={{ borderColor: 'var(--warning-border)', borderWidth: 1 }}>
+          <div className="section-head">
+            <div>
+              <h3 className="section-title">
+                <IconLabel icon={<ZapIcon size={18} style={{ color: 'var(--color-warning)' }} />}>Action required</IconLabel>
+              </h3>
+              <p>Increase contributions by {Math.round(analysis.adjustmentPercentage)}% to stay above your safe minimum.</p>
+            </div>
+            <span className="pill pill--warning"><AlertTriangleIcon size={11} /> Shortfall ahead</span>
+          </div>
+
+          <div className="grid-3" style={{ marginBottom: '1rem' }}>
+            <div className="stat-tile">
+              <div className="stat-tile__label">Current per year</div>
+              <div className="stat-tile__value">{formatMoney(analysis.currentAnnualContribution)}</div>
+            </div>
+            <div className="stat-tile stat-tile--accent">
+              <div className="stat-tile__label">Recommended per year</div>
+              <div className="stat-tile__value">{formatMoney(recommended)}</div>
+            </div>
+            <div className="stat-tile">
+              <div className="stat-tile__label">Extra per month</div>
+              <div className="stat-tile__value">{formatMoney(annualIncrease / 12)}</div>
+              <div className="stat-tile__sub">{formatMoney(annualIncrease, true)} per year</div>
+            </div>
+          </div>
+
+          <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', flex: '1 1 260px' }}>
+              Applies the increase proportionally across every income source in Setup. You can review the split before it is saved.
+            </p>
+            <button
+              onClick={showImplementationModal}
+              disabled={implementing || implementSuccess}
+              className={`btn ${implementSuccess ? 'btn-success' : 'btn-primary'}`}
+            >
+              {implementSuccess ? (
+                <><CheckIcon size={16} /> Applied</>
+              ) : implementing ? (
+                'Updating…'
+              ) : (
+                <><ZapIcon size={16} /> Apply recommendation</>
+              )}
+            </button>
+          </div>
+
+          <ComparisonChart
+            currentAnnual={analysis.currentAnnualContribution}
+            recommendedAnnual={recommended}
+            months={data.sixMonthForecast.months}
+          />
+        </div>
+      )}
+
       <SuggestionCards suggestions={data.suggestions} />
 
-      {/* 6-Month Overview */}
       <SixMonthOverview 
         months={data.sixMonthForecast.months} 
         safeMinBalance={data.sixMonthForecast.safeMinBalance}
       />
 
-      {/* Financial Summary */}
       <VarianceSummary months={data.sixMonthForecast.months} />
 
-      {/* Trend Analysis */}
       <TrendChart trends={data.trendAnalysis.expenses} />
 
       <MessageDialog
@@ -306,102 +269,58 @@ export default function RecommendationTab({ currentMonth }: Props) {
         type={message?.type || 'info'}
       />
 
-      {/* Confirmation Modal */}
+      {/* Confirmation modal */}
       {showConfirmModal && data && (
         <>
           <div className="dialog-overlay" onClick={() => setShowConfirmModal(false)} />
           <div className="dialog-content dialog-content--wide" role="dialog" aria-modal="true" aria-labelledby="confirm-contribution-title">
-            <h3 id="confirm-contribution-title" style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
-              Confirm Contribution Increase
-            </h3>
-            
-            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-              <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Total Annual Increase</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                ${(data.contributionAnalysis.recommendedAnnualContribution! - data.contributionAnalysis.currentAnnualContribution).toLocaleString()}/year
+            <h3 id="confirm-contribution-title" className="dialog-title">Confirm contribution increase</h3>
+            <p className="dialog-description">Each income source is scaled by the same percentage.</p>
+
+            <div className="grid-2" style={{ marginBottom: '1rem' }}>
+              <div className="stat-tile stat-tile--accent">
+                <div className="stat-tile__label">Total increase per year</div>
+                <div className="stat-tile__value">{formatMoney(annualIncrease, true)}</div>
               </div>
-              <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                (~${Math.round((data.contributionAnalysis.recommendedAnnualContribution! - data.contributionAnalysis.currentAnnualContribution) / 12).toLocaleString()}/month)
+              <div className="stat-tile">
+                <div className="stat-tile__label">About per month</div>
+                <div className="stat-tile__value">{formatMoney(annualIncrease / 12, true)}</div>
               </div>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '0.75rem' }}>Per-Person Breakdown:</div>
+            <div className="list" style={{ marginBottom: '1rem' }}>
               {incomeRules.map((rule: any) => {
-                const currentTotal = data.contributionAnalysis.currentAnnualContribution;
-                const recommendedTotal = data.contributionAnalysis.recommendedAnnualContribution!;
-                const adjustmentRatio = currentTotal > 0 ? recommendedTotal / currentTotal : 1;
+                const currentTotal = analysis.currentAnnualContribution;
+                const adjustmentRatio = currentTotal > 0 ? recommended / currentTotal : 1;
                 const newContribution = rule.contributionAmount * adjustmentRatio;
                 const increase = newContribution - rule.contributionAmount;
                 const payPeriodsPerYear = getPayPeriodsPerYear(rule.payFrequency);
-                
                 return (
-                  <div key={rule.id} style={{
-                    padding: '0.75rem',
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border-primary)',
-                    borderRadius: '6px',
-                    marginBottom: '0.5rem',
-                  }}>
-                    <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.25rem' }}>{rule.name}</div>
-                    <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem 0.75rem' }}>
-                      <span>Current: ${rule.contributionAmount.toFixed(2)} per paycheck</span>
-                      <span style={{ color: 'var(--color-danger)', fontWeight: '600' }}>→ ${newContribution.toFixed(2)}</span>
+                  <div key={rule.id} className="list-item" style={{ background: 'var(--bg-tertiary)' }}>
+                    <div className="list-item__body">
+                      <div className="list-item__title">{rule.name}</div>
+                      <div className="list-item__meta">
+                        {formatMoney(rule.contributionAmount)} → <strong>{formatMoney(newContribution)}</strong> per paycheck · {payPeriodsPerYear} paychecks a year
+                      </div>
                     </div>
-                    <div style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                      +${increase.toFixed(2)} per paycheck × {payPeriodsPerYear} = +${(increase * payPeriodsPerYear).toFixed(2)}/year
+                    <div className="list-item__amount money-pos">
+                      {formatMoney(increase * payPeriodsPerYear, true)}
+                      <small>per year</small>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <div style={{
-              padding: '1rem',
-              background: 'var(--info-bg)',
-              border: '1px solid var(--info-border)',
-              borderRadius: '6px',
-              marginBottom: '1.5rem',
-            }}>
-              <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--info-text)' }}>
-                <IconLabel icon={<LightbulbIcon size={16} />}>Long-Term Impact</IconLabel>
-              </div>
-              <div style={{ fontSize: 'var(--font-body)', color: 'var(--info-text)', lineHeight: '1.6' }}>
-                This increase will keep your balance above the safe minimum and maintain positive monthly growth,
-                preventing future cash flow issues and building a healthier financial cushion.
-              </div>
+            <div className="alert alert--info">
+              <LightbulbIcon size={18} />
+              <div>Keeps the balance above the safe minimum and builds a cushion month over month.</div>
             </div>
 
             <div className="dialog-actions">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: 'var(--bg-tertiary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-primary)',
-                  borderRadius: '6px',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmImplementation}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: 'var(--button-bg)',
-                  color: 'var(--button-text)',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '0.95rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                <IconLabel icon={<CheckIcon size={16} />}>Approve &amp; Implement</IconLabel>
+              <button onClick={() => setShowConfirmModal(false)} className="btn btn-secondary">Cancel</button>
+              <button onClick={confirmImplementation} className="btn btn-primary">
+                <CheckIcon size={16} /> Apply increase
               </button>
             </div>
           </div>

@@ -84,11 +84,4 @@ export function MessageDialog({
   );
 }
 
-const buttonBase: React.CSSProperties = {
-  padding: '0.625rem 1rem',
-  borderRadius: '6px',
-  fontWeight: '500',
-  fontSize: 'var(--font-body)',
-  cursor: 'pointer',
-};
 

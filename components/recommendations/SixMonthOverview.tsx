@@ -1,99 +1,57 @@
 'use client';
 
 import { MonthSummary } from '@/lib/six-month-forecast';
+import { formatMoney } from '@/lib/actualize';
+import { CheckIcon, AlertTriangleIcon, AlertOctagonIcon } from '../icons';
 
 interface Props {
   months: MonthSummary[];
   safeMinBalance: number;
 }
 
+const STATUS = {
+  safe: { label: 'Safe', icon: <CheckIcon size={11} strokeWidth={3} /> },
+  warning: { label: 'Tight', icon: <AlertTriangleIcon size={11} /> },
+  danger: { label: 'Critical', icon: <AlertOctagonIcon size={11} /> },
+} as const;
+
 export default function SixMonthOverview({ months, safeMinBalance }: Props) {
+  const issues = months.filter((m) => m.status !== 'safe').length;
   return (
     <div className="card">
-      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-        6-Month Forecast Overview
-      </h3>
+      <div className="section-head">
+        <div>
+          <h3 className="section-title">Month by month</h3>
+          <p>
+            {issues === 0
+              ? `Every month stays above your ${formatMoney(safeMinBalance)} safe minimum.`
+              : `${issues} month${issues === 1 ? '' : 's'} dip${issues === 1 ? 's' : ''} below your ${formatMoney(safeMinBalance)} safe minimum.`}
+          </p>
+        </div>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+      <div className="grid-3">
         {months.map((month, idx) => {
-          const statusColors = {
-            safe: { bg: 'var(--safe-bg)', border: 'var(--safe-border)', text: 'var(--safe-text)' },
-            warning: { bg: 'var(--warning-bg)', border: 'var(--warning-border)', text: 'var(--warning-text)' },
-            danger: { bg: 'var(--danger-bg)', border: 'var(--danger-border)', text: 'var(--danger-text)' },
-          };
-          const colors = statusColors[month.status];
-
+          const net = month.closingBalance - month.openingBalance;
+          const st = STATUS[month.status];
           return (
-            <div
-              key={idx}
-              style={{
-                padding: '1rem',
-                borderRadius: '8px',
-                background: colors.bg,
-                border: `2px solid ${colors.border}`,
-              }}
-            >
-              {/* Month Name */}
-              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.text, marginBottom: '0.75rem' }}>
-                {month.monthName.split(' ')[0]} {/* Just the month name */}
+            <div key={idx} className={`month-tile month-tile--${month.status}`}>
+              <div className="month-tile__head">
+                <span>{month.monthName.split(' ')[0]}</span>
+                <span className={`pill pill--${month.status}`}>{st.icon} {st.label}</span>
               </div>
-
-              {/* Opening Balance */}
-              <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Opening</div>
-                <div style={{ fontSize: '0.875rem', fontWeight: '500', color: colors.text }}>
-                  ${month.openingBalance.toLocaleString()}
+              <div className="kv"><span className="kv__label">Opening</span><span className="kv__value">{formatMoney(month.openingBalance)}</span></div>
+              <div className="kv"><span className="kv__label">Net</span><span className={`kv__value ${net >= 0 ? 'money-pos' : 'money-neg'}`}>{formatMoney(net, true)}</span></div>
+              <div className="kv"><span className="kv__label">Lowest</span><span className="kv__value">{formatMoney(month.lowestBalance)}</span></div>
+              {month.status !== 'safe' && (
+                <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  Day {month.lowestBalanceDay} · {month.daysBelowSafeMin}d below minimum
                 </div>
-              </div>
-
-              {/* Net Change */}
-              <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Net Change</div>
-                <div
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: colors.text,
-                  }}
-                >
-                  {month.closingBalance >= month.openingBalance ? '+' : ''}
-                  ${(month.closingBalance - month.openingBalance).toLocaleString()}
-                </div>
-              </div>
-
-              {/* Lowest Balance */}
-              <div>
-                <div style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.8 }}>Lowest</div>
-                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.text }}>
-                  ${month.lowestBalance.toLocaleString()}
-                </div>
-                {month.status !== 'safe' && (
-                  <div style={{ fontSize: '0.7rem', color: colors.text, opacity: 0.9, marginTop: '0.25rem' }}>
-                    Day {month.lowestBalanceDay} • {month.daysBelowSafeMin}d below min
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           );
         })}
       </div>
-
-      {/* Legend */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--safe-bg)', border: '1px solid var(--safe-border)' }} />
-          <span>Safe</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--warning-bg)', border: '1px solid var(--warning-border)' }} />
-          <span>Warning (&lt;7 days)</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)' }} />
-          <span>Critical (7+ days)</span>
-        </div>
-      </div>
     </div>
   );
 }
-

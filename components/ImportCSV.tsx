@@ -1,9 +1,8 @@
 'use client';
 
-import { IconLabel, CheckCircleIcon, XCircleIcon } from './icons';
+import { CheckCircleIcon, XCircleIcon, UploadIcon } from './icons';
 
 import { useState } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 
 interface Props {
   accountId: number;
@@ -14,7 +13,6 @@ export default function ImportCSV({ accountId, onImported }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
-  const isMobile = useIsMobile();
 
   async function handleImport() {
     if (!file) return;
@@ -51,38 +49,27 @@ export default function ImportCSV({ accountId, onImported }: Props) {
 
   return (
     <div>
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: '0.5rem', 
-        alignItems: isMobile ? 'stretch' : 'center',
-      }}>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          style={{ 
-            flex: 1,
-            padding: '0.5rem',
-            fontSize: '0.875rem',
-          }}
-        />
-        <button
-          onClick={handleImport}
-          disabled={!file || importing}
-          className="btn btn-primary" style={{ opacity: !file || importing ? 0.5 : 1,
-            cursor: !file || importing ? 'not-allowed' : 'pointer',
-            width: isMobile ? '100%' : 'auto', }}
-        >
-          {importing ? 'Importing...' : 'Import CSV'}
+      <div className="row" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+          <UploadIcon size={16} />
+          {file ? file.name : 'Choose CSV file'}
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+          />
+        </label>
+        <button onClick={handleImport} disabled={!file || importing} className="btn btn-primary">
+          {importing ? 'Importing…' : 'Import'}
         </button>
       </div>
       {result && (
-        <div style={{ marginTop: '0.75rem', color: result.ok ? 'var(--color-success)' : 'var(--color-danger)' }}>
-          <IconLabel icon={result.ok ? <CheckCircleIcon size={16} /> : <XCircleIcon size={16} />}>{result.text}</IconLabel>
+        <div className={`alert ${result.ok ? 'alert--safe' : 'alert--danger'}`} style={{ marginTop: '0.75rem' }}>
+          {result.ok ? <CheckCircleIcon size={18} /> : <XCircleIcon size={18} />}
+          <div>{result.text}</div>
         </div>
       )}
     </div>
   );
 }
-

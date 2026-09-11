@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { PlusIcon } from '../icons';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { INCOME_CATEGORIES, TRANSACTION_EXPENSE_CATEGORIES, withCurrentOption } from '@/lib/categories';
 
@@ -73,7 +74,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button className="btn btn-primary btn-sm">+ Add Transaction</button>
+        <button className="btn btn-primary btn-sm"><PlusIcon size={16} /> Add transaction</button>
       </Dialog.Trigger>
 
       <Dialog.Portal>

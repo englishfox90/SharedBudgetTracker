@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 import * as Label from '@radix-ui/react-label';
 import { Account, IncomeRule, RecurringExpense } from '@/types';
 import { MessageDialog } from './dialogs';
@@ -22,7 +21,6 @@ export default function SetupTab() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
 
   // Local draft values for the account fields. They are only sent to the
   // server when the field loses focus (or Enter is pressed), so typing
@@ -158,14 +156,23 @@ export default function SetupTab() {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="stack" style={{ gap: '1.25rem' }}>
+      <div className="section-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="page-title">Setup</h2>
+          <p>Account, income sources and recurring expenses that drive the forecast.</p>
+        </div>
+      </div>
+
       {/* Account Settings */}
       <section className="card">
-        <h2 className="section-title">Account Settings</h2>
-        <p style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-          Changes save when you leave a field.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="section-head">
+          <div>
+            <h3 className="section-title">Account</h3>
+            <p>Changes save when you leave a field.</p>
+          </div>
+        </div>
+        <div className="settings-grid" style={{ marginBottom: '1rem' }}>
           <div>
             <Label.Root htmlFor="account-startingBalance" className="label">{numericFields[0].label}</Label.Root>
             <input
@@ -209,24 +216,26 @@ export default function SetupTab() {
             </div>
           ))}
         </div>
-        <div>
-          <Label.Root className="label">Auto-Calculate Contributions</Label.Root>
-          <button
-            onClick={handleCalculateContributions}
-            className="btn btn-primary"
-          >
-            Calculate Contributions
+        <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-secondary)' }}>
+          <p style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', flex: '1 1 240px' }}>
+            Recalculate each person&apos;s contribution from the forecasted expenses.
+          </p>
+          <button onClick={handleCalculateContributions} className="btn btn-secondary btn-sm">
+            Calculate contributions
           </button>
         </div>
       </section>
 
       {/* Income Sources */}
       <section className="card">
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
-          <h2 className="section-title">Income Sources</h2>
+        <div className="section-head">
+          <div>
+            <h3 className="section-title">Income sources</h3>
+            <p>Who pays in, how often, and how much per paycheck.</p>
+          </div>
           <AddIncomeDialog accountId={account.id} onAdded={loadData} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="list">
           {incomeRules.map((rule) => {
             const totalContribution = incomeRules.reduce((sum, r) => sum + r.contributionAmount, 0);
             return (
@@ -240,33 +249,38 @@ export default function SetupTab() {
             );
           })}
           {incomeRules.length === 0 && (
-            <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No income sources yet. Add one to get started.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>No income sources yet. Add one to get started.</p>
           )}
         </div>
       </section>
 
       {/* Recurring Expenses */}
       <section className="card">
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
-          <h2 className="section-title">Recurring Expenses</h2>
+        <div className="section-head">
+          <div>
+            <h3 className="section-title">Recurring expenses</h3>
+            <p>Bills the forecast expects every cycle. Variable ones are estimated from history.</p>
+          </div>
           <AddExpenseDialog accountId={account.id} onAdded={loadData} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="list">
           {expenses.map((expense) => (
             <ExpenseCard key={expense.id} expense={expense} onUpdate={loadData} onDelete={loadData} />
           ))}
           {expenses.length === 0 && (
-            <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No recurring expenses yet. Add one to get started.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>No recurring expenses yet. Add one to get started.</p>
           )}
         </div>
       </section>
 
       {/* Import Transactions */}
       <section className="card">
-        <h2 className="section-title">Import Historical Data</h2>
-        <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-          Import CSV transactions to improve variable expense estimates. Format: date, amount, description, category
-        </p>
+        <div className="section-head">
+          <div>
+            <h3 className="section-title">Import history</h3>
+            <p>CSV columns: date, amount, description, category. More history makes variable estimates better.</p>
+          </div>
+        </div>
         <ImportCSV accountId={account.id} onImported={loadData} />
       </section>
 

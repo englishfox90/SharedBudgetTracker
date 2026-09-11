@@ -1,9 +1,8 @@
 'use client';
 
-import { IconLabel, ChevronLeftIcon, ChevronRightIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon } from './icons';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 import { Transaction } from '@/types';
 import AddTransactionDialog from './setup/AddTransactionDialog';
 import TransactionCard from './setup/TransactionCard';
@@ -26,7 +25,6 @@ export default function TransactionsTab() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (account) {
@@ -82,54 +80,49 @@ export default function TransactionsTab() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <section className="card">
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.75rem' : '0', marginBottom: '1rem' }}>
-            <div>
-              <h2 className="section-title">Transactions & Adjustments</h2>
-              {pagination.totalCount > 0 && (
-                <p style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                  Showing {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}
-                </p>
-              )}
-            </div>
-            <AddTransactionDialog accountId={account.id} onAdded={handleReload} />
-          </div>
-          <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            One-time adjustments or historical transactions. Use this for unplanned expenses, deposits, or imported bank data.
-            These appear in forecasts on their specific dates.
+    <div className="stack" style={{ gap: '1.25rem' }}>
+      <div className="section-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="page-title">Transactions</h2>
+          <p>
+            {pagination.totalCount > 0
+              ? `Showing ${((pagination.page - 1) * pagination.pageSize) + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of ${pagination.totalCount}`
+              : 'One-off adjustments, imported history and confirmed forecast events.'}
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {transactions.map((transaction) => (
-              <TransactionCard key={transaction.id} transaction={transaction} onUpdate={handleReload} onDelete={handleReload} />
-            ))}
-            {transactions.length === 0 && (
-              <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No transactions yet. Add one if needed.</p>
-            )}
-          </div>
-          {pagination.totalPages > 1 && (
-            <div style={paginationStyle}>
-              <button
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="btn btn-secondary btn-sm"
-              >
-                <IconLabel icon={<ChevronLeftIcon size={16} />}>Previous</IconLabel>
-              </button>
-              <span style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className="btn btn-secondary btn-sm"
-              >
-                <IconLabel icon={<ChevronRightIcon size={16} />} style={{ flexDirection: 'row-reverse' }}>Next</IconLabel>
-              </button>
-            </div>
+        </div>
+        <AddTransactionDialog accountId={account.id} onAdded={handleReload} />
+      </div>
+
+      <div className="card">
+        <div className="list">
+          {transactions.map((transaction) => (
+            <TransactionCard key={transaction.id} transaction={transaction} onUpdate={handleReload} onDelete={handleReload} />
+          ))}
+          {transactions.length === 0 && (
+            <p style={{ color: 'var(--text-secondary)' }}>No transactions yet. Confirm forecast events on the Forecast tab or add one here.</p>
           )}
-        </section>
+        </div>
+        {pagination.totalPages > 1 && (
+          <div style={paginationStyle}>
+            <button
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={pagination.page === 1}
+              className="btn btn-secondary btn-sm"
+            >
+              <ChevronLeftIcon size={16} /> Previous
+            </button>
+            <span style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={pagination.page === pagination.totalPages}
+              className="btn btn-secondary btn-sm"
+            >
+              Next <ChevronRightIcon size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

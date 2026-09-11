@@ -56,7 +56,7 @@ test('form controls never trigger mobile zoom', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'iOS zoom only applies to touch devices');
   await login(page);
   await page.getByRole('tab', { name: 'Setup' }).click();
-  await page.waitForSelector('text=Account Settings');
+  await page.waitForSelector('#account-startingBalance');
   const smallInputs = await page.evaluate(() =>
     Array.from(document.querySelectorAll('input:not([type=checkbox]):not([type=file]), select, textarea'))
       .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)

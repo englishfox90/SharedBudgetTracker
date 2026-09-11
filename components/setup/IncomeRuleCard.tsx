@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { IncomeRule } from '@/types';
 import { ConfirmDialog } from '../dialogs';
+import { formatMoney } from '@/lib/actualize';
+import { TrashIcon } from '../icons';
 
 interface Props {
   rule: IncomeRule;
@@ -23,7 +24,6 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const isMobile = useIsMobile();
 
   function formatCurrency(value: string): string {
     const num = value.replace(/[^0-9]/g, '');
@@ -97,43 +97,24 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
 
   return (
     <>
-      <div style={{
-        background: 'var(--bg-secondary)',
-        padding: '1rem',
-        borderRadius: '6px',
-        border: '1px solid var(--border-primary)',
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'stretch' : 'center',
-        gap: '1rem',
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div className="list-item">
+        <div className="list-item__body">
+          <div className="list-item__title">
             {rule.name}
-            <span style={percentageBadgeStyle}>{percentage}%</span>
+            <span className="pill pill--accent">{percentage}% of contributions</span>
           </div>
-          <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
-            ${rule.annualSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/year • {payFrequencyLabel} • {payDaysText}
+          <div className="list-item__meta">
+            {formatMoney(rule.annualSalary)} a year · {payFrequencyLabel} · {payDaysText}
           </div>
         </div>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: isMobile ? 'row' : 'row',
-          gap: '0.5rem', 
-          alignItems: 'center',
-          justifyContent: isMobile ? 'space-between' : 'flex-end',
-        }}>
-          <span style={{ fontWeight: '600', fontSize: isMobile ? 'var(--font-body)' : '1rem' }}>
-            ${rule.contributionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{payFrequencyLabel}
-          </span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={openEditDialog} className="btn btn-secondary btn-sm">
-              Edit
-            </button>
-            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger-soft btn-sm">
-              Delete
-            </button>
-          </div>
+        <div className="list-item__amount">
+          {formatMoney(rule.contributionAmount)}<small>per paycheck</small>
+        </div>
+        <div className="list-item__actions">
+          <button onClick={openEditDialog} className="btn btn-secondary btn-sm">Edit</button>
+          <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-ghost btn-sm" aria-label={`Delete ${rule.name}`} style={{ color: 'var(--color-danger)' }}>
+            <TrashIcon size={16} />
+          </button>
         </div>
       </div>
 
@@ -141,7 +122,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
         <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
           <Dialog.Overlay className="dialog-overlay" />
           <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
-            <Dialog.Title className="section-title">Edit Income Source</Dialog.Title>
+            <Dialog.Title className="dialog-title">Edit income source</Dialog.Title>
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <Label.Root className="label">Name</Label.Root>
@@ -149,7 +130,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   type="text"
                   value={rule.name}
                   disabled
-                  className="input" style={{ background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
+                  className="input"
                 />
               </div>
               <div>
@@ -169,7 +150,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   type="text"
                   value={payFrequencyLabel}
                   disabled
-                  className="input" style={{ background: 'var(--bg-tertiary)', cursor: 'not-allowed', opacity: 0.6 }}
+                  className="input"
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: rule.payFrequency === 'monthly' ? '1fr' : '1fr 1fr', gap: '1rem' }}>
@@ -227,11 +208,3 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
   );
 }
 
-const percentageBadgeStyle: React.CSSProperties = {
-  fontSize: 'var(--font-label)',
-  fontWeight: '600',
-  padding: '0.125rem 0.5rem',
-  background: 'var(--info-bg)',
-  color: 'var(--info-text)',
-  borderRadius: '12px',
-};

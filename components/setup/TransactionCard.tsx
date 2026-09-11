@@ -5,6 +5,8 @@ import { formatDateLongUTC } from '@/lib/date-utils';
 import EditTransactionDialog from './EditTransactionDialog';
 import { ConfirmDialog } from '../dialogs';
 import { formatCategory } from '@/lib/categories';
+import { formatMoney } from '@/lib/actualize';
+import { TrashIcon, CheckIcon } from '../icons';
 
 interface Transaction {
   id: number;
@@ -47,29 +49,29 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
 
   return (
     <>
-      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', padding: '1rem' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span style={dateStyle}>{formatDateLongUTC(new Date(transaction.date))}</span>
-            <span style={categoryBadgeStyle}>{formatCategory(transaction.category)}</span>
+      <div className="list-item">
+        <div className="list-item__body">
+          <div className="list-item__title">
+            {transaction.description}
+            {isActualized && <span className="pill pill--safe"><CheckIcon size={10} strokeWidth={3} /> Confirmed</span>}
           </div>
-          <div style={nameStyle}>{transaction.description}</div>
-          <div style={{ ...amountStyle, color: isDeposit ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {isDeposit ? '+' : ''}${Math.abs(transaction.amount).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+          <div className="list-item__meta">
+            {formatDateLongUTC(new Date(transaction.date))} · {formatCategory(transaction.category)}
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div className={`list-item__amount ${isDeposit ? 'money-pos' : 'money-neg'}`}>
+          {formatMoney(transaction.amount, true)}
+        </div>
+        <div className="list-item__actions">
           <EditTransactionDialog transaction={transaction} onUpdated={onUpdate} />
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isDeleting}
-            className="btn btn-danger-soft btn-sm" style={{ opacity: isDeleting ? 0.5 : 1 }}
+            className="btn btn-ghost btn-sm"
+            aria-label="Delete transaction"
+            style={{ color: 'var(--color-danger)' }}
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            <TrashIcon size={16} />
           </button>
         </div>
       </div>
@@ -85,28 +87,7 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
   );
 }
 
-const dateStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--text-secondary)',
-  fontWeight: '500',
-};
 
-const categoryBadgeStyle: React.CSSProperties = {
-  fontSize: '0.625rem',
-  padding: '0.125rem 0.5rem',
-  background: 'var(--bg-tertiary)',
-  borderRadius: '4px',
-  color: 'var(--text-secondary)',
-};
 
-const nameStyle: React.CSSProperties = {
-  fontSize: '0.9375rem',
-  fontWeight: '500',
-  marginBottom: '0.25rem',
-};
 
-const amountStyle: React.CSSProperties = {
-  fontSize: '1.125rem',
-  fontWeight: '600',
-};
 

@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { PeriodTrendForecast } from '@/lib/period-trend-forecast';
 import { formatDateShortUTC, parseDateUTC } from '@/lib/date-utils';
+import { formatMoney } from '@/lib/actualize';
 
 interface Props {
   accountId: number;
   variableExpenses: Array<{ id: number; name: string; billingCycleDay?: number | null }>;
 }
 
-export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
+export function PeriodTrendWidget({ variableExpenses }: Props) {
   const [selectedExpenseId, setSelectedExpenseId] = useState<number | null>(
     variableExpenses.length > 0 ? variableExpenses[0].id : null
   );
@@ -98,247 +99,119 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
     }
   }
 
-  const formatCurrency = (value: number) => {
-    return Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const getTrendColor = (label: string) => {
-    switch (label) {
-      case 'Trending Higher':
-        return 'var(--color-danger)';
-      case 'Trending Lower':
-        return 'var(--color-success)';
-      default:
-        return 'var(--text-secondary)';
-    }
-  };
-
-  const getTrendBadgeStyle = (label: string): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      padding: '0.5rem 1rem',
-      borderRadius: '6px',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      display: 'inline-block',
-    };
-
-    switch (label) {
-      case 'Trending Higher':
-        return { ...baseStyle, background: 'var(--danger-bg)', color: 'var(--danger-text)' };
-      case 'Trending Lower':
-        return { ...baseStyle, background: 'var(--safe-bg)', color: 'var(--safe-text)' };
-      default:
-        return { ...baseStyle, background: 'var(--bg-tertiary)', color: 'var(--text-primary)' };
-    }
-  };
+  const trendTone = (label: string): 'safe' | 'danger' | 'neutral' =>
+    label === 'Trending Higher' ? 'danger' : label === 'Trending Lower' ? 'safe' : 'neutral';
 
   return (
     <div className="card">
-      <h3 className="section-title">Period Trend Forecast</h3>
-      <p className="dialog-description">
-        Track your spending cycle and predict where you&apos;ll end up based on current trends.
-      </p>
+      <div className="section-head">
+        <div>
+          <h3 className="section-title">Check a billing period</h3>
+          <p>Enter today&apos;s balance on a card to see where the cycle is likely to end.</p>
+        </div>
+      </div>
 
-      {/* Input Section */}
-      <div style={inputSectionStyle}>
-        <div style={inputGroupStyle}>
-          <label className="label">Variable Expense</label>
-          <select
-            value={selectedExpenseId || ''}
-            onChange={(e) => setSelectedExpenseId(Number(e.target.value))}
-            className="select"
-          >
+      <div className="stack" style={{ gap: '0.875rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--border-secondary)', marginBottom: '1.25rem' }}>
+        <div>
+          <label className="label" htmlFor="ptw-expense">Variable expense</label>
+          <select id="ptw-expense" value={selectedExpenseId || ''} onChange={(e) => setSelectedExpenseId(Number(e.target.value))} className="select">
             {variableExpenses.map((exp) => (
-              <option key={exp.id} value={exp.id}>
-                {exp.name}
-              </option>
+              <option key={exp.id} value={exp.id}>{exp.name}</option>
             ))}
           </select>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div style={inputGroupStyle}>
-            <label className="label">Period Start</label>
-            <input
-              type="date"
-              value={periodStart}
-              onChange={(e) => setPeriodStart(e.target.value)}
-              className="input"
-            />
+        <div className="grid-2">
+          <div>
+            <label className="label" htmlFor="ptw-start">Period start</label>
+            <input id="ptw-start" type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className="input" />
           </div>
-
-          <div style={inputGroupStyle}>
-            <label className="label">Period End</label>
-            <input
-              type="date"
-              value={periodEnd}
-              onChange={(e) => setPeriodEnd(e.target.value)}
-              className="input"
-            />
+          <div>
+            <label className="label" htmlFor="ptw-end">Period end</label>
+            <input id="ptw-end" type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="input" />
           </div>
         </div>
 
-        <div style={inputGroupStyle}>
-          <label className="label">Current Balance ($)</label>
+        <div>
+          <label className="label" htmlFor="ptw-balance">Current balance ($)</label>
           <input
-            type="number"
-            step="0.01"
+            id="ptw-balance"
+            type="text"
+            inputMode="decimal"
             value={currentBalance}
             onChange={(e) => setCurrentBalance(e.target.value)}
-            placeholder="e.g., 2453.67"
+            placeholder="e.g. 2453.67"
             className="input"
           />
         </div>
 
-        <button onClick={handleCalculate} disabled={loading} className="btn btn-primary">
-          {loading ? 'Calculating...' : 'Calculate Forecast'}
-        </button>
+        <div>
+          <button onClick={handleCalculate} disabled={loading} className="btn btn-primary">
+            {loading ? 'Calculating…' : 'Calculate forecast'}
+          </button>
+        </div>
 
         {error && (
-          <div className="alert alert--danger">{error}</div>
+          <div className="alert alert--danger"><div>{error}</div></div>
         )}
       </div>
 
-      {/* Results Section */}
       {forecast && (
-        <div style={resultsStyle}>
-          {/* Trend Badge */}
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <div style={getTrendBadgeStyle(forecast.trendLabel)}>
-              {forecast.trendLabel}
-            </div>
-            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              You are currently{' '}
-              <strong style={{ color: getTrendColor(forecast.trendLabel) }}>
-                {forecast.trendPercentage >= 0 ? '+' : ''}
-                {forecast.trendPercentage.toFixed(1)}%
-              </strong>{' '}
-              {forecast.trendPercentage >= 0 ? 'above' : 'below'} expected for this point in the period.
-            </p>
-          </div>
-
-          {/* Progress Bar */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
-              <span>Period Progress</span>
-              <span>{forecast.daysElapsed} of {forecast.totalDays} days</span>
-            </div>
-            <div style={progressBarContainerStyle}>
-              <div
-                style={{
-                  ...progressBarFillStyle,
-                  width: `${(forecast.fractionElapsed * 100).toFixed(1)}%`,
-                }}
-              />
+        <div className="stack" style={{ gap: '1rem' }}>
+          <div className={`alert alert--${trendTone(forecast.trendLabel) === 'neutral' ? 'info' : trendTone(forecast.trendLabel)}`}>
+            <div>
+              <strong>{forecast.trendLabel}.</strong> You are {Math.abs(forecast.trendPercentage).toFixed(1)}%{' '}
+              {forecast.trendPercentage >= 0 ? 'above' : 'below'} the usual pace for this point in the period
+              ({forecast.daysElapsed} of {forecast.totalDays} days).
             </div>
           </div>
 
-          {/* Key Metrics */}
-          <div style={metricsGridStyle}>
-            <div style={metricCardStyle}>
-              <div style={metricLabelStyle}>Actual To-Date</div>
-              <div style={metricValueStyle}>${formatCurrency(forecast.actualToDate)}</div>
+          <div>
+            <div className="meter" style={{ height: 8 }}>
+              <div className="meter__fill" style={{ width: `${(forecast.fractionElapsed * 100).toFixed(1)}%` }} />
             </div>
+            <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.375rem' }}>Period progress</div>
+          </div>
 
-            <div style={metricCardStyle}>
-              <div style={metricLabelStyle}>Expected To-Date</div>
-              <div style={metricValueStyle}>${formatCurrency(forecast.expectedToDate)}</div>
+          <div className="grid-3">
+            <div className="stat-tile">
+              <div className="stat-tile__label">Spent so far</div>
+              <div className="stat-tile__value">{formatMoney(forecast.actualToDate)}</div>
             </div>
-
-            <div style={metricCardStyle}>
-              <div style={metricLabelStyle}>Baseline Full Period</div>
-              <div style={metricValueStyle}>${formatCurrency(forecast.baselineFullPeriodSpend)}</div>
+            <div className="stat-tile">
+              <div className="stat-tile__label">Expected by now</div>
+              <div className="stat-tile__value">{formatMoney(forecast.expectedToDate)}</div>
             </div>
-
-            <div style={{ ...metricCardStyle, gridColumn: '1 / -1', background: 'var(--bg-tertiary)' }}>
-              <div style={metricLabelStyle}>Predicted End Balance</div>
-              <div style={{ ...metricValueStyle, fontSize: '1.5rem', color: 'var(--text-primary)' }}>
-                ${formatCurrency(forecast.predictedFullPeriodSpend)}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                vs baseline ${formatCurrency(forecast.baselineFullPeriodSpend)} (
-                {forecast.predictedFullPeriodSpend >= forecast.baselineFullPeriodSpend ? '+' : ''}
-                {((forecast.predictedFullPeriodSpend - forecast.baselineFullPeriodSpend) / forecast.baselineFullPeriodSpend * 100).toFixed(1)}%)
+            <div className="stat-tile stat-tile--accent">
+              <div className="stat-tile__label">Predicted period total</div>
+              <div className="stat-tile__value">{formatMoney(forecast.predictedFullPeriodSpend)}</div>
+              <div className="stat-tile__sub">
+                usual {formatMoney(forecast.baselineFullPeriodSpend)} ·{' '}
+                {forecast.baselineFullPeriodSpend > 0
+                  ? `${forecast.predictedFullPeriodSpend >= forecast.baselineFullPeriodSpend ? '+' : ''}${(((forecast.predictedFullPeriodSpend - forecast.baselineFullPeriodSpend) / forecast.baselineFullPeriodSpend) * 100).toFixed(1)}%`
+                  : '—'}
               </div>
             </div>
           </div>
 
-          {/* Visual Comparison Bar */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>
-              Spend Comparison
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  Predicted Total: ${formatCurrency(forecast.predictedFullPeriodSpend)}
-                </div>
-                <div style={comparisonBarContainerStyle}>
-                  <div
-                    style={{
-                      ...comparisonBarFillStyle,
-                      width: '100%',
-                      background: getTrendColor(forecast.trendLabel),
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  Baseline Total: ${formatCurrency(forecast.baselineFullPeriodSpend)}
-                </div>
-                <div style={comparisonBarContainerStyle}>
-                  <div
-                    style={{
-                      ...comparisonBarFillStyle,
-                      width: `${(forecast.baselineFullPeriodSpend / forecast.predictedFullPeriodSpend * 100).toFixed(1)}%`,
-                      background: 'var(--text-secondary)',
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Daily Forecast Breakdown */}
           {forecast.dailyForecasts && forecast.dailyForecasts.length > 0 && (
-            <details style={{ marginTop: '1.5rem' }}>
-              <summary style={{ 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                cursor: 'pointer',
-                padding: '0.5rem',
-                background: 'var(--bg-tertiary)',
-                borderRadius: '4px',
-                userSelect: 'none',
-              }}>
-                Daily Forecast Breakdown ({forecast.dailyForecasts.length} remaining days)
+            <details>
+              <summary className="btn btn-ghost btn-sm" style={{ listStyle: 'none' }}>
+                Daily forecast · {forecast.dailyForecasts.length} remaining days
               </summary>
-              <div style={{ 
-                marginTop: '0.75rem', 
-                maxHeight: '300px', 
-                overflowY: 'auto',
-                border: '1px solid var(--border-primary)',
-                borderRadius: '4px',
-              }}>
-                <table style={{ width: '100%', fontSize: '0.75rem', borderCollapse: 'collapse' }}>
-                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
+              <div className="table-wrap" style={{ marginTop: '0.75rem', maxHeight: 300, overflowY: 'auto', border: '1px solid var(--border-secondary)', borderRadius: 'var(--radius-sm)' }}>
+                <table className="table">
+                  <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)' }}>
                     <tr>
-                      <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500' }}>Date</th>
-                      <th style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '500' }}>Predicted Spend</th>
+                      <th>Date</th>
+                      <th className="num">Predicted spend</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {forecast.dailyForecasts.map((day, idx) => (
-                      <tr key={day.date} style={{ 
-                        borderBottom: idx < forecast.dailyForecasts.length - 1 ? '1px solid var(--border-primary)' : 'none' 
-                      }}>
-                        <td style={{ padding: '0.5rem' }}>
-                          {formatDateShortUTC(parseDateUTC(day.date))}
-                        </td>
-                        <td style={{ padding: '0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                          ${day.predictedSpend.toFixed(2)}
-                        </td>
+                    {forecast.dailyForecasts.map((day) => (
+                      <tr key={day.date}>
+                        <td>{formatDateShortUTC(parseDateUTC(day.date))}</td>
+                        <td className="num">{formatMoney(day.predictedSpend)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -351,83 +224,3 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
     </div>
   );
 }
-
-// Styles
-
-const inputSectionStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-  paddingBottom: '1.5rem',
-  borderBottom: '1px solid var(--border-primary)',
-  marginBottom: '1.5rem',
-};
-
-const inputGroupStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.25rem',
-};
-
-const resultsStyle: React.CSSProperties = {
-  marginTop: '1.5rem',
-};
-
-const progressBarContainerStyle: React.CSSProperties = {
-  height: '8px',
-  background: 'var(--bg-tertiary)',
-  borderRadius: '4px',
-  overflow: 'hidden',
-};
-
-const progressBarFillStyle: React.CSSProperties = {
-  height: '100%',
-  background: 'var(--text-primary)',
-  transition: 'width 0.3s ease',
-};
-
-const metricsGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '1rem',
-};
-
-const metricCardStyle: React.CSSProperties = {
-  padding: '1rem',
-  background: 'var(--bg-tertiary)',
-  borderRadius: '6px',
-  border: '1px solid var(--border-primary)',
-};
-
-const metricLabelStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--text-secondary)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  marginBottom: '0.25rem',
-};
-
-const metricValueStyle: React.CSSProperties = {
-  fontSize: '1.125rem',
-  fontWeight: '600',
-  color: 'var(--text-primary)',
-};
-
-const comparisonBarContainerStyle: React.CSSProperties = {
-  height: '24px',
-  background: 'var(--bg-tertiary)',
-  borderRadius: '4px',
-  overflow: 'hidden',
-};
-
-const comparisonBarFillStyle: React.CSSProperties = {
-  height: '100%',
-  transition: 'width 0.3s ease',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  paddingRight: '0.5rem',
-  color: 'white',
-  fontSize: '0.75rem',
-  fontWeight: '600',
-};

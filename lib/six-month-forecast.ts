@@ -41,10 +41,12 @@ export async function generateSixMonthForecast(
   const months: MonthSummary[] = [];
   let currentYear = startYear;
   let currentMonth = startMonth;
+  let safeMinBalance = 0;
 
   // Generate forecasts for 6 months
   for (let i = 0; i < 6; i++) {
     const forecast = await generateForecast(accountId, currentYear, currentMonth);
+    safeMinBalance = forecast.safeMinBalance;
     const summary = summarizeMonth(forecast);
     months.push(summary);
 
@@ -65,7 +67,7 @@ export async function generateSixMonthForecast(
 
   return {
     accountId,
-    safeMinBalance: months[0].status !== 'safe' ? months[0].lowestBalance : 0, // Get from first month
+    safeMinBalance, // the account's safe minimum, as used by every monthly forecast
     months,
     overallStatus: {
       lowestBalance,

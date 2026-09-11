@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
 import { RecurringExpense } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 import { EditExpenseDialog } from './EditExpenseDialog';
 import { formatDateLongUTC } from '@/lib/date-utils';
 import { formatCategory } from '@/lib/categories';
+import { formatMoney } from '@/lib/actualize';
+import { TrashIcon } from '../icons';
 
 interface Props {
   expense: RecurringExpense;
@@ -19,7 +20,6 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [nextMonthEstimate, setNextMonthEstimate] = useState<number | null>(null);
-  const isMobile = useIsMobile();
 
   async function fetchNextMonthEstimate() {
     try {
@@ -47,8 +47,8 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
 
   const frequencyLabel = {
     weekly: 'Week',
-    bi_weekly: 'Bi-Weekly',
-    semi_monthly: 'Semi-Monthly',
+    bi_weekly: 'Two weeks',
+    semi_monthly: 'Half month',
     monthly: 'Month',
   }[expense.frequency || 'monthly'] || 'Month';
 
@@ -90,48 +90,25 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
 
   return (
     <>
-      <div style={{
-        background: 'var(--bg-secondary)',
-        padding: '1rem',
-        borderRadius: '6px',
-        border: '1px solid var(--border-primary)',
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'stretch' : 'center',
-        gap: '1rem',
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{expense.name}</div>
-          <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
-            {recurringText}{anchorDateText} on {dayLabel} • {categoryLabel}
-            {expense.isVariable && ' • Variable'}
+      <div className="list-item">
+        <div className="list-item__body">
+          <div className="list-item__title">
+            {expense.name}
+            {expense.isVariable && <span className="pill pill--info">Variable</span>}
+          </div>
+          <div className="list-item__meta">
+            {recurringText}{anchorDateText} on {dayLabel} · {categoryLabel}
+            {expense.budgetGoal ? ` · goal ${formatMoney(expense.budgetGoal)}` : ''}
           </div>
         </div>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: isMobile ? 'row' : 'row',
-          gap: '0.5rem', 
-          alignItems: 'center',
-          justifyContent: isMobile ? 'space-between' : 'flex-end',
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: '0.25rem' }}>
-            <span style={{ fontWeight: '600', fontSize: isMobile ? 'var(--font-body)' : '1rem' }}>
-              ${expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{frequencyLabel}
-            </span>
-            {expense.isVariable && nextMonthEstimate !== null && (
-              <span style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)' }}>
-                Next month: ${nextMonthEstimate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={() => setShowEditDialog(true)} className="btn btn-secondary btn-sm">
-              Edit
-            </button>
-            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger-soft btn-sm">
-              Delete
-            </button>
-          </div>
+        <div className="list-item__amount">
+          {formatMoney(expense.amount)}<small>per {frequencyLabel.toLowerCase()}{expense.isVariable && nextMonthEstimate !== null ? ` · next ${formatMoney(nextMonthEstimate)}` : ''}</small>
+        </div>
+        <div className="list-item__actions">
+          <button onClick={() => setShowEditDialog(true)} className="btn btn-secondary btn-sm">Edit</button>
+          <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-ghost btn-sm" aria-label={`Delete ${expense.name}`} style={{ color: 'var(--color-danger)' }}>
+            <TrashIcon size={16} />
+          </button>
         </div>
       </div>
 

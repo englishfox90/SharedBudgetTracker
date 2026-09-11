@@ -1,120 +1,52 @@
 'use client';
 
-import { IconLabel, TrendingUpIcon, TrendingDownIcon, ArrowRightIcon, AlertTriangleIcon } from '../icons';
-
 import { ExpenseTrend } from '@/lib/trend-detection';
+import { formatMoney } from '@/lib/actualize';
+import { TrendingUpIcon, TrendingDownIcon, ArrowRightIcon, AlertTriangleIcon } from '../icons';
 
 interface Props {
   trends: ExpenseTrend[];
 }
 
 export default function TrendChart({ trends }: Props) {
-  if (trends.length === 0) {
-    return (
-      <div className="card">
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
-          Variable Expense Trends
-        </h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          No variable expense data available. Add variable expenses in the Setup tab to see trends.
-        </p>
-      </div>
-    );
-  }
+  const increasing = trends.filter((t) => t.trend === 'increasing').length;
+  const decreasing = trends.filter((t) => t.trend === 'decreasing').length;
 
   return (
     <div className="card">
-      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-        Variable Expense Trends
-      </h3>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {trends.map((trend) => {
-          const trendIcon = trend.trend === 'increasing' ? <TrendingUpIcon size={18} /> : trend.trend === 'decreasing' ? <TrendingDownIcon size={18} /> : <ArrowRightIcon size={18} />;
-          const trendColor = trend.trend === 'increasing' ? 'var(--color-danger)' : trend.trend === 'decreasing' ? 'var(--color-success)' : 'var(--text-secondary)';
-
-          return (
-            <div
-              key={trend.recurringExpenseId}
-              style={{
-                padding: '1rem',
-                borderRadius: '6px',
-                background: trend.alert ? 'var(--warning-bg)' : 'var(--bg-tertiary)',
-                border: trend.alert ? '1px solid var(--warning-border)' : '1px solid var(--border-primary)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                {/* Category Name */}
-                <div>
-                  <div style={{ fontSize: '0.9375rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                    {trend.expenseName}
-                  </div>
-                  {trend.alert && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginTop: '0.25rem' }}>
-                      <IconLabel icon={<AlertTriangleIcon size={12} />}>15%+ above average</IconLabel>
-                    </div>
-                  )}
-                </div>
-
-                {/* Trend Indicator */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ display: 'flex', color: trendColor }}>{trendIcon}</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: trendColor }}>
-                    {Math.abs(trend.trendPercentage)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Values */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', fontSize: '0.8125rem' }}>
-                <div>
-                  <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Current Month</div>
-                  <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                    ${trend.currentMonthActual.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>3-Mo Avg</div>
-                  <div style={{ fontWeight: '500' }}>
-                    ${trend.threeMonthAverage.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>6-Mo Avg</div>
-                  <div style={{ fontWeight: '500' }}>
-                    ${trend.sixMonthAverage.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Summary */}
-      <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: '4px', fontSize: '0.8125rem' }}>
-        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-          <div>
-            <span style={{ color: 'var(--text-secondary)' }}>Increasing: </span>
-            <span style={{ fontWeight: '600', color: 'var(--color-danger)' }}>
-              {trends.filter(t => t.trend === 'increasing').length}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-secondary)' }}>Stable: </span>
-            <span style={{ fontWeight: '600' }}>
-              {trends.filter(t => t.trend === 'stable').length}
-            </span>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-secondary)' }}>Decreasing: </span>
-            <span style={{ fontWeight: '600', color: 'var(--color-success)' }}>
-              {trends.filter(t => t.trend === 'decreasing').length}
-            </span>
-          </div>
+      <div className="section-head">
+        <div>
+          <h3 className="section-title">Variable expense trends</h3>
+          <p>
+            {trends.length === 0
+              ? 'Add variable expenses in Setup to see trends.'
+              : `${increasing} rising · ${trends.length - increasing - decreasing} stable · ${decreasing} falling`}
+          </p>
         </div>
       </div>
+
+      {trends.length > 0 && (
+        <div className="list">
+          {trends.map((trend) => {
+            const tone = trend.trend === 'increasing' ? 'danger' : trend.trend === 'decreasing' ? 'safe' : 'neutral';
+            const icon = trend.trend === 'increasing' ? <TrendingUpIcon size={12} /> : trend.trend === 'decreasing' ? <TrendingDownIcon size={12} /> : <ArrowRightIcon size={12} />;
+            return (
+              <div key={trend.recurringExpenseId} className="list-item" style={{ flexWrap: 'wrap', background: trend.alert ? 'var(--warning-bg)' : undefined, borderColor: trend.alert ? 'var(--warning-border)' : undefined }}>
+                <div className="list-item__body">
+                  <div className="list-item__title">
+                    {trend.expenseName}
+                    <span className={`pill pill--${tone}`}>{icon} {Math.abs(trend.trendPercentage)}%</span>
+                    {trend.alert && <span className="pill pill--warning"><AlertTriangleIcon size={11} /> 15%+ above average</span>}
+                  </div>
+                  <div className="list-item__meta">
+                    This month {formatMoney(trend.currentMonthActual)} · 3-mo avg {formatMoney(trend.threeMonthAverage)} · 6-mo avg {formatMoney(trend.sixMonthAverage)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-

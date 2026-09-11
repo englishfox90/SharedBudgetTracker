@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { PlusIcon } from '../icons';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { EXPENSE_CATEGORIES } from '@/lib/categories';
 
@@ -92,7 +93,7 @@ export function AddExpenseDialog({ accountId, onAdded }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button className="btn btn-primary">+ Add Expense</button>
+        <button className="btn btn-primary btn-sm"><PlusIcon size={16} /> Add expense</button>
       </Dialog.Trigger>
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <Dialog.Overlay className="dialog-overlay" />

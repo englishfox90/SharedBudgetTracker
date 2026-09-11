@@ -1,6 +1,7 @@
 'use client';
 
-import { IconLabel, TrendingDownIcon, TrendingUpIcon, ArrowRightIcon, WalletIcon, ClipboardListIcon } from './icons';
+import { IconLabel, TrendingDownIcon, TrendingUpIcon, ArrowRightIcon, ClipboardListIcon, CheckIcon, AlertTriangleIcon, AlertOctagonIcon, InfoIcon } from './icons';
+import { formatMoney } from '@/lib/actualize';
 
 import { useState, useEffect } from 'react';
 import type { BudgetAnalysis } from '@/lib/budget-advisor';
@@ -56,54 +57,49 @@ export default function BudgetAdvisorTab({
 
   if (loading || accountLoading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div className="skeleton" style={{ height: '32px', width: '50%' }} />
-        <div className="skeleton" style={{ height: '260px' }} />
-        <div className="skeleton" style={{ height: '360px' }} />
-      </div>
-    );
-  }
-
-  if (analyses.length === 0) {
-    return (
-      <div style={{ padding: '0' }}>
-        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>Budget Advisor</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-body)' }}>
-          No budget goals set yet. Set budget goals on variable expenses in the Setup tab to start tracking.
-        </p>
+      <div className="stack">
+        <div className="skeleton" style={{ height: '36px', width: '40%' }} />
+        <div className="skeleton" style={{ height: '300px' }} />
+        <div className="skeleton" style={{ height: '420px' }} />
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '0' }}>
-      <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '600' }}>Budget Advisor</h2>
+    <div className="stack" style={{ gap: '1.25rem' }}>
+      <div className="section-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="page-title">Budget</h2>
+          <p>Variable expenses against the goals you set in Setup.</p>
+        </div>
+      </div>
 
-      {/* Period Trend Forecast - for tracking current billing period */}
-      {accountId && variableExpenses.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <PeriodTrendWidget accountId={accountId} variableExpenses={variableExpenses} />
+      {analyses.length === 0 && (
+        <div className="alert alert--info">
+          <InfoIcon size={18} />
+          <div>No budget goals yet. Edit a variable expense in Setup and give it a budget goal to start tracking it here.</div>
         </div>
       )}
 
       {analyses.map((analysis) => (
         <BudgetCard key={analysis.expense.id} analysis={analysis} />
       ))}
+
+      {accountId && variableExpenses.length > 0 && (
+        <PeriodTrendWidget accountId={accountId} variableExpenses={variableExpenses} />
+      )}
     </div>
   );
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
   const { expense, currentMonth, historical, impact, recommendations } = analysis;
   const [periodTrend, setPeriodTrend] = useState<any>(null);
-  const [loadingTrend, setLoadingTrend] = useState(false);
-  
-  // Load period trend forecast if billing cycle is set
 
   async function loadPeriodTrend() {
     try {
-      setLoadingTrend(true);
-      
       // Calculate billing period dates
       const now = new Date();
       const today = now.getDate();
@@ -145,8 +141,6 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
       }
     } catch (error) {
       console.error('Failed to load period trend:', error);
-    } finally {
-      setLoadingTrend(false);
     }
   }
 
@@ -154,262 +148,118 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
     if (expense.billingCycleDay) {
       loadPeriodTrend();
     }
-  }, [expense.id, expense.billingCycleDay]);
-  
-  const statusColor = 
-    currentMonth.status === 'on-track' ? 'var(--color-success)' :
-    currentMonth.status === 'warning' ? 'var(--color-warning)' :
-    'var(--color-danger)';
+  }, [expense.id, expense.billingCycleDay]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const progressPercent = Math.min(
-    (currentMonth.actualSpending / currentMonth.budgetGoal) * 100,
-    100
-  );
+  const tone: 'safe' | 'warning' | 'danger' =
+    currentMonth.status === 'on-track' ? 'safe' : currentMonth.status === 'warning' ? 'warning' : 'danger';
+  const statusLabel = currentMonth.status === 'on-track' ? 'On track' : currentMonth.status === 'warning' ? 'Watch' : 'Over budget';
+  const statusIcon = tone === 'safe' ? <CheckIcon size={11} strokeWidth={3} /> : tone === 'warning' ? <AlertTriangleIcon size={11} /> : <AlertOctagonIcon size={11} />;
+  const spentPercent = Math.min((currentMonth.actualSpending / currentMonth.budgetGoal) * 100, 100);
+  const timePercent = Math.min((currentMonth.daysElapsed / currentMonth.daysInMonth) * 100, 100);
+  const remaining = currentMonth.budgetGoal - currentMonth.actualSpending;
+  const trendTone = periodTrend ? (periodTrend.trendLabel === 'Trending Lower' ? 'safe' : periodTrend.trendLabel === 'Trending Higher' ? 'danger' : 'neutral') : 'neutral';
 
   return (
-    <div
-      style={{
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
-        padding: '1.5rem',
-        marginBottom: '1.5rem',
-        background: 'var(--bg-secondary)',
-      }}
-    >
-      {/* Header */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h3 style={{ fontSize: '1.125rem', margin: 0 }}>{expense.name}</h3>
-          <span
-            style={{
-              padding: '0.25rem 0.75rem',
-              borderRadius: '12px',
-              background: statusColor,
-              color: 'white',
-              fontSize: 'var(--font-small)',
-              fontWeight: '600',
-            }}
-          >
-            {currentMonth.status.replace('-', ' ').toUpperCase()}
-          </span>
+    <div className="card">
+      <div className="section-head">
+        <div>
+          <h3 className="section-title">{expense.name}</h3>
+          <p>Goal {formatMoney(currentMonth.budgetGoal)} a month · {currentMonth.daysElapsed} of {currentMonth.daysInMonth} days</p>
         </div>
-        <div style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)' }}>
-          Budget Goal: ${currentMonth.budgetGoal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/month
-        </div>
+        <span className={`pill pill--${tone}`}>{statusIcon} {statusLabel}</span>
       </div>
 
-      {/* Progress Bar */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: 'var(--font-body)', fontWeight: '600' }}>
-            ${currentMonth.actualSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-          <span style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)' }}>
-            {currentMonth.daysElapsed} of {currentMonth.daysInMonth} days
+      {/* Spend so far */}
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div className="row row--between" style={{ alignItems: 'baseline', marginBottom: '0.5rem' }}>
+          <span className="stat-value">{formatMoney(currentMonth.actualSpending)}</span>
+          <span style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
+            {remaining >= 0 ? `${formatMoney(remaining)} left` : `${formatMoney(Math.abs(remaining))} over`}
           </span>
         </div>
-        <div
-          style={{
-            height: '8px',
-            background: 'var(--bg-primary)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-          }}
-        >
+        <div className={`meter meter--${tone}`} style={{ position: 'relative', height: 10 }}>
+          <div className="meter__fill" style={{ width: `${spentPercent}%` }} />
           <div
-            style={{
-              height: '100%',
-              width: `${progressPercent}%`,
-              background: statusColor,
-              transition: 'width 0.3s ease',
-            }}
+            title="Where the month is today"
+            style={{ position: 'absolute', top: -3, bottom: -3, left: `${timePercent}%`, width: 2, background: 'var(--text-primary)', opacity: 0.6 }}
           />
         </div>
-        <div style={{ marginTop: '0.5rem', fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
-          {currentMonth.variance >= 0 ? '+$' : '-$'}{Math.abs(currentMonth.variance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (
-          {currentMonth.variancePercent >= 0 ? '+' : ''}
-          {currentMonth.variancePercent.toFixed(1)}%)
+        <div className="row row--between" style={{ fontSize: 'var(--font-small)', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
+          <span>{Math.round(spentPercent)}% of goal spent</span>
+          <span>marker = {Math.round(timePercent)}% of the month gone</span>
         </div>
       </div>
 
-      {/* Billing Period Tracking */}
+      <div className="grid-3" style={{ marginBottom: '1.25rem' }}>
+        <div className="stat-tile">
+          <div className="stat-tile__label">Projected month end</div>
+          <div className="stat-tile__value">{formatMoney(currentMonth.projectedTotal)}</div>
+          <div className={`stat-tile__sub ${currentMonth.projectedVariance <= 0 ? 'money-pos' : 'money-neg'}`}>
+            {formatMoney(Math.abs(currentMonth.projectedVariance))} {currentMonth.projectedVariance <= 0 ? 'under' : 'over'} goal
+          </div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-tile__label">3-month average</div>
+          <div className="stat-tile__value">{formatMoney(historical.averageMonthly)}</div>
+          <div className="stat-tile__sub">
+            <IconLabel icon={historical.trend === 'improving' ? <TrendingDownIcon size={12} /> : historical.trend === 'worsening' ? <TrendingUpIcon size={12} /> : <ArrowRightIcon size={12} />}>
+              {historical.trend === 'improving' ? 'Improving' : historical.trend === 'worsening' ? 'Worsening' : 'Stable'}
+            </IconLabel>
+          </div>
+        </div>
+        <div className="stat-tile stat-tile--accent">
+          <div className="stat-tile__label">If you hit the goal</div>
+          <div className="stat-tile__value">{formatMoney(Math.abs(impact.annualSavingsIfGoalMet))}</div>
+          <div className="stat-tile__sub">saved a year · {impact.percentageReduction.toFixed(0)}% less</div>
+        </div>
+      </div>
+
       {periodTrend && (
-        <div
-          style={{
-            padding: '1rem',
-            background: 'var(--bg-primary)',
-            borderRadius: '6px',
-            marginBottom: '1.5rem',
-            border: `1px solid ${periodTrend.trendLabel === 'Trending Lower' ? 'var(--color-success)' : periodTrend.trendLabel === 'Trending Higher' ? 'var(--color-danger)' : 'var(--border-color)'}`,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: 'var(--font-body)', fontWeight: '600', margin: 0 }}>
-              Current Billing Period
-            </h4>
-            <span
-              style={{
-                padding: '0.25rem 0.5rem',
-                borderRadius: '4px',
-                fontSize: 'var(--font-small)',
-                fontWeight: '600',
-                background: periodTrend.trendLabel === 'Trending Lower' ? 'var(--safe-bg)' : periodTrend.trendLabel === 'Trending Higher' ? 'var(--danger-bg)' : 'var(--bg-tertiary)',
-                color: periodTrend.trendLabel === 'Trending Lower' ? 'var(--safe-text)' : periodTrend.trendLabel === 'Trending Higher' ? 'var(--danger-text)' : 'var(--text-primary)',
-              }}
-            >
+        <div className="card--inset" style={{ marginBottom: '1.25rem' }}>
+          <div className="section-head" style={{ marginBottom: '0.625rem' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>Current billing period</div>
+              <p>Cycle starts on day {expense.billingCycleDay}</p>
+            </div>
+            <span className={`pill pill--${trendTone}`}>
+              {trendTone === 'danger' ? <TrendingUpIcon size={11} /> : trendTone === 'safe' ? <TrendingDownIcon size={11} /> : <ArrowRightIcon size={11} />}
               {periodTrend.trendLabel}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', fontSize: 'var(--font-small)' }}>
-            <div>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Actual Spending</div>
-              <div style={{ fontWeight: '600' }}>
-                ${periodTrend.actualToDate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Expected</div>
-              <div style={{ fontWeight: '600' }}>
-                ${periodTrend.expectedToDate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Baseline Full Period</div>
-              <div style={{ fontWeight: '600' }}>
-                ${periodTrend.baselineFullPeriodSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Predicted End</div>
-              <div style={{ fontWeight: '600' }}>
-                ${periodTrend.predictedFullPeriodSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
+          <div className="grid-2" style={{ gap: '0.5rem' }}>
+            <div className="kv"><span className="kv__label">Spent so far</span><span className="kv__value">{formatMoney(periodTrend.actualToDate)}</span></div>
+            <div className="kv"><span className="kv__label">Expected by now</span><span className="kv__value">{formatMoney(periodTrend.expectedToDate)}</span></div>
+            <div className="kv"><span className="kv__label">Usual full period</span><span className="kv__value">{formatMoney(periodTrend.baselineFullPeriodSpend)}</span></div>
+            <div className="kv"><span className="kv__label">Predicted end</span><span className="kv__value">{formatMoney(periodTrend.predictedFullPeriodSpend)}</span></div>
           </div>
         </div>
       )}
 
-      {/* Projection */}
-      <div
-        style={{
-          padding: '1rem',
-          background: 'var(--bg-primary)',
-          borderRadius: '6px',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <div style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-          Projected Month-End Total
-        </div>
-        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
-          ${currentMonth.projectedTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </div>
-        <div style={{ fontSize: 'var(--font-small)', color: statusColor, marginTop: '0.25rem' }}>
-          {currentMonth.projectedVariance >= 0 ? '+$' : '-$'}
-          {Math.abs(currentMonth.projectedVariance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} vs budget
-        </div>
-      </div>
-
-      {/* Historical Trend */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h4 style={{ fontSize: 'var(--font-body)', marginBottom: '0.75rem' }}>
-          Last 3 Months
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-          {historical.last3Months.map((monthData) => (
-            <div
-              key={`${monthData.year}-${monthData.month}`}
-              style={{
-                padding: '0.75rem',
-                background: 'var(--bg-primary)',
-                borderRadius: '4px',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                {new Date(monthData.year, monthData.month - 1).toLocaleDateString('en-US', {
-                  month: 'short',
-                })}
-              </div>
-              <div style={{ fontSize: 'var(--font-body)', fontWeight: '600' }}>
-                ${monthData.amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div
-                style={{
-                  fontSize: 'var(--font-small)',
-                  color: monthData.variance > 0 ? 'var(--color-danger)' : 'var(--color-success)',
-                }}
-              >
-                {monthData.variance >= 0 ? '+$' : '-$'}{Math.abs(monthData.variance).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: '0.75rem', fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
-          Avg: ${historical.averageMonthly.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/month
-          {' • '}
-          Trend:{' '}
-          {historical.trend === 'improving' ? (
-            <IconLabel icon={<TrendingDownIcon size={14} />}>Improving</IconLabel>
-          ) : historical.trend === 'worsening' ? (
-            <IconLabel icon={<TrendingUpIcon size={14} />}>Worsening</IconLabel>
-          ) : (
-            <IconLabel icon={<ArrowRightIcon size={14} />}>Stable</IconLabel>
-          )}
-        </div>
-      </div>
-
-      {/* Impact Analysis */}
-      <div
-        style={{
-          padding: '1.25rem',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '8px',
-          color: 'white',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <h4 style={{ fontSize: '1rem', marginBottom: '1rem', fontWeight: '600', margin: '0 0 1rem 0' }}>
-          <IconLabel icon={<WalletIcon size={18} />}>Impact of Meeting Your Goal</IconLabel>
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-          <div>
-            <div style={{ fontSize: 'var(--font-label)', opacity: 0.9, marginBottom: '0.25rem' }}>Annual Savings</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
-              ${Math.abs(impact.annualSavingsIfGoalMet).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </div>
+      <div className="grid-3" style={{ marginBottom: '1.25rem' }}>
+        {historical.last3Months.map((monthData) => (
+          <div key={`${monthData.year}-${monthData.month}`} className="kv" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '0.5rem 0.75rem', border: '1px solid var(--border-secondary)', borderRadius: 'var(--radius-sm)' }}>
+            <span className="kv__label">{MONTHS[monthData.month - 1]} {monthData.year}</span>
+            <span className="kv__value" style={{ fontSize: 'var(--font-body)' }}>{formatMoney(monthData.amount)}</span>
+            <span className={`kv__label ${monthData.variance > 0 ? 'money-neg' : 'money-pos'}`}>{formatMoney(Math.abs(monthData.variance))} {monthData.variance > 0 ? 'over' : 'under'}</span>
           </div>
-          <div>
-            <div style={{ fontSize: 'var(--font-label)', opacity: 0.9, marginBottom: '0.25rem' }}>Monthly Reduction</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>
-              {impact.percentageReduction.toFixed(1)}%
-            </div>
+        ))}
+      </div>
+
+      {recommendations.length > 0 && (
+        <div>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>
+            <IconLabel icon={<ClipboardListIcon size={16} />}>What to do</IconLabel>
+          </div>
+          <div className="step-list">
+            {recommendations.map((rec, idx) => (
+              <div key={idx} className="step-list__item">
+                <span className="step-list__num">{idx + 1}</span>
+                <span>{rec}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Recommendations */}
-      <div>
-        <h4 style={{ fontSize: 'var(--font-body)', marginBottom: '0.75rem' }}>
-          <IconLabel icon={<ClipboardListIcon size={16} />}>Action Items</IconLabel>
-        </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {recommendations.map((rec, idx) => (
-            <div
-              key={idx}
-              style={{
-                padding: '0.75rem',
-                background: 'var(--bg-primary)',
-                borderRadius: '4px',
-                fontSize: 'var(--font-small)',
-                lineHeight: '1.5',
-              }}
-            >
-              {rec}
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
