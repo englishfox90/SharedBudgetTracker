@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { formatDateUTC } from '@/lib/date-utils';
 
 interface CashEvent {
@@ -111,8 +112,8 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
       </Dialog.Trigger>
 
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
-        <Dialog.Overlay style={overlayStyle} />
-        <Dialog.Content style={contentStyle}>
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
           <Dialog.Title style={titleStyle}>Edit Actual Transaction</Dialog.Title>
           
           {isLinked && (
@@ -159,7 +160,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                 <select
                   value={isExpense ? 'expense' : 'income'}
                   onChange={(e) => setIsExpense(e.target.value === 'expense')}
-                  style={{ ...inputStyle, width: 'auto', minWidth: '100px' }}
+                  style={{ ...inputStyle, width: 'auto', minWidth: '0', flex: '0 0 auto' }}
                 >
                   <option value="expense">Expense (−)</option>
                   <option value="income">Income (+)</option>
@@ -170,7 +171,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                   value={amount}
                   onChange={handleAmountChange}
                   required
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={{ ...inputStyle, flex: 1, minWidth: 0 }}
                   placeholder="0.00"
                 />
               </div>
@@ -191,59 +192,61 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
               </div>
             )}
 
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              gap: '0.75rem', 
-              marginTop: '1.5rem' 
+            <div className="dialog-actions">
+              <Dialog.Close asChild>
+                <button type="button" style={cancelButtonStyle}>
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  ...submitButtonStyle,
+                  opacity: isSubmitting ? 0.5 : 1,
+                }}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+
+            <div style={{
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid var(--border-primary)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}>
-              <div>
-                {!showDeleteConfirm ? (
+              {!showDeleteConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={deleteButtonStyle}
+                >
+                  Delete this transaction
+                </button>
+              ) : (
+                <>
+                  <span style={{ fontSize: 'var(--font-body)', color: '#dc2626', fontWeight: 500 }}>Delete this transaction?</span>
                   <button
                     type="button"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    style={deleteButtonStyle}
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    style={{ ...deleteButtonStyle, background: '#dc2626', color: 'white' }}
                   >
-                    Delete
+                    {isDeleting ? 'Deleting...' : 'Yes, Delete'}
                   </button>
-                ) : (
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.875rem', color: '#dc2626' }}>Sure?</span>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      style={{ ...deleteButtonStyle, background: '#dc2626', color: 'white' }}
-                    >
-                      {isDeleting ? 'Deleting...' : 'Yes, Delete'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteConfirm(false)}
-                      style={cancelButtonStyle}
-                    >
-                      No
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <Dialog.Close asChild>
-                  <button type="button" style={cancelButtonStyle}>
-                    Cancel
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    style={cancelButtonStyle}
+                  >
+                    No
                   </button>
-                </Dialog.Close>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{
-                    ...submitButtonStyle,
-                    opacity: isSubmitting ? 0.5 : 1,
-                  }}
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
+                </>
+              )}
             </div>
           </form>
         </Dialog.Content>
@@ -251,28 +254,6 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
     </Dialog.Root>
   );
 }
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  maxWidth: '450px',
-  width: '90%',
-  maxHeight: '90vh',
-  overflow: 'auto',
-  zIndex: 51,
-};
 
 const titleStyle: React.CSSProperties = {
   fontSize: '1.25rem',

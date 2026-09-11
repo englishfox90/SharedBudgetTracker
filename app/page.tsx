@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -14,23 +15,29 @@ import BudgetAdvisorTab from '@/components/BudgetAdvisorTab';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
 import { useTheme } from '@/contexts/ThemeContext';
 
+const TABS = [
+  { value: 'dashboard', label: 'Dashboard' },
+  { value: 'forecast', label: 'Forecast' },
+  { value: 'recommendation', label: 'Recommendation' },
+  { value: 'transactions', label: 'Transactions' },
+  { value: 'budget', label: 'Budget' },
+  { value: 'setup', label: 'Setup' },
+];
+
 export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [currentMonth, setCurrentMonth] = useState<{ year: number; month: number }>(getCurrentMonthUTC());
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'forecast');
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
+  const tabsListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Detect mobile viewport
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+    // Keep the active tab visible when the tab row scrolls horizontally
+    const active = tabsListRef.current?.querySelector<HTMLElement>('[data-state="active"]');
+    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [activeTab]);
 
   useEffect(() => {
     // Update URL when tab changes
@@ -47,7 +54,7 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', padding: isMobile ? '1rem' : '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       <header style={{ 
-        marginBottom: isMobile ? '1rem' : '2rem', 
+        marginBottom: isMobile ? '0.75rem' : '2rem', 
       }}> 
         <div style={{ 
           display: 'flex', 
@@ -55,7 +62,7 @@ export default function Home() {
           alignItems: 'center',
           marginBottom: '0.5rem',
         }}>
-          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '700', margin: 0 }}>
+          <h1 style={{ fontSize: isMobile ? '1.25rem' : '2rem', fontWeight: '700', margin: 0 }}>
             Shared Balance Planner
           </h1>
           
@@ -64,7 +71,7 @@ export default function Home() {
             <DropdownMenu.Trigger asChild>
               <button
                 style={{
-                  padding: '0.5rem 0.75rem',
+                  padding: isMobile ? '0.375rem 0.625rem' : '0.5rem 0.75rem',
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-primary)',
                   borderRadius: '6px',
@@ -154,128 +161,51 @@ export default function Home() {
           </DropdownMenu.Root>
         </div>
         
-        <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '0.875rem' : '1rem' }}>
-          Manage your shared checking account and forecast balances
-        </p>
+        {!isMobile && (
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+            Manage your shared checking account and forecast balances
+          </p>
+        )}
       </header>
 
       <Tabs.Root value={activeTab} onValueChange={handleTabChange} style={{ width: '100%' }}>
         <Tabs.List
+          ref={tabsListRef}
+          className="tabs-list"
+          aria-label="Sections"
           style={{
             display: 'flex',
-            gap: isMobile ? '0.5rem' : '1rem',
+            gap: isMobile ? '0.25rem' : '1rem',
             borderBottom: '1px solid var(--border-primary)',
-            marginBottom: isMobile ? '1.5rem' : '2rem',
             overflowX: 'auto',
             WebkitOverflowScrolling: 'touch',
+            // Let the tab row bleed to the screen edges on phones so the
+            // partially visible last tab hints that the row scrolls.
+            margin: isMobile ? '0 -1rem 1.25rem' : '0 0 2rem',
+            padding: isMobile ? '0 0.5rem' : 0,
           }}
         >
-          <Tabs.Trigger
-            value="dashboard"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-            data-state-active-style={{
-              color: '#1a1a1a',
-              borderBottomColor: '#1a1a1a',
-            }}
-          >
-            Dashboard
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="forecast"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Forecast
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="recommendation"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Recommendation
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="transactions"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Transactions
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="budget"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Budget
-          </Tabs.Trigger>
-          <Tabs.Trigger
-            value="setup"
-            style={{
-              padding: isMobile ? '0.625rem 1rem' : '0.75rem 1.5rem',
-              fontSize: isMobile ? '0.875rem' : '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              borderBottom: '2px solid transparent',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Setup
-          </Tabs.Trigger>
+          {TABS.map((tab) => (
+            <Tabs.Trigger
+              key={tab.value}
+              value={tab.value}
+              style={{
+                padding: isMobile ? '0.75rem 0.75rem' : '0.75rem 1.5rem',
+                fontSize: isMobile ? '0.9375rem' : '1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                borderBottom: '2px solid transparent',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {tab.label}
+            </Tabs.Trigger>
+          ))}
         </Tabs.List>
 
         <Tabs.Content value="dashboard">

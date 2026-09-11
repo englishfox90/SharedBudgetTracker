@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import * as Label from '@radix-ui/react-label';
 import { Account, IncomeRule, RecurringExpense } from '@/types';
 import { MessageDialog } from './dialogs';
@@ -16,16 +17,7 @@ export default function SetupTab() {
   const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();

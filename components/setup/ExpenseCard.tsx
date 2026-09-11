@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { RecurringExpense } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 import { EditExpenseDialog } from './EditExpenseDialog';
@@ -17,16 +18,7 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [nextMonthEstimate, setNextMonthEstimate] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (expense.isVariable) {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 
 interface Props {
   accountId: number;
@@ -73,8 +74,8 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay style={overlayStyle} />
-        <Dialog.Content style={contentStyle}>
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
           <Dialog.Title style={titleStyle}>Add One-Time Transaction</Dialog.Title>
           <Dialog.Description style={descriptionStyle}>
             Add an unplanned expense or transfer to adjust the account balance for a specific date.
@@ -110,7 +111,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
                 <select
                   value={isExpense ? 'expense' : 'income'}
                   onChange={(e) => setIsExpense(e.target.value === 'expense')}
-                  style={{ ...selectStyle, width: 'auto', minWidth: '110px', flex: 'none' }}
+                  style={{ ...selectStyle, width: 'auto', minWidth: 0, flex: '0 0 auto' }}
                 >
                   <option value="expense">Expense (−)</option>
                   <option value="income">Income (+)</option>
@@ -122,7 +123,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
                   onChange={handleAmountChange}
                   placeholder="0.00"
                   required
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={{ ...inputStyle, flex: 1, minWidth: 0 }}
                 />
               </div>
             </div>
@@ -150,7 +151,7 @@ export default function AddTransactionDialog({ accountId, onAdded }: Props) {
               </select>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <div className="dialog-actions">
               <Dialog.Close asChild>
                 <button type="button" style={cancelButtonStyle} disabled={isSubmitting}>
                   Cancel
@@ -176,28 +177,6 @@ const triggerButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
   fontSize: '0.875rem',
   fontWeight: '500',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  width: '90%',
-  maxWidth: '500px',
-  maxHeight: '85vh',
-  overflow: 'auto',
-  zIndex: 51,
 };
 
 const titleStyle: React.CSSProperties = {

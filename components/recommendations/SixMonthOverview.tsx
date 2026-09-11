@@ -14,7 +14,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
         6-Month Forecast Overview
       </h3>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
         {months.map((month, idx) => {
           const statusColors = {
             safe: { bg: 'var(--safe-bg)', border: 'var(--safe-border)', text: 'var(--safe-text)' },
@@ -79,7 +79,7 @@ export default function SixMonthOverview({ months, safeMinBalance }: Props) {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.5rem', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--safe-bg)', border: '1px solid var(--safe-border)' }} />
           <span>Safe</span>

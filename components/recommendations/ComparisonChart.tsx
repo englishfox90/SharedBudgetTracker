@@ -98,8 +98,8 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
         </h4>
       </div>
 
-      <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
-        <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '100%', height: 'auto' }}>
+      <div className="chart-scroll" style={{ marginBottom: '1rem' }}>
+        <svg className="chart-svg" width="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet">
         {/* Chart area */}
         <g transform={`translate(${padding.left}, ${padding.top})`}>
           {/* Grid lines */}

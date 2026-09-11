@@ -25,13 +25,13 @@ export function ConfirmDialog({
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay style={overlayStyle} />
-        <AlertDialog.Content style={contentStyle}>
+        <AlertDialog.Overlay className="dialog-overlay" />
+        <AlertDialog.Content className="dialog-content dialog-content--narrow">
           <AlertDialog.Title style={titleStyle}>{title}</AlertDialog.Title>
           <AlertDialog.Description style={descriptionStyle}>
             {description}
           </AlertDialog.Description>
-          <div style={actionsStyle}>
+          <div className="dialog-actions">
             <AlertDialog.Cancel asChild>
               <button style={secondaryButtonStyle}>{cancelText}</button>
             </AlertDialog.Cancel>
@@ -62,18 +62,18 @@ export function MessageDialog({
   message,
   type = 'info',
 }: MessageDialogProps) {
-  const titleColor = type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : '#1a1a1a';
+  const titleColor = type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : 'var(--text-primary)';
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay style={overlayStyle} />
-        <AlertDialog.Content style={contentStyle}>
+        <AlertDialog.Overlay className="dialog-overlay" />
+        <AlertDialog.Content className="dialog-content dialog-content--narrow">
           <AlertDialog.Title style={{ ...titleStyle, color: titleColor }}>
             {title}
           </AlertDialog.Title>
           <AlertDialog.Description style={descriptionStyle}>{message}</AlertDialog.Description>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+          <div className="dialog-actions">
             <AlertDialog.Action asChild>
               <button style={primaryButtonStyle}>OK</button>
             </AlertDialog.Action>
@@ -84,29 +84,6 @@ export function MessageDialog({
   );
 }
 
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-  animation: 'fadeIn 150ms ease-out',
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'white',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-  maxWidth: '450px',
-  width: '90%',
-  zIndex: 51,
-  animation: 'slideIn 200ms ease-out',
-};
-
 const titleStyle: React.CSSProperties = {
   fontSize: '1.125rem',
   fontWeight: '600',
@@ -114,43 +91,35 @@ const titleStyle: React.CSSProperties = {
 };
 
 const descriptionStyle: React.CSSProperties = {
-  marginBottom: '1.5rem',
-  color: '#666',
+  color: 'var(--text-secondary)',
   lineHeight: '1.5',
 };
 
-const actionsStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '0.75rem',
-  justifyContent: 'flex-end',
+const buttonBase: React.CSSProperties = {
+  padding: '0.625rem 1rem',
+  borderRadius: '6px',
+  fontWeight: '500',
+  fontSize: 'var(--font-body)',
+  cursor: 'pointer',
 };
 
 const primaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
+  ...buttonBase,
   background: '#1a1a1a',
   color: 'white',
   border: 'none',
-  borderRadius: '4px',
-  fontWeight: '500',
-  cursor: 'pointer',
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  background: 'white',
-  color: '#1a1a1a',
-  border: '1px solid #e0e0e0',
-  borderRadius: '4px',
-  fontWeight: '500',
-  cursor: 'pointer',
+  ...buttonBase,
+  background: 'var(--bg-tertiary)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-primary)',
 };
 
 const dangerButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
+  ...buttonBase,
   background: '#dc2626',
   color: 'white',
   border: 'none',
-  borderRadius: '4px',
-  fontWeight: '500',
-  cursor: 'pointer',
 };

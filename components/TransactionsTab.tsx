@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { Transaction } from '@/types';
 import AddTransactionDialog from './setup/AddTransactionDialog';
 import TransactionCard from './setup/TransactionCard';
@@ -22,16 +23,7 @@ export default function TransactionsTab() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();

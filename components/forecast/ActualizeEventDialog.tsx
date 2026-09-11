@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
-import { formatDateUTC, formatDateLongUTC } from '@/lib/date-utils';
+import { formatDateUTC } from '@/lib/date-utils';
+import { isTouchDevice } from '@/lib/useIsMobile';
 
 interface CashEvent {
   date: Date;
@@ -28,20 +29,29 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
   const [isSubmitting, setIsSubmitting] = useState(false);
   const amountInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form and focus amount when dialog opens
+  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setAmount(Math.abs(event.amount).toString());
       setDescription(event.description.replace(/ \(estimated\)$/i, ''));
       setDate(formatDateUTC(event.date));
-      
-      // Focus and select amount input
-      setTimeout(() => {
-        amountInputRef.current?.focus();
-        amountInputRef.current?.select();
-      }, 0);
     }
   }, [open, event]);
+
+  /**
+   * Radix focuses the first field on open. That used to be the date input,
+   * which on phones pops the calendar picker before the user has done
+   * anything. Instead: on desktop, focus and select the amount so it can be
+   * overtyped; on touch devices, focus nothing so the user can simply tap
+   * "Confirm" (the amount is already pre-filled).
+   */
+  function handleOpenAutoFocus(e: Event) {
+    e.preventDefault();
+    if (!isTouchDevice()) {
+      amountInputRef.current?.focus();
+      amountInputRef.current?.select();
+    }
+  }
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value.replace(/,/g, ''); // Remove existing commas
@@ -116,20 +126,28 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
     }
   }
 
+  const forecastedDisplay = Math.abs(event.amount).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <div
+          role="button"
+          tabIndex={0}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.5rem',
+            minHeight: '44px',
             background: 'var(--forecast-bg)',
             border: '1px solid var(--forecast-border)',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '0.875rem',
+            fontSize: 'var(--font-body)',
             transition: 'all 0.2s',
           }}
           onMouseEnter={(e) => {
@@ -139,16 +157,18 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
             e.currentTarget.style.opacity = '1';
           }}
         >
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             {event.description}:{' '}
             <span style={{
               fontWeight: '600',
+              whiteSpace: 'nowrap',
               color: event.amount > 0 ? '#16a34a' : '#dc2626',
             }}>
-              {event.amount > 0 ? '+' : ''}${Math.abs(event.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {event.amount > 0 ? '+' : ''}${forecastedDisplay}
             </span>
           </div>
           <div style={{
+            flexShrink: 0,
             padding: '0.25rem 0.5rem',
             background: 'var(--forecast-badge)',
             color: 'white',
@@ -163,28 +183,38 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay style={overlayStyle} />
-        <Dialog.Content style={contentStyle}>
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content" onOpenAutoFocus={handleOpenAutoFocus}>
           <Dialog.Title style={titleStyle}>Confirm Transaction</Dialog.Title>
           <Dialog.Description style={descriptionStyle}>
-            Verify this transaction actually occurred. You can adjust the amount if it differs from the forecast.
+            Confirm this transaction happened. Adjust the amount if it differs from the forecast.
           </Dialog.Description>
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Date</Label.Root>
+              <Label.Root htmlFor="actualize-amount" style={labelStyle}>
+                Actual Amount ($)
+              </Label.Root>
               <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                id="actualize-amount"
+                ref={amountInputRef}
+                type="text"
+                inputMode="decimal"
+                value={formatAmountDisplay(amount)}
+                onChange={handleAmountChange}
+                placeholder="0.00"
                 required
-                style={inputStyle}
+                style={{ ...inputStyle, fontSize: '1.125rem', fontWeight: 600 }}
               />
+              <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                Forecasted: ${forecastedDisplay}
+              </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>Description</Label.Root>
+              <Label.Root htmlFor="actualize-description" style={labelStyle}>Description</Label.Root>
               <input
+                id="actualize-description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -194,25 +224,18 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <Label.Root style={labelStyle}>
-                Actual Amount ($)
-              </Label.Root>
+              <Label.Root htmlFor="actualize-date" style={labelStyle}>Date</Label.Root>
               <input
-                ref={amountInputRef}
-                type="text"
-                inputMode="decimal"
-                value={formatAmountDisplay(amount)}
-                onChange={handleAmountChange}
-                placeholder="0.00"
+                id="actualize-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 required
                 style={inputStyle}
               />
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                Forecasted: ${Math.abs(event.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+            <div className="dialog-actions">
               <Dialog.Close asChild>
                 <button type="button" style={cancelButtonStyle} disabled={isSubmitting}>
                   Cancel
@@ -229,28 +252,6 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
   );
 }
 
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  width: '90%',
-  maxWidth: '500px',
-  maxHeight: '85vh',
-  overflow: 'auto',
-  zIndex: 51,
-};
-
 const titleStyle: React.CSSProperties = {
   fontSize: '1.25rem',
   fontWeight: '600',
@@ -258,44 +259,46 @@ const titleStyle: React.CSSProperties = {
 };
 
 const descriptionStyle: React.CSSProperties = {
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   color: 'var(--text-secondary)',
   marginBottom: '1.5rem',
 };
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
   fontWeight: '500',
   marginBottom: '0.25rem',
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '0.5rem',
+  padding: '0.5rem 0.75rem',
   border: '1px solid var(--border-primary)',
-  borderRadius: '4px',
+  borderRadius: '6px',
   fontSize: '0.875rem',
   background: 'var(--bg-primary)',
   color: 'var(--text-primary)',
 };
 
 const cancelButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
+  padding: '0.625rem 1rem',
   background: 'var(--bg-tertiary)',
   color: 'var(--text-primary)',
   border: '1px solid var(--border-primary)',
   borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
+  fontWeight: '500',
 };
 
 const submitButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
+  padding: '0.625rem 1.25rem',
   background: '#1a1a1a',
   color: 'white',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '0.875rem',
+  fontSize: 'var(--font-body)',
+  fontWeight: '600',
 };

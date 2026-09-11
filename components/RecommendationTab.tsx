@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import SixMonthOverview from './recommendations/SixMonthOverview';
 import VarianceSummary from './recommendations/VarianceSummary';
 import TrendChart from './recommendations/TrendChart';
@@ -21,16 +22,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const [implementSuccess, setImplementSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [incomeRules, setIncomeRules] = useState<any[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadAccountId();
@@ -181,7 +173,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
       {/* Header */}
       <div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+        <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
           Financial Recommendations
         </h2>
         <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
@@ -225,7 +217,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               </p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '1rem' : '1.5rem', marginBottom: '1rem' }}>
             <div>
               <div style={{ fontSize: 'var(--font-label)', color: 'var(--warning-text)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                 Current Annual
@@ -304,9 +296,10 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
       {/* Confirmation Modal */}
       {showConfirmModal && data && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
+        <>
+          <div className="dialog-overlay" onClick={() => setShowConfirmModal(false)} />
+          <div className="dialog-content dialog-content--wide" role="dialog" aria-modal="true" aria-labelledby="confirm-contribution-title">
+            <h3 id="confirm-contribution-title" style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
               Confirm Contribution Increase
             </h3>
             
@@ -339,7 +332,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
                     marginBottom: '0.5rem',
                   }}>
                     <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.25rem' }}>{rule.name}</div>
-                    <div style={{ fontSize: 'var(--font-body)', color: '#666', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.25rem 0.75rem' }}>
                       <span>Current: ${rule.contributionAmount.toFixed(2)} per paycheck</span>
                       <span style={{ color: '#dc2626', fontWeight: '600' }}>→ ${newContribution.toFixed(2)}</span>
                     </div>
@@ -367,7 +360,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+            <div className="dialog-actions">
               <button
                 onClick={() => setShowConfirmModal(false)}
                 style={{
@@ -400,7 +393,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -421,31 +414,6 @@ function getPayPeriodsPerYear(payFrequency: string): number {
       return 24;
   }
 }
-
-// Modal Styles
-const modalOverlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-};
-
-const modalContentStyle: React.CSSProperties = {
-  background: 'var(--bg-secondary)',
-  padding: '2rem',
-  borderRadius: '12px',
-  maxWidth: '600px',
-  width: '90%',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  boxShadow: '0 20px 25px -5px var(--shadow), 0 10px 10px -5px var(--shadow)',
-};
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-secondary)',

@@ -40,6 +40,13 @@
   --forecast-border: #fde047;
   --forecast-badge: #eab308;
   
+  /* Semantic colors used by buttons, badges and status text */
+  --color-primary: #1a1a1a;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --border-color: var(--border-primary);
+
   /* Font sizes - standardized */
   --font-body: 0.875rem; /* 14px */
   --font-label: 0.6875rem; /* 11px - smaller than body */
@@ -81,6 +88,11 @@
   --forecast-bg: #713f12;
   --forecast-border: #a16207;
   --forecast-badge: #d97706;
+
+  --color-primary: #2563eb;
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
 }
 
 html,
@@ -100,9 +112,9 @@ body {
 
 @media (max-width: 768px) {
   :root {
-    --font-body: 0.75rem; /* 12px on mobile */
-    --font-label: 0.625rem; /* 10px on mobile */
-    --font-small: 0.6875rem; /* 11px on mobile */
+    --font-body: 0.875rem; /* 14px on mobile - keep body text readable */
+    --font-label: 0.75rem; /* 12px on mobile */
+    --font-small: 0.75rem; /* 12px on mobile */
   }
 }
 
@@ -129,5 +141,153 @@ select {
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile / touch adjustments                                          */
+/* ------------------------------------------------------------------ */
+
+/* iOS Safari zooms the whole page when a focused form control has a font
+   size below 16px, and never zooms back out. Force 16px on touch devices so
+   tapping an input never changes the page zoom. !important is required to
+   beat the inline styles used throughout the app. */
+@media (max-width: 768px), (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  /* Comfortable tap targets. `all: unset` above makes buttons inline, so
+     give them a flex box (inline styles that set display: flex still win). */
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Native iOS date inputs ignore width: 100% and collapse when empty. */
+input[type='date'] {
+  display: block;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.4em;
+}
+
+/* Tab bar: horizontally scrollable on small screens, without a scrollbar. */
+.tabs-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tabs-list::-webkit-scrollbar {
+  display: none;
+}
+.tabs-list > * {
+  flex-shrink: 0;
+}
+
+/* Charts: let the SVG keep a legible size and scroll sideways on phones. */
+.chart-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chart-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+@media (max-width: 640px) {
+  .chart-svg {
+    min-width: 600px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Dialogs                                                             */
+/* Centered modal on desktop, bottom sheet on phones. Shared by every   */
+/* Radix dialog in the app.                                             */
+/* ------------------------------------------------------------------ */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+
+.dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  max-height: 85dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  box-shadow: 0 10px 25px var(--shadow);
+  z-index: 51;
+  outline: none;
+}
+.dialog-content--narrow {
+  max-width: 450px;
+}
+.dialog-content--wide {
+  max-width: 600px;
+}
+
+@media (max-width: 640px) {
+  .dialog-content,
+  .dialog-content--narrow,
+  .dialog-content--wide {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    border-radius: 16px 16px 0 0;
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Action row at the bottom of a dialog. Stacks full-width buttons on
+   phones with the primary action (last in DOM) on top. */
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+@media (max-width: 640px) {
+  .dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .dialog-actions > button {
+    width: 100%;
+    min-height: 44px;
+    text-align: center;
+    box-sizing: border-box;
   }
 }

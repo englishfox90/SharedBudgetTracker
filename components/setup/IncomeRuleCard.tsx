@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { IncomeRule } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 
@@ -21,16 +23,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   function formatCurrency(value: string): string {
     const num = value.replace(/[^0-9]/g, '');
@@ -146,8 +139,8 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
 
       <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
         <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
-          <Dialog.Overlay style={overlayStyle} />
-          <Dialog.Content style={contentStyle}>
+          <Dialog.Overlay className="dialog-overlay" />
+          <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
             <Dialog.Title style={titleStyle}>Edit Income Source</Dialog.Title>
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
@@ -207,7 +200,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <div className="dialog-actions" style={{ marginTop: '1rem' }}>
                 <Dialog.Close asChild>
                   <button type="button" style={buttonSecondaryStyle}>
                     Cancel
@@ -285,28 +278,6 @@ const buttonDangerStyle: React.CSSProperties = {
   cursor: 'pointer',
   fontSize: 'var(--font-label)',
   fontWeight: '500',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  maxWidth: '500px',
-  width: '90%',
-  maxHeight: '90vh',
-  overflow: 'auto',
-  zIndex: 51,
 };
 
 const titleStyle: React.CSSProperties = {

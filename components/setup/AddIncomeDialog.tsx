@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
+import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 
 interface Props {
   accountId: number;
@@ -64,8 +65,8 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
         <button style={buttonStyle}>+ Add Income Source</button>
       </Dialog.Trigger>
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
-        <Dialog.Overlay style={overlayStyle} />
-        <Dialog.Content style={contentStyle}>
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
           <Dialog.Title style={titleStyle}>Add Income Source</Dialog.Title>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
@@ -132,7 +133,7 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            <div className="dialog-actions" style={{ marginTop: '1rem' }}>
               <Dialog.Close asChild>
                 <button type="button" style={buttonSecondaryStyle}>
                   Cancel
@@ -169,28 +170,6 @@ const buttonSecondaryStyle: React.CSSProperties = {
   fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.5)',
-  zIndex: 50,
-};
-
-const contentStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  background: 'var(--bg-secondary)',
-  padding: '1.5rem',
-  borderRadius: '8px',
-  maxWidth: '500px',
-  width: '90%',
-  maxHeight: '90vh',
-  overflow: 'auto',
-  zIndex: 51,
 };
 
 const titleStyle: React.CSSProperties = {

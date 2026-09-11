@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { format, addMonths } from 'date-fns';
 
 interface DashboardSummaryProps {
@@ -37,16 +38,7 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
   const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
   const [missingTransactions, setMissingTransactions] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadDashboardData();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { DashboardSummaryWidgets } from './DashboardSummaryWidgets';
 import SixMonthTrendChart from './dashboard/SixMonthTrendChart';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
@@ -14,16 +15,7 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
   const [variableExpenses, setVariableExpenses] = useState<Array<{ id: number; name: string }>>([]);
   const [sixMonthData, setSixMonthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();
