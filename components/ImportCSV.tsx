@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, CheckCircleIcon, XCircleIcon } from './icons';
+
 import { useState } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
 
@@ -11,14 +13,14 @@ interface Props {
 export default function ImportCSV({ accountId, onImported }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<string>('');
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const isMobile = useIsMobile();
 
   async function handleImport() {
     if (!file) return;
 
     setImporting(true);
-    setResult('');
+    setResult(null);
 
     try {
       const formData = new FormData();
@@ -33,15 +35,15 @@ export default function ImportCSV({ accountId, onImported }: Props) {
       const data = await res.json();
 
       if (res.ok) {
-        setResult(`✅ Successfully imported ${data.imported} of ${data.total} transactions`);
+        setResult({ ok: true, text: `Successfully imported ${data.imported} of ${data.total} transactions` });
         setFile(null);
         onImported();
       } else {
-        setResult(`❌ Error: ${data.error}`);
+        setResult({ ok: false, text: `Error: ${data.error}` });
       }
     } catch (error) {
       console.error('Error importing:', error);
-      setResult('❌ Import failed');
+      setResult({ ok: false, text: 'Import failed' });
     } finally {
       setImporting(false);
     }
@@ -79,8 +81,8 @@ export default function ImportCSV({ accountId, onImported }: Props) {
         </button>
       </div>
       {result && (
-        <div style={{ marginTop: '0.75rem' }}>
-          {result}
+        <div style={{ marginTop: '0.75rem', color: result.ok ? 'var(--color-success)' : 'var(--color-danger)' }}>
+          <IconLabel icon={result.ok ? <CheckCircleIcon size={16} /> : <XCircleIcon size={16} />}>{result.text}</IconLabel>
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import { InfoIcon } from '../icons';
+
 import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
@@ -128,7 +130,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
               fontSize: '0.875rem',
               color: 'var(--info-text)',
             }}>
-              ℹ️ This transaction is linked to a recurring {event.incomeRuleId ? 'income' : 'expense'}.
+              <InfoIcon size={14} style={{ marginRight: '0.375rem' }} />This transaction is linked to a recurring {event.incomeRuleId ? 'income' : 'expense'}.
               Editing here updates this occurrence only.
             </div>
           )}

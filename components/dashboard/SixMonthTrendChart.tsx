@@ -1,5 +1,7 @@
 'use client';
 
+import { TrendingUpIcon } from '../icons';
+
 interface SixMonthTrendChartProps {
   months: Array<{
     monthName: string;
@@ -57,7 +59,7 @@ export default function SixMonthTrendChart({ months }: SixMonthTrendChartProps) 
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <span style={{ fontSize: '1rem' }}>📈</span>
+        <TrendingUpIcon size={18} />
         <h3 style={titleStyle}>6-Month Financial Trend</h3>
       </div>
 

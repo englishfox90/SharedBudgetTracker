@@ -15,14 +15,18 @@ import BudgetAdvisorTab from '@/components/BudgetAdvisorTab';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { AccountProvider } from '@/contexts/AccountContext';
+import {
+  LayoutGridIcon, CalendarIcon, LightbulbIcon, ReceiptIcon, TargetIcon, SettingsIcon,
+  UserIcon, MoonIcon, SunIcon, LogOutIcon,
+} from '@/components/icons';
 
 const TABS = [
-  { value: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: '📊' },
-  { value: 'forecast', label: 'Forecast', shortLabel: 'Forecast', icon: '📅' },
-  { value: 'recommendation', label: 'Recommendation', shortLabel: 'Insights', icon: '💡' },
-  { value: 'transactions', label: 'Transactions', shortLabel: 'Transactions', icon: '🧾' },
-  { value: 'budget', label: 'Budget', shortLabel: 'Budget', icon: '🎯' },
-  { value: 'setup', label: 'Setup', shortLabel: 'Setup', icon: '⚙️' },
+  { value: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', Icon: LayoutGridIcon },
+  { value: 'forecast', label: 'Forecast', shortLabel: 'Forecast', Icon: CalendarIcon },
+  { value: 'recommendation', label: 'Recommendation', shortLabel: 'Insights', Icon: LightbulbIcon },
+  { value: 'transactions', label: 'Transactions', shortLabel: 'Transactions', Icon: ReceiptIcon },
+  { value: 'budget', label: 'Budget', shortLabel: 'Budget', Icon: TargetIcon },
+  { value: 'setup', label: 'Setup', shortLabel: 'Setup', Icon: SettingsIcon },
 ];
 
 export default function Home() {
@@ -95,7 +99,7 @@ export default function Home() {
                   fontWeight: 500,
                 }}
               >
-                <span style={{ fontSize: '1.25rem' }}>👤</span>
+                <UserIcon size={20} />
                 {!isMobile && <span style={{ fontSize: 'var(--font-body)' }}>Menu</span>}
               </button>
             </DropdownMenu.Trigger>
@@ -134,7 +138,7 @@ export default function Home() {
                     e.currentTarget.style.background = 'transparent';
                   }}
                 >
-                  <span style={{ fontSize: '1.125rem' }}>{theme === 'light' ? '🌙' : '☀️'}</span>
+                  {theme === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
                   <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
                 </DropdownMenu.Item>
 
@@ -164,7 +168,7 @@ export default function Home() {
                     e.currentTarget.style.background = 'transparent';
                   }}
                 >
-                  <span style={{ fontSize: '1.125rem' }}>🚪</span>
+                  <LogOutIcon size={18} />
                   <span>Sign Out</span>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
@@ -190,7 +194,7 @@ export default function Home() {
             <Tabs.Trigger key={tab.value} value={tab.value} className="tab-trigger">
               {isMobile ? (
                 <>
-                  <span className="tab-trigger__icon" aria-hidden="true">{tab.icon}</span>
+                  <tab.Icon size={22} strokeWidth={1.75} className="tab-trigger__icon" />
                   <span className="tab-trigger__label">{tab.shortLabel}</span>
                 </>
               ) : (

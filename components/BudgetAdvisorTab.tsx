@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, TrendingDownIcon, TrendingUpIcon, ArrowRightIcon, WalletIcon, ClipboardListIcon } from './icons';
+
 import { useState, useEffect } from 'react';
 import type { BudgetAnalysis } from '@/lib/budget-advisor';
 import { PeriodTrendWidget } from './PeriodTrendWidget';
@@ -346,7 +348,14 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
         <div style={{ marginTop: '0.75rem', fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
           Avg: ${historical.averageMonthly.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/month
           {' • '}
-          Trend: {historical.trend === 'improving' ? '📉 Improving' : historical.trend === 'worsening' ? '📈 Worsening' : '➡️ Stable'}
+          Trend:{' '}
+          {historical.trend === 'improving' ? (
+            <IconLabel icon={<TrendingDownIcon size={14} />}>Improving</IconLabel>
+          ) : historical.trend === 'worsening' ? (
+            <IconLabel icon={<TrendingUpIcon size={14} />}>Worsening</IconLabel>
+          ) : (
+            <IconLabel icon={<ArrowRightIcon size={14} />}>Stable</IconLabel>
+          )}
         </div>
       </div>
 
@@ -361,7 +370,7 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
         }}
       >
         <h4 style={{ fontSize: '1rem', marginBottom: '1rem', fontWeight: '600', margin: '0 0 1rem 0' }}>
-          💰 Impact of Meeting Your Goal
+          <IconLabel icon={<WalletIcon size={18} />}>Impact of Meeting Your Goal</IconLabel>
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
           <div>
@@ -382,7 +391,7 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
       {/* Recommendations */}
       <div>
         <h4 style={{ fontSize: 'var(--font-body)', marginBottom: '0.75rem' }}>
-          📋 Action Items
+          <IconLabel icon={<ClipboardListIcon size={16} />}>Action Items</IconLabel>
         </h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {recommendations.map((rec, idx) => (

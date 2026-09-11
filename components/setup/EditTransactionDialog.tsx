@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, CheckIcon } from '../icons';
+
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
@@ -94,7 +96,7 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
               fontSize: '0.875rem',
               color: 'var(--safe-text)'
             }}>
-              <strong>✓ Actualized Transaction</strong>
+              <strong><IconLabel icon={<CheckIcon size={14} />}>Actualized Transaction</IconLabel></strong>
               <div style={{ marginTop: '0.25rem', fontSize: '0.8125rem' }}>
                 This transaction is linked to a forecasted event. You can edit the description or category, but the amount and date should match the actual transaction.
               </div>

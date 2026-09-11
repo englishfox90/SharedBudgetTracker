@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, ArrowUpIcon, ArrowDownIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, AlertOctagonIcon, AlertTriangleIcon } from './icons';
+
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
 import { CashEvent, ForecastResult } from '@/types';
@@ -152,9 +154,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                 // For expenses (negative amounts): worse = more negative (higher spending) = ↑
                 // For income (positive amounts): worse = less positive (lower income) = ↓
                 const isWorse = variance < 0;
-                const arrow = event.amount < 0 
-                  ? (variance < 0 ? '↑' : '↓')  // Expense: up = overspent, down = saved
-                  : (variance < 0 ? '↓' : '↑'); // Income: down = less income, up = more income
+                const up = event.amount < 0 ? variance < 0 : variance >= 0; // expense: overspent; income: more income
                 
                 return (
                   <span style={{
@@ -166,7 +166,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                     fontWeight: '600',
                     whiteSpace: 'nowrap',
                   }}>
-                    {arrow} ${formatCurrency(Math.abs(variance))}
+                    {up ? <ArrowUpIcon size={12} /> : <ArrowDownIcon size={12} />} ${formatCurrency(Math.abs(variance))}
                   </span>
                 );
               })()}
@@ -184,7 +184,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               gap: '0.25rem',
               letterSpacing: '0.05em'
             }}>
-              <span>✓</span>
+              <CheckIcon size={11} strokeWidth={3} />
               <span>ACTUAL</span>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               cursor: (loading || isAtStartDate) ? 'not-allowed' : 'pointer' 
             }}
           >
-            {isMobile ? '←' : '← Previous'}
+            {isMobile ? <ChevronLeftIcon size={22} /> : <IconLabel icon={<ChevronLeftIcon size={16} />}>Previous</IconLabel>}
           </button>
           <button
             onClick={handleNextMonth}
@@ -242,7 +242,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               cursor: loading ? 'wait' : 'pointer' 
             }}
           >
-            {isMobile ? '→' : 'Next →'}
+            {isMobile ? <ChevronRightIcon size={22} /> : <IconLabel icon={<ChevronRightIcon size={16} />} style={{ flexDirection: 'row-reverse' }}>Next</IconLabel>}
           </button>
         </div>
       </div>
@@ -298,7 +298,8 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               color: forecast.overallStatus.minBalance < 0 ? 'var(--danger-text)' : 'var(--warning-text)',
             }}
           >
-            {forecast.overallStatus.minBalance < 0 ? '🚨' : '⚠️'} {forecast.overallStatus.minBalance < 0 ? 'Critical' : 'Warning'}: Your balance is projected to {forecast.overallStatus.minBalance < 0 ? 'go negative' : 'drop below your safe minimum'} on{' '}
+            {forecast.overallStatus.minBalance < 0 ? <AlertOctagonIcon size={16} /> : <AlertTriangleIcon size={16} />}{' '}
+            {forecast.overallStatus.minBalance < 0 ? 'Critical' : 'Warning'}: Your balance is projected to {forecast.overallStatus.minBalance < 0 ? 'go negative' : 'drop below your safe minimum'} on{' '}
             {forecast.overallStatus.daysBelowSafeMin} day(s) this month.
           </div>
         )}
@@ -345,7 +346,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                         color: isNegative ? 'var(--color-danger)' : day.belowSafeMin ? 'var(--color-warning)' : 'inherit',
                       }}>
                         ${formatCurrency(day.closingBalance)}
-                        {isNegative ? ' 🚨' : day.belowSafeMin ? ' ⚠️' : ''}
+                        {isNegative ? <AlertOctagonIcon size={14} style={{ marginLeft: '0.25rem' }} /> : day.belowSafeMin ? <AlertTriangleIcon size={14} style={{ marginLeft: '0.25rem' }} /> : null}
                       </div>
                     </div>
                   </div>
@@ -419,7 +420,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                         }}
                       >
                         ${formatCurrency(day.closingBalance)}
-                        {day.closingBalance < 0 ? ' 🚨' : day.belowSafeMin ? ' ⚠️' : ''}
+                        {day.closingBalance < 0 ? <AlertOctagonIcon size={14} style={{ marginLeft: '0.25rem' }} /> : day.belowSafeMin ? <AlertTriangleIcon size={14} style={{ marginLeft: '0.25rem' }} /> : null}
                       </td>
                     </tr>
                   );

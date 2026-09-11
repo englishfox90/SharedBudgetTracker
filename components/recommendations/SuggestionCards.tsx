@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, CheckCircleIcon, AlertOctagonIcon, AlertTriangleIcon, InfoIcon } from '../icons';
+
 import { Suggestion } from '@/lib/recommendation-engine';
 
 interface Props {
@@ -11,7 +13,7 @@ export default function SuggestionCards({ suggestions }: Props) {
     return (
       <div style={cardStyle}>
         <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--color-success)' }}>
-          ✅ All Clear!
+          <IconLabel icon={<CheckCircleIcon size={18} />}>All Clear!</IconLabel>
         </h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
           Your finances are looking good. No immediate recommendations at this time.
@@ -31,19 +33,19 @@ export default function SuggestionCards({ suggestions }: Props) {
           critical: {
             bg: 'var(--danger-bg)',
             border: 'var(--danger-border)',
-            icon: '🚨',
+            icon: <AlertOctagonIcon size={22} />,
             textColor: 'var(--danger-text)',
           },
           warning: {
             bg: 'var(--warning-bg)',
             border: 'var(--warning-border)',
-            icon: '⚠️',
+            icon: <AlertTriangleIcon size={22} />,
             textColor: 'var(--warning-text)',
           },
           info: {
             bg: 'var(--info-bg)',
             border: 'var(--info-border)',
-            icon: 'ℹ️',
+            icon: <InfoIcon size={22} />,
             textColor: 'var(--info-text)',
           },
         };
@@ -61,7 +63,7 @@ export default function SuggestionCards({ suggestions }: Props) {
           >
             <div style={{ display: 'flex', gap: '1rem' }}>
               {/* Icon */}
-              <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>{style.icon}</div>
+              <div style={{ flexShrink: 0, color: style.textColor, display: 'flex', paddingTop: '0.125rem' }}>{style.icon}</div>
 
               {/* Content */}
               <div style={{ flex: 1 }}>

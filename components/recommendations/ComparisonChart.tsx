@@ -1,5 +1,7 @@
 'use client';
 
+import { BarChartIcon } from '../icons';
+
 interface ComparisonChartProps {
   currentAnnual: number;
   recommendedAnnual: number;
@@ -92,7 +94,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
       padding: '1.25rem',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-        <span style={{ fontSize: '1rem' }}>📊</span>
+        <BarChartIcon size={18} />
         <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
           6-Month Impact Projection
         </h4>

@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, InfoIcon, ZapIcon, CheckIcon, LightbulbIcon } from './icons';
+
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
 import SixMonthOverview from './recommendations/SixMonthOverview';
@@ -189,7 +191,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
           cursor: 'pointer',
           listStyle: 'none',
         }}>
-          ℹ️ How This Works
+          <IconLabel icon={<InfoIcon size={16} />}>How This Works</IconLabel>
         </summary>
         <ul style={{ paddingLeft: '1.5rem', fontSize: 'var(--font-body)', lineHeight: '1.6', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
           <li>Analyzes your forecasted income and expenses for the next 6 months</li>
@@ -209,7 +211,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
             <div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                ⚡ Action Required
+                <IconLabel icon={<ZapIcon size={18} />}>Action Required</IconLabel>
               </h3>
               <p style={{ fontSize: 'var(--font-body)', color: 'var(--warning-text)' }}>
                 Increase contributions by {Math.round(data.contributionAnalysis.adjustmentPercentage)}% to maintain safe balance
@@ -263,7 +265,13 @@ export default function RecommendationTab({ currentMonth }: Props) {
                 transition: 'all 0.2s',
               }}
             >
-              {implementSuccess ? '✓ Implemented Successfully!' : (implementing ? 'Updating...' : '⚡ Implement Recommendation')}
+              {implementSuccess ? (
+                <IconLabel icon={<CheckIcon size={16} />}>Implemented Successfully!</IconLabel>
+              ) : implementing ? (
+                'Updating...'
+              ) : (
+                <IconLabel icon={<ZapIcon size={16} />}>Implement Recommendation</IconLabel>
+              )}
             </button>
           </div>
 
@@ -359,7 +367,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
               marginBottom: '1.5rem',
             }}>
               <div style={{ fontSize: 'var(--font-body)', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--info-text)' }}>
-                💡 Long-Term Impact
+                <IconLabel icon={<LightbulbIcon size={16} />}>Long-Term Impact</IconLabel>
               </div>
               <div style={{ fontSize: 'var(--font-body)', color: 'var(--info-text)', lineHeight: '1.6' }}>
                 This increase will keep your balance above the safe minimum and maintain positive monthly growth,
@@ -396,7 +404,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
                   cursor: 'pointer',
                 }}
               >
-                ✓ Approve & Implement
+                <IconLabel icon={<CheckIcon size={16} />}>Approve &amp; Implement</IconLabel>
               </button>
             </div>
           </div>

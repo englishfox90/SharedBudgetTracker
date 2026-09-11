@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, TrendingUpIcon, TrendingDownIcon, ArrowRightIcon, AlertTriangleIcon } from '../icons';
+
 import { ExpenseTrend } from '@/lib/trend-detection';
 
 interface Props {
@@ -28,7 +30,7 @@ export default function TrendChart({ trends }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {trends.map((trend) => {
-          const trendIcon = trend.trend === 'increasing' ? '↑' : trend.trend === 'decreasing' ? '↓' : '→';
+          const trendIcon = trend.trend === 'increasing' ? <TrendingUpIcon size={18} /> : trend.trend === 'decreasing' ? <TrendingDownIcon size={18} /> : <ArrowRightIcon size={18} />;
           const trendColor = trend.trend === 'increasing' ? 'var(--color-danger)' : trend.trend === 'decreasing' ? 'var(--color-success)' : 'var(--text-secondary)';
 
           return (
@@ -49,14 +51,14 @@ export default function TrendChart({ trends }: Props) {
                   </div>
                   {trend.alert && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--warning-text)', marginTop: '0.25rem' }}>
-                      ⚠️ 15%+ above average
+                      <IconLabel icon={<AlertTriangleIcon size={12} />}>15%+ above average</IconLabel>
                     </div>
                   )}
                 </div>
 
                 {/* Trend Indicator */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.25rem', color: trendColor }}>{trendIcon}</span>
+                  <span style={{ display: 'flex', color: trendColor }}>{trendIcon}</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600', color: trendColor }}>
                     {Math.abs(trend.trendPercentage)}%
                   </span>

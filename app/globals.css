@@ -266,8 +266,7 @@ input[type='date']::-webkit-date-and-time-value {
   border-top-color: var(--text-primary);
 }
 .tab-trigger__icon {
-  font-size: 1.25rem;
-  line-height: 1;
+  display: block;
 }
 .tab-trigger__label {
   font-size: 0.625rem;

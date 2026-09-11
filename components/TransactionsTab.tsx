@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, ChevronLeftIcon, ChevronRightIcon } from './icons';
+
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
 import { Transaction } from '@/types';
@@ -116,7 +118,7 @@ export default function TransactionsTab() {
                   ...(pagination.page === 1 ? disabledButtonStyle : {}),
                 }}
               >
-                ← Previous
+                <IconLabel icon={<ChevronLeftIcon size={16} />}>Previous</IconLabel>
               </button>
               <span style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
                 Page {pagination.page} of {pagination.totalPages}
@@ -129,7 +131,7 @@ export default function TransactionsTab() {
                   ...(pagination.page === pagination.totalPages ? disabledButtonStyle : {}),
                 }}
               >
-                Next →
+                <IconLabel icon={<ChevronRightIcon size={16} />} style={{ flexDirection: 'row-reverse' }}>Next</IconLabel>
               </button>
             </div>
           )}

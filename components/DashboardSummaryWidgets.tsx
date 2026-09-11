@@ -1,5 +1,7 @@
 'use client';
 
+import { IconLabel, AlertTriangleIcon, CheckCircleIcon } from './icons';
+
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
 import { addMonths } from 'date-fns';
@@ -135,7 +137,7 @@ export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate
       {missingTransactions > 0 && (
         <div style={bannerStyle}>
           <div style={bannerContentStyle}>
-            <div style={bannerIconStyle}>⚠️</div>
+            <div style={bannerIconStyle}><AlertTriangleIcon size={22} /></div>
             <div style={bannerTextStyle}>
               <strong>{missingTransactions}</strong> past transaction{missingTransactions > 1 ? 's' : ''} need to be updated with actual amounts
             </div>
@@ -190,7 +192,11 @@ export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate
           }}
         >
           <div style={widgetTitleStyle}>
-            {minBalanceAlert ? '⚠️ Transfer Needed' : '✓ Safe Balance'}
+            {minBalanceAlert ? (
+              <IconLabel icon={<AlertTriangleIcon size={14} />}>Transfer Needed</IconLabel>
+            ) : (
+              <IconLabel icon={<CheckCircleIcon size={14} />}>Safe Balance</IconLabel>
+            )}
           </div>
           {minBalanceAlert ? (
             <>
@@ -270,7 +276,8 @@ const bannerContentStyle: React.CSSProperties = {
 };
 
 const bannerIconStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
+  display: 'flex',
+  color: 'var(--warning-text)',
 };
 
 const bannerTextStyle: React.CSSProperties = {
