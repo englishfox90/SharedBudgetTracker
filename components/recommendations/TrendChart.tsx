@@ -29,7 +29,7 @@ export default function TrendChart({ trends }: Props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {trends.map((trend) => {
           const trendIcon = trend.trend === 'increasing' ? '↑' : trend.trend === 'decreasing' ? '↓' : '→';
-          const trendColor = trend.trend === 'increasing' ? '#dc2626' : trend.trend === 'decreasing' ? '#16a34a' : '#666';
+          const trendColor = trend.trend === 'increasing' ? 'var(--color-danger)' : trend.trend === 'decreasing' ? 'var(--color-success)' : 'var(--text-secondary)';
 
           return (
             <div
@@ -94,7 +94,7 @@ export default function TrendChart({ trends }: Props) {
         <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
           <div>
             <span style={{ color: 'var(--text-secondary)' }}>Increasing: </span>
-            <span style={{ fontWeight: '600', color: '#dc2626' }}>
+            <span style={{ fontWeight: '600', color: 'var(--color-danger)' }}>
               {trends.filter(t => t.trend === 'increasing').length}
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function TrendChart({ trends }: Props) {
           </div>
           <div>
             <span style={{ color: 'var(--text-secondary)' }}>Decreasing: </span>
-            <span style={{ fontWeight: '600', color: '#16a34a' }}>
+            <span style={{ fontWeight: '600', color: 'var(--color-success)' }}>
               {trends.filter(t => t.trend === 'decreasing').length}
             </span>
           </div>

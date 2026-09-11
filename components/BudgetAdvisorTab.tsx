@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { BudgetAnalysis } from '@/lib/budget-advisor';
 import { PeriodTrendWidget } from './PeriodTrendWidget';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface BudgetAdvisorTabProps {
   year: number;
@@ -14,23 +15,15 @@ export default function BudgetAdvisorTab({
   month,
 }: BudgetAdvisorTabProps) {
   const [analyses, setAnalyses] = useState<BudgetAnalysis[]>([]);
-  const [accountId, setAccountId] = useState<number | null>(null);
+  const { account, loading: accountLoading } = useAccount();
+  const accountId = account?.id ?? null;
   const [variableExpenses, setVariableExpenses] = useState<Array<{ id: number; name: string; billingCycleDay?: number | null }>>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchData();
-  }, [year, month]);
 
   async function fetchData() {
     try {
       setLoading(true);
-      
-      // Get account ID
-      const accountsRes = await fetch('/api/accounts');
-      const accounts = await accountsRes.json();
-      const accId = accounts.length > 0 ? accounts[0].id : null;
-      setAccountId(accId);
+      const accId = accountId;
       
       // Get budget analysis
       const res = await fetch(`/api/budget-analysis?year=${year}&month=${month}`);
@@ -53,8 +46,20 @@ export default function BudgetAdvisorTab({
     }
   }
 
-  if (loading) {
-    return <div style={{ padding: '2rem' }}>Loading budget analysis...</div>;
+  useEffect(() => {
+    if (!accountLoading) {
+      fetchData();
+    }
+  }, [year, month, accountId, accountLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading || accountLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="skeleton" style={{ height: '32px', width: '50%' }} />
+        <div className="skeleton" style={{ height: '260px' }} />
+        <div className="skeleton" style={{ height: '360px' }} />
+      </div>
+    );
   }
 
   if (analyses.length === 0) {
@@ -92,11 +97,6 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
   const [loadingTrend, setLoadingTrend] = useState(false);
   
   // Load period trend forecast if billing cycle is set
-  useEffect(() => {
-    if (expense.billingCycleDay) {
-      loadPeriodTrend();
-    }
-  }, [expense.id, expense.billingCycleDay]);
 
   async function loadPeriodTrend() {
     try {
@@ -147,6 +147,12 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
       setLoadingTrend(false);
     }
   }
+
+  useEffect(() => {
+    if (expense.billingCycleDay) {
+      loadPeriodTrend();
+    }
+  }, [expense.id, expense.billingCycleDay]);
   
   const statusColor = 
     currentMonth.status === 'on-track' ? 'var(--color-success)' :
@@ -245,8 +251,8 @@ function BudgetCard({ analysis }: { analysis: BudgetAnalysis }) {
                 borderRadius: '4px',
                 fontSize: 'var(--font-small)',
                 fontWeight: '600',
-                background: periodTrend.trendLabel === 'Trending Lower' ? '#dcfce7' : periodTrend.trendLabel === 'Trending Higher' ? '#fee2e2' : '#f3f4f6',
-                color: periodTrend.trendLabel === 'Trending Lower' ? '#166534' : periodTrend.trendLabel === 'Trending Higher' ? '#991b1b' : '#374151',
+                background: periodTrend.trendLabel === 'Trending Lower' ? 'var(--safe-bg)' : periodTrend.trendLabel === 'Trending Higher' ? 'var(--danger-bg)' : 'var(--bg-tertiary)',
+                color: periodTrend.trendLabel === 'Trending Lower' ? 'var(--safe-text)' : periodTrend.trendLabel === 'Trending Higher' ? 'var(--danger-text)' : 'var(--text-primary)',
               }}
             >
               {periodTrend.trendLabel}

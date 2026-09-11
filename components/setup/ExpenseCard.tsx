@@ -6,6 +6,7 @@ import { RecurringExpense } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 import { EditExpenseDialog } from './EditExpenseDialog';
 import { formatDateLongUTC } from '@/lib/date-utils';
+import { formatCategory } from '@/lib/categories';
 
 interface Props {
   expense: RecurringExpense;
@@ -19,12 +20,6 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [nextMonthEstimate, setNextMonthEstimate] = useState<number | null>(null);
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (expense.isVariable) {
-      fetchNextMonthEstimate();
-    }
-  }, [expense.id, expense.isVariable]);
 
   async function fetchNextMonthEstimate() {
     try {
@@ -44,6 +39,12 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
     }
   }
 
+  useEffect(() => {
+    if (expense.isVariable) {
+      fetchNextMonthEstimate();
+    }
+  }, [expense.id, expense.isVariable]);
+
   const frequencyLabel = {
     weekly: 'Week',
     bi_weekly: 'Bi-Weekly',
@@ -51,17 +52,7 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
     monthly: 'Month',
   }[expense.frequency || 'monthly'] || 'Month';
 
-  const categoryLabel = {
-    auto: 'Auto',
-    bills: 'Bills',
-    credit_card_payment: 'Credit Card Payment',
-    insurance: 'Insurance',
-    loan_payment: 'Loan Payment',
-    other: 'Other',
-    rent: 'Rent/Mortgage',
-    subscription: 'Subscription',
-    utilities: 'Utilities',
-  }[expense.category] || expense.category;
+  const categoryLabel = formatCategory(expense.category);
 
   const isWeeklyBased = expense.frequency === 'weekly' || expense.frequency === 'bi_weekly';
   const dayLabel = isWeeklyBased 
@@ -111,7 +102,7 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{expense.name}</div>
-          <div style={{ fontSize: 'var(--font-body)', color: '#666' }}>
+          <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
             {recurringText}{anchorDateText} on {dayLabel} • {categoryLabel}
             {expense.isVariable && ' • Variable'}
           </div>
@@ -128,7 +119,7 @@ export function ExpenseCard({ expense, onUpdate, onDelete }: Props) {
               ${expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{frequencyLabel}
             </span>
             {expense.isVariable && nextMonthEstimate !== null && (
-              <span style={{ fontSize: 'var(--font-label)', color: '#666' }}>
+              <span style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)' }}>
                 Next month: ${nextMonthEstimate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             )}
@@ -186,8 +177,8 @@ const buttonSecondaryStyle: React.CSSProperties = {
 
 const buttonDangerStyle: React.CSSProperties = {
   padding: '0.375rem 0.75rem',
-  background: '#fee2e2',
-  color: '#dc2626',
+  background: 'var(--danger-bg)',
+  color: 'var(--color-danger)',
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',

@@ -30,28 +30,28 @@ export default function VarianceSummary({ months }: Props) {
       {/* Overview Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
             Total Income
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#16a34a' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-success)' }}>
             ${totals.income.toLocaleString()}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
             Total Expenses
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#dc2626' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-danger)' }}>
             ${totals.total.toLocaleString()}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
             Net Change
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: isPositive ? '#16a34a' : '#dc2626' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: isPositive ? 'var(--color-success)' : 'var(--color-danger)' }}>
             {isPositive ? '+' : ''}${netChange.toLocaleString()}
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function VarianceSummary({ months }: Props) {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+              <tr style={{ borderBottom: '2px solid var(--border-primary)' }}>
                 <th style={tableHeaderStyle}>Month</th>
                 <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Income</th>
                 <th style={{ ...tableHeaderStyle, textAlign: 'right' }}>Expenses</th>
@@ -93,15 +93,15 @@ export default function VarianceSummary({ months }: Props) {
               {months.map((month, idx) => {
                 const monthNet = month.totalIncome - month.totalExpenses;
                 return (
-                  <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--border-primary)' }}>
                     <td style={tableCellStyle}>{month.monthName.split(' ')[0]}</td>
-                    <td style={{ ...tableCellStyle, textAlign: 'right', color: '#16a34a' }}>
+                    <td style={{ ...tableCellStyle, textAlign: 'right', color: 'var(--color-success)' }}>
                       ${month.totalIncome.toLocaleString()}
                     </td>
-                    <td style={{ ...tableCellStyle, textAlign: 'right', color: '#dc2626' }}>
+                    <td style={{ ...tableCellStyle, textAlign: 'right', color: 'var(--color-danger)' }}>
                       ${month.totalExpenses.toLocaleString()}
                     </td>
-                    <td style={{ ...tableCellStyle, textAlign: 'right', fontWeight: '600', color: monthNet >= 0 ? '#16a34a' : '#dc2626' }}>
+                    <td style={{ ...tableCellStyle, textAlign: 'right', fontWeight: '600', color: monthNet >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                       {monthNet >= 0 ? '+' : ''}${monthNet.toLocaleString()}
                     </td>
                   </tr>

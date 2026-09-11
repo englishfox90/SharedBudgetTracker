@@ -66,6 +66,7 @@ export interface CashEvent {
   incomeRuleId?: number;
   recurringExpenseId?: number;
   forecastedAmount?: number;
+  category?: string;
 }
 
 export interface DayForecast {

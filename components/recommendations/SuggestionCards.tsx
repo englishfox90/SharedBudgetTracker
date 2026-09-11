@@ -10,7 +10,7 @@ export default function SuggestionCards({ suggestions }: Props) {
   if (suggestions.length === 0) {
     return (
       <div style={cardStyle}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#16a34a' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--color-success)' }}>
           ✅ All Clear!
         </h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>

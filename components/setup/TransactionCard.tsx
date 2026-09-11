@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { formatDateLongUTC } from '@/lib/date-utils';
 import EditTransactionDialog from './EditTransactionDialog';
 import { ConfirmDialog } from '../dialogs';
+import { formatCategory } from '@/lib/categories';
 
 interface Transaction {
   id: number;
@@ -42,25 +43,6 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
     }
   }
 
-  function formatCategory(cat: string | null): string {
-    if (!cat) return 'Uncategorized';
-    const labels: Record<string, string> = {
-      income: 'Income',
-      transfer_in: 'Transfer In',
-      transfer_out: 'Transfer Out',
-      auto: 'Auto',
-      bills: 'Bills',
-      credit_card_payment: 'Credit Card Payment',
-      insurance: 'Insurance',
-      loan_payment: 'Loan Payment',
-      other: 'Other',
-      rent: 'Rent/Mortgage',
-      subscription: 'Subscription',
-      utilities: 'Utilities',
-    };
-    return labels[cat] || cat.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  }
-
   const isDeposit = transaction.amount >= 0;
 
   return (
@@ -72,7 +54,7 @@ export default function TransactionCard({ transaction, onUpdate, onDelete }: Pro
             <span style={categoryBadgeStyle}>{formatCategory(transaction.category)}</span>
           </div>
           <div style={nameStyle}>{transaction.description}</div>
-          <div style={{ ...amountStyle, color: isDeposit ? '#16a34a' : '#dc2626' }}>
+          <div style={{ ...amountStyle, color: isDeposit ? 'var(--color-success)' : 'var(--color-danger)' }}>
             {isDeposit ? '+' : ''}${Math.abs(transaction.amount).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -141,8 +123,8 @@ const amountStyle: React.CSSProperties = {
 
 const deleteButtonStyle: React.CSSProperties = {
   padding: '0.375rem 0.75rem',
-  background: '#fee2e2',
-  color: '#dc2626',
+  background: 'var(--danger-bg)',
+  color: 'var(--color-danger)',
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',

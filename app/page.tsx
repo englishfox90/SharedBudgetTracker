@@ -14,14 +14,15 @@ import DashboardTab from '@/components/DashboardTab';
 import BudgetAdvisorTab from '@/components/BudgetAdvisorTab';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AccountProvider } from '@/contexts/AccountContext';
 
 const TABS = [
-  { value: 'dashboard', label: 'Dashboard' },
-  { value: 'forecast', label: 'Forecast' },
-  { value: 'recommendation', label: 'Recommendation' },
-  { value: 'transactions', label: 'Transactions' },
-  { value: 'budget', label: 'Budget' },
-  { value: 'setup', label: 'Setup' },
+  { value: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', icon: '📊' },
+  { value: 'forecast', label: 'Forecast', shortLabel: 'Forecast', icon: '📅' },
+  { value: 'recommendation', label: 'Recommendation', shortLabel: 'Insights', icon: '💡' },
+  { value: 'transactions', label: 'Transactions', shortLabel: 'Transactions', icon: '🧾' },
+  { value: 'budget', label: 'Budget', shortLabel: 'Budget', icon: '🎯' },
+  { value: 'setup', label: 'Setup', shortLabel: 'Setup', icon: '⚙️' },
 ];
 
 export default function Home() {
@@ -34,10 +35,12 @@ export default function Home() {
   const tabsListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Keep the active tab visible when the tab row scrolls horizontally
+    // Keep the active tab visible when the tab row scrolls horizontally (desktop only;
+    // on phones the tabs live in a fixed bottom bar and are always visible)
+    if (isMobile) return;
     const active = tabsListRef.current?.querySelector<HTMLElement>('[data-state="active"]');
     active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, [activeTab]);
+  }, [activeTab, isMobile]);
 
   useEffect(() => {
     // Update URL when tab changes
@@ -52,7 +55,15 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', padding: isMobile ? '1rem' : '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        padding: isMobile ? '1rem' : '2rem',
+        paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '2rem',
+        maxWidth: '1400px',
+        margin: '0 auto',
+      }}
+    >
       <header style={{ 
         marginBottom: isMobile ? '0.75rem' : '2rem', 
       }}> 
@@ -168,42 +179,23 @@ export default function Home() {
         )}
       </header>
 
+      <AccountProvider>
       <Tabs.Root value={activeTab} onValueChange={handleTabChange} style={{ width: '100%' }}>
         <Tabs.List
           ref={tabsListRef}
-          className="tabs-list"
+          className={isMobile ? 'tabs-list tabs-list--bottom' : 'tabs-list tabs-list--top'}
           aria-label="Sections"
-          style={{
-            display: 'flex',
-            gap: isMobile ? '0.25rem' : '1rem',
-            borderBottom: '1px solid var(--border-primary)',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            // Let the tab row bleed to the screen edges on phones so the
-            // partially visible last tab hints that the row scrolls.
-            margin: isMobile ? '0 -1rem 1.25rem' : '0 0 2rem',
-            padding: isMobile ? '0 0.5rem' : 0,
-          }}
         >
           {TABS.map((tab) => (
-            <Tabs.Trigger
-              key={tab.value}
-              value={tab.value}
-              style={{
-                padding: isMobile ? '0.75rem 0.75rem' : '0.75rem 1.5rem',
-                fontSize: isMobile ? '0.9375rem' : '1rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--text-secondary)',
-                borderBottom: '2px solid transparent',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              {tab.label}
+            <Tabs.Trigger key={tab.value} value={tab.value} className="tab-trigger">
+              {isMobile ? (
+                <>
+                  <span className="tab-trigger__icon" aria-hidden="true">{tab.icon}</span>
+                  <span className="tab-trigger__label">{tab.shortLabel}</span>
+                </>
+              ) : (
+                tab.label
+              )}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -235,13 +227,7 @@ export default function Home() {
           <SetupTab />
         </Tabs.Content>
       </Tabs.Root>
-
-      <style jsx>{`
-        :global([data-state='active']) {
-          color: var(--text-primary) !important;
-          border-bottom-color: var(--text-primary) !important;
-        }
-      `}</style>
+      </AccountProvider>
     </div>
   );
 }

@@ -41,7 +41,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, type, startingBalance, safeMinBalance, inflationRate, autoCalculateContrib, defaultPayFrequency } = body;
+    const { name, type, startingBalance, startDate, safeMinBalance, inflationRate, autoCalculateContrib, defaultPayFrequency } = body;
 
     // Validate user has access to this account
     const validation = await validateAccountAccess(id);
@@ -53,6 +53,7 @@ export async function PATCH(
         ...(name && { name }),
         ...(type && { type }),
         ...(startingBalance !== undefined && { startingBalance: parseFloat(startingBalance) }),
+        ...(startDate !== undefined && { startDate: new Date(startDate) }),
         ...(safeMinBalance !== undefined && { safeMinBalance: parseFloat(safeMinBalance) }),
         ...(inflationRate !== undefined && { inflationRate: parseFloat(inflationRate) }),
         ...(autoCalculateContrib !== undefined && { autoCalculateContrib }),

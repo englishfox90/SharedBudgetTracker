@@ -13,12 +13,28 @@ interface CashEvent {
   type: string;
   incomeRuleId?: number;
   recurringExpenseId?: number;
+  category?: string;
 }
 
 interface Props {
   event: CashEvent;
   accountId: number;
   onActualized: () => void;
+}
+
+/** Fallback for events that don't carry a category (older forecasts). */
+function guessCategory(event: CashEvent): string {
+  if (event.type === 'income') return 'income';
+  const desc = event.description.toLowerCase();
+  if (desc.includes('credit card')) return 'credit_card_payment';
+  if (desc.includes('rent') || desc.includes('mortgage')) return 'rent';
+  if (desc.includes('loan')) return 'loan_payment';
+  if (desc.includes('insurance')) return 'insurance';
+  if (desc.includes('utilit') || desc.includes('electric') || desc.includes('water') || desc.includes('gas')) return 'utilities';
+  if (desc.includes('auto') || desc.includes('car')) return 'auto';
+  if (desc.includes('subscription')) return 'subscription';
+  if (desc.includes('bill')) return 'bills';
+  return 'other';
 }
 
 export default function ActualizeEventDialog({ event, accountId, onActualized }: Props) {
@@ -74,29 +90,7 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
     setIsSubmitting(true);
 
     try {
-      // Determine category based on event type and description
-      let category = 'other';
-      const desc = event.description.toLowerCase();
-      
-      if (event.type === 'income') {
-        category = 'income';
-      } else if (desc.includes('credit card')) {
-        category = 'credit_card_payment';
-      } else if (desc.includes('rent') || desc.includes('mortgage')) {
-        category = 'rent';
-      } else if (desc.includes('loan')) {
-        category = 'loan_payment';
-      } else if (desc.includes('insurance')) {
-        category = 'insurance';
-      } else if (desc.includes('utility') || desc.includes('utilities') || desc.includes('electric') || desc.includes('water') || desc.includes('gas')) {
-        category = 'utilities';
-      } else if (desc.includes('auto') || desc.includes('car')) {
-        category = 'auto';
-      } else if (desc.includes('subscription')) {
-        category = 'subscription';
-      } else if (desc.includes('bill')) {
-        category = 'bills';
-      }
+      const category = event.category || guessCategory(event);
 
       // Preserve the original sign from the event type
       const finalAmount = event.amount < 0 ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
@@ -162,7 +156,7 @@ export default function ActualizeEventDialog({ event, accountId, onActualized }:
             <span style={{
               fontWeight: '600',
               whiteSpace: 'nowrap',
-              color: event.amount > 0 ? '#16a34a' : '#dc2626',
+              color: event.amount > 0 ? 'var(--color-success)' : 'var(--color-danger)',
             }}>
               {event.amount > 0 ? '+' : ''}${forecastedDisplay}
             </span>
@@ -294,8 +288,8 @@ const cancelButtonStyle: React.CSSProperties = {
 
 const submitButtonStyle: React.CSSProperties = {
   padding: '0.625rem 1.25rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',

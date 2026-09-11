@@ -7,6 +7,7 @@ import { formatDateShortUTC } from '@/lib/date-utils';
 import AddTransactionDialog from './setup/AddTransactionDialog';
 import ActualizeEventDialog from './forecast/ActualizeEventDialog';
 import EditActualizedEventDialog from './forecast/EditActualizedEventDialog';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface Props {
   currentMonth: { year: number; month: number };
@@ -15,8 +16,8 @@ interface Props {
 
 export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
-  const [accountId, setAccountId] = useState<number | null>(null);
-  const [account, setAccount] = useState<any>(null);
+  const { account, loading: accountLoading } = useAccount();
+  const accountId = account?.id ?? null;
   const [loading, setLoading] = useState(false);
   const isMobile = useIsMobile();
 
@@ -25,27 +26,10 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
   }
 
   useEffect(() => {
-    loadAccountId();
-  }, []);
-
-  useEffect(() => {
     if (accountId) {
       loadForecast();
     }
-  }, [currentMonth, accountId]);
-
-  async function loadAccountId() {
-    try {
-      const res = await fetch('/api/accounts');
-      const accounts = await res.json();
-      if (accounts.length > 0) {
-        setAccountId(accounts[0].id);
-        setAccount(accounts[0]);
-      }
-    } catch (error) {
-      console.error('Error loading account:', error);
-    }
-  }
+  }, [currentMonth, accountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadForecast() {
     if (!accountId) return;
@@ -98,7 +82,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
     onMonthChange({ year: newYear, month: newMonth });
   }
 
-  if (loading && !forecast) {
+  if ((loading || accountLoading) && !forecast) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div style={{ height: '40px', background: 'var(--bg-tertiary)', borderRadius: '4px', animation: 'pulse 2s infinite' }} />
@@ -121,11 +105,12 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
     year: 'numeric',
   });
 
-  // Check if we're at the start date
+  // Check if we're at the start month (compare UTC year/month, like handlePreviousMonth)
   const isAtStartDate = account?.startDate ? (() => {
     const startDate = new Date(account.startDate);
-    const currentDate = new Date(currentMonth.year, currentMonth.month - 1, 1);
-    return currentDate <= new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const startYear = startDate.getUTCFullYear();
+    const startMonth = startDate.getUTCMonth() + 1;
+    return currentMonth.year < startYear || (currentMonth.year === startYear && currentMonth.month <= startMonth);
   })() : false;
 
   const visibleDays = forecast.days.filter((day) => day.events.length > 0 || day.belowSafeMin);
@@ -158,7 +143,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               <span style={{
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
-                color: event.amount > 0 ? '#16a34a' : '#dc2626',
+                color: event.amount > 0 ? 'var(--color-success)' : 'var(--color-danger)',
               }}>
                 {event.amount > 0 ? '+' : ''}${formatCurrency(Math.abs(event.amount))}
               </span>
@@ -175,8 +160,8 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                   <span style={{
                     marginLeft: '0.5rem',
                     padding: '0.125rem 0.375rem',
-                    background: isWorse ? '#fee2e2' : '#dcfce7',
-                    color: isWorse ? '#991b1b' : '#166534',
+                    background: isWorse ? 'var(--danger-bg)' : 'var(--safe-bg)',
+                    color: isWorse ? 'var(--danger-text)' : 'var(--safe-text)',
                     borderRadius: '4px',
                     fontWeight: '600',
                     whiteSpace: 'nowrap',
@@ -280,7 +265,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
               label: 'Lowest Balance',
               value: forecast.overallStatus.minBalance,
               color:
-                forecast.overallStatus.minBalance < 0 ? '#dc2626' : forecast.overallStatus.minBalance < forecast.safeMinBalance ? '#f97316' : '#16a34a',
+                forecast.overallStatus.minBalance < 0 ? 'var(--color-danger)' : forecast.overallStatus.minBalance < forecast.safeMinBalance ? 'var(--color-warning)' : 'var(--color-success)',
             },
             {
               label: 'Safe Minimum',
@@ -357,7 +342,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                         fontWeight: '700',
                         fontSize: '1rem',
                         whiteSpace: 'nowrap',
-                        color: isNegative ? '#dc2626' : day.belowSafeMin ? '#f97316' : 'inherit',
+                        color: isNegative ? 'var(--color-danger)' : day.belowSafeMin ? 'var(--color-warning)' : 'inherit',
                       }}>
                         ${formatCurrency(day.closingBalance)}
                         {isNegative ? ' 🚨' : day.belowSafeMin ? ' ⚠️' : ''}
@@ -371,7 +356,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginTop: '0.5rem', fontSize: 'var(--font-small)', color: 'var(--text-secondary)' }}>
                     <span>Opening ${formatCurrency(day.openingBalance)}</span>
-                    <span style={{ color: day.netChange > 0 ? '#16a34a' : '#dc2626', fontWeight: '600' }}>
+                    <span style={{ color: day.netChange > 0 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: '600' }}>
                       {day.netChange > 0 ? '+' : '-'}${formatCurrency(Math.abs(day.netChange))}
                     </span>
                   </div>
@@ -419,7 +404,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                       <td
                         style={{
                           ...tdStyle,
-                          color: day.netChange > 0 ? '#16a34a' : '#dc2626',
+                          color: day.netChange > 0 ? 'var(--color-success)' : 'var(--color-danger)',
                           fontWeight: '600',
                         }}
                       >
@@ -430,7 +415,7 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
                           ...tdStyle,
                           fontWeight: '600',
                           whiteSpace: 'nowrap',
-                          color: day.closingBalance < 0 ? '#dc2626' : day.belowSafeMin ? '#f97316' : 'inherit',
+                          color: day.closingBalance < 0 ? 'var(--color-danger)' : day.belowSafeMin ? 'var(--color-warning)' : 'inherit',
                         }}
                       >
                         ${formatCurrency(day.closingBalance)}
@@ -451,8 +436,8 @@ export default function ForecastTab({ currentMonth, onMonthChange }: Props) {
 // Styles
 const buttonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontWeight: '500',

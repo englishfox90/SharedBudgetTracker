@@ -33,6 +33,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
       setAmount(Math.abs(event.amount).toString());
       setIsExpense(event.amount < 0);
       setShowDeleteConfirm(false);
+      setError(null);
     }
   }, [open, event]);
 
@@ -78,7 +80,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
       onUpdated();
     } catch (error) {
       console.error('Error updating transaction:', error);
-      alert('Failed to update transaction');
+      setError('Could not save the transaction. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +101,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
       onUpdated();
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert('Failed to delete transaction');
+      setError('Could not delete the transaction. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -119,12 +121,12 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
           {isLinked && (
             <div style={{
               padding: '0.75rem',
-              background: 'var(--info-bg, #eff6ff)',
-              border: '1px solid var(--info-border, #bfdbfe)',
+              background: 'var(--info-bg)',
+              border: '1px solid var(--info-border)',
               borderRadius: '6px',
               marginBottom: '1rem',
               fontSize: '0.875rem',
-              color: 'var(--info-text, #1e40af)',
+              color: 'var(--info-text)',
             }}>
               ℹ️ This transaction is linked to a recurring {event.incomeRuleId ? 'income' : 'expense'}.
               Editing here updates this occurrence only.
@@ -192,6 +194,8 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
               </div>
             )}
 
+            {error && <div style={errorBoxStyle}>{error}</div>}
+
             <div className="dialog-actions">
               <Dialog.Close asChild>
                 <button type="button" style={cancelButtonStyle}>
@@ -229,7 +233,7 @@ export default function EditActualizedEventDialog({ event, onUpdated, children }
                 </button>
               ) : (
                 <>
-                  <span style={{ fontSize: 'var(--font-body)', color: '#dc2626', fontWeight: 500 }}>Delete this transaction?</span>
+                  <span style={{ fontSize: 'var(--font-body)', color: 'var(--color-danger)', fontWeight: 500 }}>Delete this transaction?</span>
                   <button
                     type="button"
                     onClick={handleDelete}
@@ -291,8 +295,8 @@ const cancelButtonStyle: React.CSSProperties = {
 
 const submitButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontSize: '0.875rem',
@@ -303,10 +307,20 @@ const submitButtonStyle: React.CSSProperties = {
 const deleteButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
   background: 'transparent',
-  color: '#dc2626',
-  border: '1px solid #dc2626',
+  color: 'var(--color-danger)',
+  border: '1px solid var(--color-danger)',
   borderRadius: '4px',
   fontSize: '0.875rem',
   fontWeight: '500',
   cursor: 'pointer',
+};
+
+const errorBoxStyle: React.CSSProperties = {
+  marginTop: '0.5rem',
+  padding: '0.75rem',
+  background: 'var(--danger-bg)',
+  border: '1px solid var(--danger-border)',
+  color: 'var(--danger-text)',
+  borderRadius: '6px',
+  fontSize: 'var(--font-body)',
 };

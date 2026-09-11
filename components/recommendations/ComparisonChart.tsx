@@ -112,7 +112,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
                 y1={y}
                 x2={chartWidth}
                 y2={y}
-                stroke="#e0e0e0"
+                stroke="var(--border-primary)"
                 strokeDasharray="4 4"
               />
             );
@@ -130,7 +130,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
           {/* Current Balance line (solid blue) */}
           <path
             d={currentBalancePath}
-            stroke="#1e40af"
+            stroke="var(--chart-balance)"
             strokeWidth={3}
             fill="none"
           />
@@ -147,7 +147,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
           {/* Recommended Balance line (solid green) */}
           <path
             d={recommendedBalancePath}
-            stroke="#15803d"
+            stroke="var(--chart-balance-alt)"
             strokeWidth={3}
             fill="none"
           />
@@ -157,8 +157,8 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
             const x = scaleX(i);
             return (
               <g key={i}>
-                <circle cx={x} cy={scaleBalanceY(month.closingBalance)} r={4} fill="#1e40af" />
-                <circle cx={x} cy={scaleBalanceY(recommendedMonths[i].balance)} r={4} fill="#15803d" />
+                <circle cx={x} cy={scaleBalanceY(month.closingBalance)} r={4} fill="var(--chart-balance)" />
+                <circle cx={x} cy={scaleBalanceY(recommendedMonths[i].balance)} r={4} fill="var(--chart-balance-alt)" />
               </g>
             );
           })}
@@ -187,7 +187,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
             textAnchor="end"
             fontSize="12"
             fontWeight="600"
-            fill="#1a1a1a"
+            fill="var(--text-primary)"
           >
             Balance ($)
           </text>
@@ -214,7 +214,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
           <text x={0} y={0} fontSize="11" fontWeight="600" fill="var(--text-primary)">Legend</text>
           
           {/* Current Balance */}
-          <line x1={0} y1={20} x2={25} y2={20} stroke="#1e40af" strokeWidth={2.5} />
+          <line x1={0} y1={20} x2={25} y2={20} stroke="var(--chart-balance)" strokeWidth={2.5} />
           <text x={30} y={24} fontSize="10" fill="var(--text-secondary)">Current Balance</text>
           
           {/* Current Income */}
@@ -222,7 +222,7 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
           <text x={30} y={42} fontSize="10" fill="var(--text-secondary)">Current Income</text>
           
           {/* Recommended Balance */}
-          <line x1={0} y1={56} x2={25} y2={56} stroke="#15803d" strokeWidth={2.5} />
+          <line x1={0} y1={56} x2={25} y2={56} stroke="var(--chart-balance-alt)" strokeWidth={2.5} />
           <text x={30} y={60} fontSize="10" fill="var(--text-secondary)">Recommended Balance</text>
           
           {/* Recommended Income */}
@@ -234,11 +234,11 @@ export default function ComparisonChart({ currentAnnual, recommendedAnnual, mont
 
       <div style={{
         padding: '0.875rem',
-        background: '#f0fdf4',
-        border: '1px solid #86efac',
+        background: 'var(--safe-bg)',
+        border: '1px solid var(--safe-border)',
         borderRadius: '6px',
       }}>
-        <div style={{ fontSize: '0.85rem', color: '#166534', lineHeight: '1.5' }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--safe-text)', lineHeight: '1.5' }}>
           <strong>Impact:</strong> The green lines show how implementing the recommended contribution
           increases your monthly income and raises your ending balance, keeping you above the safe minimum.
         </div>

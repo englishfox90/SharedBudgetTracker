@@ -47,6 +47,14 @@
   --color-warning: #d97706;
   --border-color: var(--border-primary);
 
+  /* Primary (filled) buttons: dark on light, light on dark */
+  --button-bg: #1a1a1a;
+  --button-text: #ffffff;
+
+  /* Chart line colors */
+  --chart-balance: #1e40af;
+  --chart-balance-alt: #15803d;
+
   /* Font sizes - standardized */
   --font-body: 0.875rem; /* 14px */
   --font-label: 0.6875rem; /* 11px - smaller than body */
@@ -93,6 +101,12 @@
   --color-danger: #f87171;
   --color-success: #4ade80;
   --color-warning: #fbbf24;
+
+  --button-bg: #e2e8f0;
+  --button-text: #0f172a;
+
+  --chart-balance: #60a5fa;
+  --chart-balance-alt: #4ade80;
 }
 
 html,
@@ -185,16 +199,91 @@ input[type='date']::-webkit-date-and-time-value {
   min-height: 1.4em;
 }
 
-/* Tab bar: horizontally scrollable on small screens, without a scrollbar. */
+/* ------------------------------------------------------------------ */
+/* Tabs: a scrollable row under the header on desktop, a fixed bottom   */
+/* bar on phones.                                                       */
+/* ------------------------------------------------------------------ */
 .tabs-list {
+  display: flex;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 .tabs-list::-webkit-scrollbar {
   display: none;
 }
-.tabs-list > * {
+
+.tabs-list--top {
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-primary);
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs-list--top .tab-trigger {
   flex-shrink: 0;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.tabs-list--top .tab-trigger[data-state='active'] {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+.tabs-list--bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -2px 10px var(--shadow);
+}
+.tabs-list--bottom .tab-trigger {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.125rem 0.375rem;
+  min-height: 56px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-top: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tabs-list--bottom .tab-trigger[data-state='active'] {
+  color: var(--text-primary);
+  border-top-color: var(--text-primary);
+}
+.tab-trigger__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.tab-trigger__label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Loading placeholder blocks */
+.skeleton {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  animation: pulse 2s infinite;
 }
 
 /* Charts: let the SVG keep a legible size and scroll sideways on phones. */

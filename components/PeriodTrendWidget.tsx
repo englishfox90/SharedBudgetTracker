@@ -105,11 +105,11 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
   const getTrendColor = (label: string) => {
     switch (label) {
       case 'Trending Higher':
-        return '#dc2626';
+        return 'var(--color-danger)';
       case 'Trending Lower':
-        return '#16a34a';
+        return 'var(--color-success)';
       default:
-        return '#666';
+        return 'var(--text-secondary)';
     }
   };
 
@@ -124,11 +124,11 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
 
     switch (label) {
       case 'Trending Higher':
-        return { ...baseStyle, background: '#fee2e2', color: '#991b1b' };
+        return { ...baseStyle, background: 'var(--danger-bg)', color: 'var(--danger-text)' };
       case 'Trending Lower':
-        return { ...baseStyle, background: '#dcfce7', color: '#166534' };
+        return { ...baseStyle, background: 'var(--safe-bg)', color: 'var(--safe-text)' };
       default:
-        return { ...baseStyle, background: '#f3f4f6', color: '#374151' };
+        return { ...baseStyle, background: 'var(--bg-tertiary)', color: 'var(--text-primary)' };
     }
   };
 
@@ -136,7 +136,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
     <div style={widgetStyle}>
       <h3 style={headingStyle}>Period Trend Forecast</h3>
       <p style={descriptionStyle}>
-        Track your spending cycle and predict where you'll end up based on current trends.
+        Track your spending cycle and predict where you&apos;ll end up based on current trends.
       </p>
 
       {/* Input Section */}
@@ -284,7 +284,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   Baseline Total: ${formatCurrency(forecast.baselineFullPeriodSpend)}
                 </div>
                 <div style={comparisonBarContainerStyle}>
@@ -292,7 +292,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                     style={{
                       ...comparisonBarFillStyle,
                       width: `${(forecast.baselineFullPeriodSpend / forecast.predictedFullPeriodSpend * 100).toFixed(1)}%`,
-                      background: '#9ca3af',
+                      background: 'var(--text-secondary)',
                     }}
                   />
                 </div>
@@ -308,7 +308,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                 fontWeight: '500', 
                 cursor: 'pointer',
                 padding: '0.5rem',
-                background: '#f9fafb',
+                background: 'var(--bg-tertiary)',
                 borderRadius: '4px',
                 userSelect: 'none',
               }}>
@@ -318,7 +318,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                 marginTop: '0.75rem', 
                 maxHeight: '300px', 
                 overflowY: 'auto',
-                border: '1px solid #e0e0e0',
+                border: '1px solid var(--border-primary)',
                 borderRadius: '4px',
               }}>
                 <table style={{ width: '100%', fontSize: '0.75rem', borderCollapse: 'collapse' }}>
@@ -331,7 +331,7 @@ export function PeriodTrendWidget({ accountId, variableExpenses }: Props) {
                   <tbody>
                     {forecast.dailyForecasts.map((day, idx) => (
                       <tr key={day.date} style={{ 
-                        borderBottom: idx < forecast.dailyForecasts.length - 1 ? '1px solid #f3f4f6' : 'none' 
+                        borderBottom: idx < forecast.dailyForecasts.length - 1 ? '1px solid var(--border-primary)' : 'none' 
                       }}>
                         <td style={{ padding: '0.5rem' }}>
                           {formatDateShortUTC(parseDateUTC(day.date))}
@@ -385,7 +385,7 @@ const inputSectionStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: '1rem',
   paddingBottom: '1.5rem',
-  borderBottom: '1px solid #e0e0e0',
+  borderBottom: '1px solid var(--border-primary)',
   marginBottom: '1.5rem',
 };
 
@@ -417,8 +417,8 @@ const selectStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: '0.75rem 1.5rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '6px',
   fontSize: '0.875rem',
@@ -428,8 +428,8 @@ const buttonStyle: React.CSSProperties = {
 
 const errorStyle: React.CSSProperties = {
   padding: '0.75rem',
-  background: '#fee2e2',
-  color: '#991b1b',
+  background: 'var(--danger-bg)',
+  color: 'var(--danger-text)',
   borderRadius: '6px',
   fontSize: '0.875rem',
 };
@@ -440,14 +440,14 @@ const resultsStyle: React.CSSProperties = {
 
 const progressBarContainerStyle: React.CSSProperties = {
   height: '8px',
-  background: '#e5e7eb',
+  background: 'var(--bg-tertiary)',
   borderRadius: '4px',
   overflow: 'hidden',
 };
 
 const progressBarFillStyle: React.CSSProperties = {
   height: '100%',
-  background: '#1a1a1a',
+  background: 'var(--text-primary)',
   transition: 'width 0.3s ease',
 };
 

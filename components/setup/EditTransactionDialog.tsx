@@ -4,6 +4,7 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
+import { INCOME_CATEGORIES, TRANSACTION_EXPENSE_CATEGORIES, withCurrentOption } from '@/lib/categories';
 import { formatDateUTC } from '@/lib/date-utils';
 
 interface Transaction {
@@ -29,6 +30,7 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
   const [isExpense, setIsExpense] = useState(transaction.amount < 0);
   const [category, setCategory] = useState(transaction.category || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isActualized = transaction.incomeRuleId !== null || transaction.recurringExpenseId !== null;
 
@@ -43,6 +45,7 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const finalAmount = isExpense ? -Math.abs(parseFloat(amount)) : Math.abs(parseFloat(amount));
@@ -64,7 +67,7 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
       onUpdated();
     } catch (error) {
       console.error('Error updating transaction:', error);
-      alert('Failed to update transaction');
+      setError('Could not update the transaction. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -84,12 +87,12 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
           {isActualized && (
             <div style={{
               padding: '0.75rem',
-              background: '#dcfce7',
-              border: '1px solid #bbf7d0',
+              background: 'var(--safe-bg)',
+              border: '1px solid var(--safe-border)',
               borderRadius: '6px',
               marginBottom: '1rem',
               fontSize: '0.875rem',
-              color: '#166534'
+              color: 'var(--safe-text)'
             }}>
               <strong>✓ Actualized Transaction</strong>
               <div style={{ marginTop: '0.25rem', fontSize: '0.8125rem' }}>
@@ -148,23 +151,19 @@ export default function EditTransactionDialog({ transaction, onUpdated }: Props)
               <select value={category} onChange={(e) => setCategory(e.target.value)} style={selectStyle}>
                 <option value="">-- Select Category --</option>
                 <optgroup label="Income & Transfers">
-                  <option value="income">Income</option>
-                  <option value="transfer_in">Transfer In</option>
+                  {INCOME_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
                 </optgroup>
                 <optgroup label="Expenses">
-                  <option value="auto">Auto</option>
-                  <option value="bills">Bills</option>
-                  <option value="credit_card_payment">Credit Card Payment</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="loan_payment">Loan Payment</option>
-                  <option value="other">Other</option>
-                  <option value="rent">Rent/Mortgage</option>
-                  <option value="subscription">Subscription</option>
-                  <option value="transfer_out">Transfer Out</option>
-                  <option value="utilities">Utilities</option>
+                  {withCurrentOption(TRANSACTION_EXPENSE_CATEGORIES, transaction.category).map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
                 </optgroup>
               </select>
             </div>
+
+            {error && <div style={errorBoxStyle}>{error}</div>}
 
             <div className="dialog-actions">
               <Dialog.Close asChild>
@@ -239,10 +238,20 @@ const cancelButtonStyle: React.CSSProperties = {
 
 const submitButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',
   fontSize: '0.875rem',
+};
+
+const errorBoxStyle: React.CSSProperties = {
+  marginTop: '0.5rem',
+  padding: '0.75rem',
+  background: 'var(--danger-bg)',
+  border: '1px solid var(--danger-border)',
+  color: 'var(--danger-text)',
+  borderRadius: '6px',
+  fontSize: 'var(--font-body)',
 };

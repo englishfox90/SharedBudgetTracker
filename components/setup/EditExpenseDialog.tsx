@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { RecurringExpense } from '@/types';
+import { EXPENSE_CATEGORIES, withCurrentOption } from '@/lib/categories';
 
 interface Props {
   expense: RecurringExpense;
@@ -128,9 +129,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
               <div>
                 <Label.Root style={labelStyle}>
                   Anchor Date (Starting Reference)
-                  <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
-                    When did/will the first payment occur?
-                  </span>
+                  <span style={hintStyle}>When did/will the first payment occur?</span>
                 </Label.Root>
                 <input
                   type="date"
@@ -139,7 +138,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                   required
                   style={inputStyle}
                 />
-                <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Expense will recur every 14 days from this date
                 </div>
               </div>
@@ -173,7 +172,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                     max="31"
                     placeholder={dayPlaceholder}
                   />
-                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                     If day exceeds month length, uses last day of month
                   </div>
                 </>
@@ -186,25 +185,19 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                 onChange={(e) => setCategory(e.target.value)}
                 style={selectStyle}
               >
-                <option value="auto">Auto</option>
-                <option value="bills">Bills</option>
-                <option value="credit_card_payment">Credit Card Payment</option>
-                <option value="insurance">Insurance</option>
-                <option value="loan_payment">Loan Payment</option>
-                <option value="other">Other</option>
-                <option value="rent">Rent/Mortgage</option>
-                <option value="subscription">Subscription</option>
-                <option value="utilities">Utilities</option>
+                {withCurrentOption(EXPENSE_CATEGORIES, expense.category).map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="checkbox"
-                id="isVariable"
+                id="edit-expense-isVariable"
                 checked={isVariable}
                 onChange={(e) => setIsVariable(e.target.checked)}
               />
-              <Label.Root htmlFor="isVariable" style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
+              <Label.Root htmlFor="edit-expense-isVariable" style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
                 Variable amount (estimated from history)
               </Label.Root>
             </div>
@@ -213,9 +206,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                 <div>
                   <Label.Root style={labelStyle}>
                     Budget Goal (optional)
-                    <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
-                      Track spending vs goal in Budget tab
-                    </span>
+                    <span style={hintStyle}>Track spending vs goal in Budget tab</span>
                   </Label.Root>
                   <input
                     type="text"
@@ -228,9 +219,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
                 <div>
                   <Label.Root style={labelStyle}>
                     Billing Cycle Day (optional)
-                    <span style={{ fontSize: '0.75rem', fontWeight: '400', color: '#666', marginLeft: '0.5rem' }}>
-                      For credit cards: day of month billing cycle starts (e.g., 16)
-                    </span>
+                    <span style={hintStyle}>For credit cards: day of month billing cycle starts (e.g., 16)</span>
                   </Label.Root>
                   <input
                     type="number"
@@ -263,8 +252,8 @@ export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: Pro
 
 const buttonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontSize: '0.875rem',
@@ -287,6 +276,14 @@ const titleStyle: React.CSSProperties = {
   fontSize: '1.25rem',
   fontWeight: '600',
   marginBottom: '1.5rem',
+};
+
+const hintStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 'var(--font-small)',
+  fontWeight: '400',
+  color: 'var(--text-secondary)',
+  marginTop: '0.125rem',
 };
 
 const labelStyle: React.CSSProperties = {

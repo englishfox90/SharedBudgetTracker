@@ -112,7 +112,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
             {rule.name}
             <span style={percentageBadgeStyle}>{percentage}%</span>
           </div>
-          <div style={{ fontSize: 'var(--font-body)', color: '#666' }}>
+          <div style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
             ${rule.annualSalary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/year • {payFrequencyLabel} • {payDaysText}
           </div>
         </div>
@@ -249,8 +249,8 @@ const inputStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontSize: 'var(--font-body)',
@@ -271,8 +271,8 @@ const buttonSecondaryStyle: React.CSSProperties = {
 
 const buttonDangerStyle: React.CSSProperties = {
   padding: '0.375rem 0.75rem',
-  background: '#fee2e2',
-  color: '#dc2626',
+  background: 'var(--danger-bg)',
+  color: 'var(--color-danger)',
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
@@ -297,7 +297,7 @@ const percentageBadgeStyle: React.CSSProperties = {
   fontSize: 'var(--font-label)',
   fontWeight: '600',
   padding: '0.125rem 0.5rem',
-  background: '#e0f2fe',
-  color: '#0369a1',
+  background: 'var(--info-bg)',
+  color: 'var(--info-text)',
   borderRadius: '12px',
 };

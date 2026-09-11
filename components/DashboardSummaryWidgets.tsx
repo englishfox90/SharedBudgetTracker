@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/lib/useIsMobile';
-import { format, addMonths } from 'date-fns';
+import { addMonths } from 'date-fns';
+import { formatDateUTC, parseDateUTC, formatDateLongUTC } from '@/lib/date-utils';
 
 interface DashboardSummaryProps {
   accountId: number;
+  recommendations: RecommendationData | null;
   onNavigate: (tab: string) => void;
 }
 
@@ -13,6 +15,7 @@ interface ForecastData {
   days: Array<{ 
     date: string; 
     closingBalance: number;
+    events?: Array<{ actualized?: boolean; amount: number }>;
   }>;
   overallStatus: {
     minBalance: number;
@@ -21,7 +24,7 @@ interface ForecastData {
   safeMinBalance: number;
 }
 
-interface RecommendationData {
+export interface RecommendationData {
   insights: Array<{
     type: string;
     message: string;
@@ -31,24 +34,24 @@ interface RecommendationData {
   adjustmentNeeded: boolean;
 }
 
-export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSummaryProps) {
+export function DashboardSummaryWidgets({ accountId, recommendations, onNavigate }: DashboardSummaryProps) {
   const [todayBalance, setTodayBalance] = useState<number | null>(null);
   const [monthEndBalance, setMonthEndBalance] = useState<number | null>(null);
   const [minBalanceAlert, setMinBalanceAlert] = useState<{ amount: number; date: string; severity: 'warning' | 'danger' } | null>(null);
-  const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
   const [missingTransactions, setMissingTransactions] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [accountId]);
-
   async function loadDashboardData() {
     try {
-      const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth() + 1;
+      // The forecast API works in UTC calendar days (YYYY-MM-DD strings), so
+      // compare those strings directly instead of converting through local
+      // Date objects, which drifts by a day in the evening in western zones.
+      const todayStr = formatDateUTC(new Date());
+      const { year: currentYear, month: currentMonth } = (() => {
+        const now = new Date();
+        return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1 };
+      })();
 
       // Get current month forecast
       const currentForecastRes = await fetch(
@@ -57,8 +60,7 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
       const currentForecast: ForecastData = await currentForecastRes.json();
 
       // Find today's balance
-      const todayStr = format(today, 'yyyy-MM-dd');
-      const todayData = currentForecast.days.find((d: any) => d.date === todayStr);
+      const todayData = currentForecast.days.find((d) => d.date === todayStr);
       if (todayData) {
         setTodayBalance(todayData.closingBalance);
       }
@@ -69,58 +71,33 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
         setMonthEndBalance(lastDay.closingBalance);
       }
 
-      // Check for missing transactions (past days with estimated events)
-      const pastDays = currentForecast.days.filter((d: any) => {
-        const dayDate = new Date(d.date);
-        dayDate.setHours(0, 0, 0, 0);
-        const compareDate = new Date(today);
-        compareDate.setHours(0, 0, 0, 0);
-        // Only include days BEFORE today (not today itself)
-        return dayDate < compareDate;
-      });
-
-      // Count DAYS with forecast EXPENSE events (exclude income contributions)
-      const daysWithMissingTransactions = pastDays.filter((d: any) => {
-        return d.events?.some((e: any) => 
-          !e.actualized && e.amount < 0 // Only count expenses (negative amounts) that aren't actualized
-        );
-      });
-
+      // Count past days (before today) that still have unconfirmed forecast expenses
+      const daysWithMissingTransactions = currentForecast.days.filter(
+        (d) => d.date < todayStr && d.events?.some((e) => !e.actualized && e.amount < 0)
+      );
       setMissingTransactions(daysWithMissingTransactions.length);
 
       // Get next month forecast for lookahead
-      const nextMonth = addMonths(today, 1);
-      const nextYear = nextMonth.getFullYear();
-      const nextMonthNum = nextMonth.getMonth() + 1;
+      const nextMonth = addMonths(parseDateUTC(todayStr), 1);
+      const nextYear = nextMonth.getUTCFullYear();
+      const nextMonthNum = nextMonth.getUTCMonth() + 1;
 
       const nextForecastRes = await fetch(
         `/api/forecast?accountId=${accountId}&year=${nextYear}&month=${nextMonthNum}`
       );
       const nextForecast: ForecastData = await nextForecastRes.json();
 
-      // Combine forecasts to check for minimum balance violations
+      // Combine forecasts to check for minimum balance violations from today onwards
       const allDays = [...currentForecast.days, ...nextForecast.days];
-      
-      // Get safe minimum balance from forecast
       const minimumBalance = currentForecast.safeMinBalance;
+      const futureDays = allDays.filter((d) => d.date >= todayStr);
 
-      // Check all days including future days in current month
-      const futureDays = allDays.filter((d: any) => {
-        const dayDate = new Date(d.date);
-        dayDate.setHours(0, 0, 0, 0);
-        const compareDate = new Date(today);
-        compareDate.setHours(0, 0, 0, 0);
-        // Include today and future days
-        return dayDate >= compareDate;
-      });
-
-      // Find lowest point below minimum in future days
-      const belowMinimum = futureDays.filter((d: any) => d.closingBalance < minimumBalance);
+      // Find the EARLIEST/SOONEST violation (not the worst)
+      const belowMinimum = futureDays
+        .filter((d) => d.closingBalance < minimumBalance)
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
       if (belowMinimum.length > 0) {
-        // Sort by date to find the EARLIEST/SOONEST violation (not the worst)
-        belowMinimum.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const earliest = belowMinimum[0];
-        
         setMinBalanceAlert({
           amount: minimumBalance - earliest.closingBalance,
           date: earliest.date,
@@ -129,18 +106,6 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
       } else {
         setMinBalanceAlert(null);
       }
-
-      // Get recommendations
-      const recsRes = await fetch(`/api/recommendations?accountId=${accountId}&year=${currentYear}&month=${currentMonth}`);
-      const recsData = await recsRes.json();
-      
-      if (recsData) {
-        setRecommendations({
-          insights: recsData.suggestions || [],
-          suggestedContribution: recsData.contributionAnalysis?.recommendedAnnualContribution || 0,
-          adjustmentNeeded: recsData.contributionAnalysis?.adjustmentNeeded || false,
-        });
-      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -148,10 +113,18 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
     }
   }
 
+  useEffect(() => {
+    loadDashboardData();
+  }, [accountId]);
+
   if (loading) {
     return (
       <div style={containerStyle}>
-        <p>Loading summary...</p>
+        <div style={widgetsGridStyle}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="skeleton" style={{ height: '110px' }} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -184,9 +157,9 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
         >
           <div style={widgetTitleStyle}>Predicted Balance Today</div>
           <div style={widgetValueStyle}>
-            ${todayBalance !== null ? todayBalance.toFixed(2) : '--'}
+            {todayBalance !== null ? formatMoney(todayBalance) : '$--'}
           </div>
-          <div style={widgetSubtitleStyle}>{format(new Date(), 'MMM d, yyyy')}</div>
+          <div style={widgetSubtitleStyle}>{formatDateLongUTC(new Date())}</div>
         </button>
 
         {/* Estimated Month End Balance */}
@@ -196,10 +169,10 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
         >
           <div style={widgetTitleStyle}>Estimated Month End Balance</div>
           <div style={widgetValueStyle}>
-            ${monthEndBalance !== null ? monthEndBalance.toFixed(2) : '--'}
+            {monthEndBalance !== null ? formatMoney(monthEndBalance) : '$--'}
           </div>
           <div style={widgetSubtitleStyle}>
-            {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'MMM d, yyyy')}
+            {formatDateLongUTC(new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 0)))}
           </div>
         </button>
 
@@ -209,10 +182,10 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
           style={{
             ...widgetButtonStyle,
             background: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? '#fef2f2' : 'var(--warning-bg)')
+              ? (minBalanceAlert.severity === 'danger' ? 'var(--danger-bg)' : 'var(--warning-bg)')
               : 'var(--bg-tertiary)',
             border: minBalanceAlert 
-              ? (minBalanceAlert.severity === 'danger' ? '1px solid #fca5a5' : '1px solid var(--warning-border)')
+              ? (minBalanceAlert.severity === 'danger' ? '1px solid var(--danger-border)' : '1px solid var(--warning-border)')
               : '1px solid var(--border-primary)',
           }}
         >
@@ -223,17 +196,17 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
             <>
               <div style={{ 
                 ...widgetValueStyle, 
-                color: minBalanceAlert.severity === 'danger' ? '#dc2626' : '#d97706'
+                color: minBalanceAlert.severity === 'danger' ? 'var(--color-danger)' : 'var(--color-warning)'
               }}>
-                ${minBalanceAlert.amount.toFixed(2)}
+                {formatMoney(minBalanceAlert.amount)}
               </div>
               <div style={widgetSubtitleStyle}>
-                By {format(new Date(minBalanceAlert.date), 'MMM d, yyyy')}
+                By {formatDateLongUTC(parseDateUTC(minBalanceAlert.date))}
               </div>
             </>
           ) : (
             <>
-              <div style={{ ...widgetValueStyle, color: '#16a34a' }}>$0.00</div>
+              <div style={{ ...widgetValueStyle, color: 'var(--color-success)' }}>$0.00</div>
               <div style={widgetSubtitleStyle}>No shortfall expected</div>
             </>
           )}
@@ -256,7 +229,7 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
             </>
           ) : (
             <>
-              <div style={{ ...widgetValueStyle, color: '#16a34a' }}>On Track</div>
+              <div style={{ ...widgetValueStyle, color: 'var(--color-success)' }}>On Track</div>
               <div style={widgetSubtitleStyle}>No adjustments needed</div>
             </>
           )}
@@ -264,6 +237,11 @@ export function DashboardSummaryWidgets({ accountId, onNavigate }: DashboardSumm
       </div>
     </div>
   );
+}
+
+function formatMoney(value: number): string {
+  const sign = value < 0 ? '-' : '';
+  return `${sign}$${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Styles
@@ -296,12 +274,12 @@ const bannerIconStyle: React.CSSProperties = {
 };
 
 const bannerTextStyle: React.CSSProperties = {
-  color: '#78350f',
+  color: 'var(--warning-text)',
 };
 
 const bannerButtonStyle: React.CSSProperties = {
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '6px',
   padding: '0.5rem 1rem',

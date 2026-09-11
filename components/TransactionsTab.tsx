@@ -5,6 +5,7 @@ import { useIsMobile } from '@/lib/useIsMobile';
 import { Transaction } from '@/types';
 import AddTransactionDialog from './setup/AddTransactionDialog';
 import TransactionCard from './setup/TransactionCard';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface PaginationInfo {
   page: number;
@@ -14,7 +15,7 @@ interface PaginationInfo {
 }
 
 export default function TransactionsTab() {
-  const [account, setAccount] = useState<any>(null);
+  const { account, loading: accountLoading } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -26,25 +27,22 @@ export default function TransactionsTab() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    loadData();
-  }, [pagination.page]);
+    if (account) {
+      loadData();
+    } else if (!accountLoading) {
+      setLoading(false);
+    }
+  }, [pagination.page, account?.id, accountLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadData() {
+    if (!account) return;
     try {
-      const accountsRes = await fetch('/api/accounts');
-      const accounts = await accountsRes.json();
-      
-      if (accounts.length > 0) {
-        const acc = accounts[0];
-        setAccount(acc);
-
-        const transactionsRes = await fetch(
-          `/api/transactions?accountId=${acc.id}&page=${pagination.page}&pageSize=${pagination.pageSize}`
-        );
-        const data = await transactionsRes.json();
-        setTransactions(data.transactions);
-        setPagination(data.pagination);
-      }
+      const transactionsRes = await fetch(
+        `/api/transactions?accountId=${account.id}&page=${pagination.page}&pageSize=${pagination.pageSize}`
+      );
+      const data = await transactionsRes.json();
+      setTransactions(data.transactions);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -52,11 +50,14 @@ export default function TransactionsTab() {
     }
   }
 
-  if (loading) {
+  if (loading || accountLoading) {
     return (
-      <div>
-        <p>Loading...</p>
-      </div>
+      <section style={sectionStyle}>
+        <div className="skeleton" style={{ height: '28px', width: '60%', marginBottom: '1.5rem' }} />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="skeleton" style={{ height: '96px', marginBottom: '0.75rem' }} />
+        ))}
+      </section>
     );
   }
 
@@ -86,14 +87,14 @@ export default function TransactionsTab() {
             <div>
               <h2 style={headingStyle}>Transactions & Adjustments</h2>
               {pagination.totalCount > 0 && (
-                <p style={{ fontSize: 'var(--font-label)', color: '#999', marginTop: '0.25rem' }}>
+                <p style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Showing {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount}
                 </p>
               )}
             </div>
             <AddTransactionDialog accountId={account.id} onAdded={handleReload} />
           </div>
-          <p style={{ fontSize: 'var(--font-body)', color: '#666', marginBottom: '1rem' }}>
+          <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
             One-time adjustments or historical transactions. Use this for unplanned expenses, deposits, or imported bank data.
             These appear in forecasts on their specific dates.
           </p>
@@ -102,7 +103,7 @@ export default function TransactionsTab() {
               <TransactionCard key={transaction.id} transaction={transaction} onUpdate={handleReload} onDelete={handleReload} />
             ))}
             {transactions.length === 0 && (
-              <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No transactions yet. Add one if needed.</p>
+              <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No transactions yet. Add one if needed.</p>
             )}
           </div>
           {pagination.totalPages > 1 && (
@@ -117,7 +118,7 @@ export default function TransactionsTab() {
               >
                 ← Previous
               </button>
-              <span style={{ fontSize: 'var(--font-body)', color: '#666' }}>
+              <span style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
@@ -158,13 +159,13 @@ const paginationStyle: React.CSSProperties = {
   gap: '1rem',
   marginTop: '1.5rem',
   paddingTop: '1.5rem',
-  borderTop: '1px solid #e0e0e0',
+  borderTop: '1px solid var(--border-primary)',
 };
 
 const paginationButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '6px',
   fontSize: 'var(--font-body)',
@@ -174,7 +175,7 @@ const paginationButtonStyle: React.CSSProperties = {
 };
 
 const disabledButtonStyle: React.CSSProperties = {
-  background: '#e0e0e0',
-  color: '#999',
+  background: 'var(--bg-tertiary)',
+  color: 'var(--text-secondary)',
   cursor: 'not-allowed',
 };

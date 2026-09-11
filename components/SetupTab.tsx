@@ -10,36 +10,58 @@ import { AddIncomeDialog } from './setup/AddIncomeDialog';
 import { ExpenseCard } from './setup/ExpenseCard';
 import { AddExpenseDialog } from './setup/AddExpenseDialog';
 import ImportCSV from './ImportCSV';
+import { useAccount } from '@/contexts/AccountContext';
+import { formatDateUTC } from '@/lib/date-utils';
+
+type NumericField = 'startingBalance' | 'safeMinBalance' | 'inflationRate';
 
 export default function SetupTab() {
-  const [account, setAccount] = useState<Account | null>(null);
+  const { account, loading: accountLoading, setAccount } = useAccount();
   const [incomeRules, setIncomeRules] = useState<IncomeRule[]>([]);
   const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
+  // Local draft values for the account fields. They are only sent to the
+  // server when the field loses focus (or Enter is pressed), so typing
+  // "2500" no longer saves 2, 25 and 250 along the way.
+  const [drafts, setDrafts] = useState<Record<NumericField, string>>({
+    startingBalance: '',
+    safeMinBalance: '',
+    inflationRate: '',
+  });
+  const [startDateDraft, setStartDateDraft] = useState('');
+  const [savingField, setSavingField] = useState<string | null>(null);
+
   useEffect(() => {
-    loadData();
-  }, []);
+    if (account) {
+      setDrafts({
+        startingBalance: String(account.startingBalance),
+        safeMinBalance: String(account.safeMinBalance),
+        inflationRate: String(account.inflationRate),
+      });
+      setStartDateDraft(account.startDate ? formatDateUTC(account.startDate) : '');
+    }
+  }, [account]);
 
-  async function loadData() {
+  useEffect(() => {
+    if (account) {
+      loadRules(account.id);
+    } else if (!accountLoading) {
+      setLoading(false);
+    }
+  }, [account?.id, accountLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadRules(accountId: number) {
     try {
-      const accountsRes = await fetch('/api/accounts');
-      const accounts = await accountsRes.json();
-      
-      if (accounts.length > 0) {
-        const acc = accounts[0];
-        setAccount(acc);
-
-        const incomeRes = await fetch(`/api/income-rules?accountId=${acc.id}`);
-        const incomeData = await incomeRes.json();
-        setIncomeRules(incomeData);
-
-        const expensesRes = await fetch(`/api/expenses?accountId=${acc.id}`);
-        const expensesData = await expensesRes.json();
-        setExpenses(expensesData);
-      }
+      const [incomeRes, expensesRes] = await Promise.all([
+        fetch(`/api/income-rules?accountId=${accountId}`),
+        fetch(`/api/expenses?accountId=${accountId}`),
+      ]);
+      setIncomeRules(await incomeRes.json());
+      setExpenses(await expensesRes.json());
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -47,12 +69,17 @@ export default function SetupTab() {
     }
   }
 
-  async function updateAccount(updates: Partial<Account>) {
+  function loadData() {
+    if (account) loadRules(account.id);
+  }
+
+  async function updateAccount(updates: Partial<Account>, fieldName: string) {
     if (!account || !account.id) {
       console.error('Cannot update account: account not loaded');
       return;
     }
 
+    setSavingField(fieldName);
     try {
       const res = await fetch(`/api/accounts/${account.id}`, {
         method: 'PATCH',
@@ -68,6 +95,34 @@ export default function SetupTab() {
       setAccount(updated);
     } catch (error) {
       console.error('Error updating account:', error);
+      setErrorMessage('Could not save the change. Please try again.');
+    } finally {
+      setSavingField(null);
+    }
+  }
+
+  function commitNumericField(field: NumericField) {
+    if (!account) return;
+    const value = parseFloat(drafts[field].replace(/,/g, ''));
+    if (isNaN(value)) {
+      // Revert an unparseable draft to the saved value
+      setDrafts((d) => ({ ...d, [field]: String(account[field]) }));
+      return;
+    }
+    if (value === account[field]) return;
+    updateAccount({ [field]: value }, field);
+  }
+
+  function commitStartDate() {
+    if (!account || !startDateDraft) return;
+    const current = account.startDate ? formatDateUTC(account.startDate) : '';
+    if (startDateDraft === current) return;
+    updateAccount({ startDate: new Date(`${startDateDraft}T00:00:00Z`) }, 'startDate');
+  }
+
+  function blurOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
     }
   }
 
@@ -77,15 +132,18 @@ export default function SetupTab() {
     try {
       const res = await fetch(`/api/contributions?accountId=${account.id}`, { method: 'POST' });
       if (res.ok) {
-        await loadData();
+        await loadRules(account.id);
         setSuccessMessage('Contributions updated based on forecasted expenses!');
+      } else {
+        setErrorMessage('Could not calculate contributions. Please try again.');
       }
     } catch (error) {
       console.error('Error calculating contributions:', error);
+      setErrorMessage('Could not calculate contributions. Please try again.');
     }
   }
 
-  if (loading) {
+  if (loading || accountLoading) {
     return <div>Loading...</div>;
   }
 
@@ -93,70 +151,63 @@ export default function SetupTab() {
     return <div>No account found. Please create an account first.</div>;
   }
 
+  const numericFields: Array<{ key: NumericField; label: string; step?: string }> = [
+    { key: 'startingBalance', label: 'Starting Balance ($)' },
+    { key: 'safeMinBalance', label: 'Safe Minimum Balance ($)' },
+    { key: 'inflationRate', label: 'Inflation Rate (%)', step: '0.1' },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Account Settings */}
       <section style={sectionStyle}>
         <h2 style={headingStyle}>Account Settings</h2>
+        <p style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          Changes save when you leave a field.
+        </p>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           <div>
-            <Label.Root style={labelStyle}>Starting Balance ($)</Label.Root>
+            <Label.Root htmlFor="account-startingBalance" style={labelStyle}>{numericFields[0].label}</Label.Root>
             <input
-              type="number"
-              value={account.startingBalance}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (!isNaN(value)) {
-                  updateAccount({ startingBalance: value });
-                }
-              }}
+              id="account-startingBalance"
+              type="text"
+              inputMode="decimal"
+              value={drafts.startingBalance}
+              onChange={(e) => setDrafts((d) => ({ ...d, startingBalance: e.target.value }))}
+              onBlur={() => commitNumericField('startingBalance')}
+              onKeyDown={blurOnEnter}
               style={inputStyle}
             />
+            {savingField === 'startingBalance' && <SavingHint />}
           </div>
           <div>
-            <Label.Root style={labelStyle}>Start Date</Label.Root>
+            <Label.Root htmlFor="account-startDate" style={labelStyle}>Start Date</Label.Root>
             <input
+              id="account-startDate"
               type="date"
-              value={account.startDate ? new Date(account.startDate).toISOString().split('T')[0] : ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  updateAccount({ startDate: new Date(e.target.value) });
-                }
-              }}
+              value={startDateDraft}
+              onChange={(e) => setStartDateDraft(e.target.value)}
+              onBlur={commitStartDate}
               style={inputStyle}
             />
+            {savingField === 'startDate' && <SavingHint />}
           </div>
-          <div>
-            <Label.Root style={labelStyle}>Safe Minimum Balance ($)</Label.Root>
-            <input
-              type="number"
-              value={account.safeMinBalance}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (!isNaN(value)) {
-                  updateAccount({ safeMinBalance: value });
-                }
-              }}
-              style={inputStyle}
-            />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
-          <div>
-            <Label.Root style={labelStyle}>Inflation Rate (%)</Label.Root>
-            <input
-              type="number"
-              step="0.1"
-              value={account.inflationRate}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (!isNaN(value)) {
-                  updateAccount({ inflationRate: value });
-                }
-              }}
-              style={inputStyle}
-            />
-          </div>
+          {numericFields.slice(1).map((field) => (
+            <div key={field.key}>
+              <Label.Root htmlFor={`account-${field.key}`} style={labelStyle}>{field.label}</Label.Root>
+              <input
+                id={`account-${field.key}`}
+                type="text"
+                inputMode="decimal"
+                value={drafts[field.key]}
+                onChange={(e) => setDrafts((d) => ({ ...d, [field.key]: e.target.value }))}
+                onBlur={() => commitNumericField(field.key)}
+                onKeyDown={blurOnEnter}
+                style={inputStyle}
+              />
+              {savingField === field.key && <SavingHint />}
+            </div>
+          ))}
         </div>
         <div>
           <Label.Root style={labelStyle}>Auto-Calculate Contributions</Label.Root>
@@ -189,7 +240,7 @@ export default function SetupTab() {
             );
           })}
           {incomeRules.length === 0 && (
-            <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No income sources yet. Add one to get started.</p>
+            <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No income sources yet. Add one to get started.</p>
           )}
         </div>
       </section>
@@ -205,7 +256,7 @@ export default function SetupTab() {
             <ExpenseCard key={expense.id} expense={expense} onUpdate={loadData} onDelete={loadData} />
           ))}
           {expenses.length === 0 && (
-            <p style={{ fontSize: 'var(--font-body)', color: '#666' }}>No recurring expenses yet. Add one to get started.</p>
+            <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)' }}>No recurring expenses yet. Add one to get started.</p>
           )}
         </div>
       </section>
@@ -213,13 +264,12 @@ export default function SetupTab() {
       {/* Import Transactions */}
       <section style={sectionStyle}>
         <h2 style={headingStyle}>Import Historical Data</h2>
-        <p style={{ fontSize: 'var(--font-body)', color: '#666', marginBottom: '1rem' }}>
+        <p style={{ fontSize: 'var(--font-body)', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Import CSV transactions to improve variable expense estimates. Format: date, amount, description, category
         </p>
         <ImportCSV accountId={account.id} onImported={loadData} />
       </section>
 
-      {/* Success Dialog */}
       <MessageDialog
         open={!!successMessage}
         onOpenChange={(open) => !open && setSuccessMessage(null)}
@@ -227,6 +277,21 @@ export default function SetupTab() {
         message={successMessage || ''}
         type="success"
       />
+      <MessageDialog
+        open={!!errorMessage}
+        onOpenChange={(open) => !open && setErrorMessage(null)}
+        title="Something went wrong"
+        message={errorMessage || ''}
+        type="error"
+      />
+    </div>
+  );
+}
+
+function SavingHint() {
+  return (
+    <div style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+      Saving…
     </div>
   );
 }
@@ -241,7 +306,7 @@ const sectionStyle: React.CSSProperties = {
 const headingStyle: React.CSSProperties = {
   fontSize: '1.25rem',
   fontWeight: '600',
-  marginBottom: '1rem',
+  marginBottom: '0.5rem',
 };
 
 const labelStyle: React.CSSProperties = {
@@ -263,8 +328,8 @@ const inputStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontSize: 'var(--font-body)',

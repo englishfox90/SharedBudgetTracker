@@ -62,7 +62,7 @@ export function MessageDialog({
   message,
   type = 'info',
 }: MessageDialogProps) {
-  const titleColor = type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : 'var(--text-primary)';
+  const titleColor = type === 'error' ? 'var(--color-danger)' : type === 'success' ? 'var(--color-success)' : 'var(--text-primary)';
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -105,8 +105,8 @@ const buttonBase: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonBase,
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
 };
 

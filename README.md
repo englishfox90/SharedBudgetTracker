@@ -99,10 +99,36 @@ A full-stack TypeScript application for managing a shared checking account betwe
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run test:e2e` - Run the Playwright smoke tests (see below)
 - `npm run db:push` - Push Prisma schema to database
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:seed` - Seed database with sample data
 - `npm run db:studio` - Open Prisma Studio (database GUI)
+
+### End-to-end smoke tests
+
+`tests/mobile-smoke.spec.ts` logs in, opens every tab on an iPhone-sized and a
+desktop viewport, and checks that nothing overflows the screen, that form
+controls are at least 16px (so iOS Safari never zooms the page), and that a
+forecast transaction can be confirmed and undone.
+
+The tests run against an already running app and a database seeded with the
+demo user:
+
+```bash
+npm run db:seed          # creates demo@example.com / demo123
+npm run build && npm run start
+npm run test:e2e         # in another terminal
+```
+
+Set `E2E_BASE_URL`, `E2E_EMAIL` and `E2E_PASSWORD` to point at a different
+server or account.
+
+### Installing on a phone
+
+The app ships a web manifest and home-screen icons. On iOS open it in Safari,
+tap Share, then "Add to Home Screen"; it then launches full screen without the
+browser chrome. On Android, Chrome offers "Install app" from its menu.
 
 ## How It Works
 

@@ -152,8 +152,8 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
 
 const buttonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#1a1a1a',
-  color: 'white',
+  background: 'var(--button-bg)',
+  color: 'var(--button-text)',
   border: 'none',
   borderRadius: '4px',
   fontSize: '0.875rem',

@@ -1,56 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
-import { DashboardSummaryWidgets } from './DashboardSummaryWidgets';
+import { DashboardSummaryWidgets, RecommendationData } from './DashboardSummaryWidgets';
 import SixMonthTrendChart from './dashboard/SixMonthTrendChart';
 import { getCurrentMonthUTC } from '@/lib/date-utils';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface DashboardTabProps {
   onNavigate: (tab: string) => void;
 }
 
 export default function DashboardTab({ onNavigate }: DashboardTabProps) {
-  const [account, setAccount] = useState<any>(null);
-  const [variableExpenses, setVariableExpenses] = useState<Array<{ id: number; name: string }>>([]);
+  const { account, loading: accountLoading } = useAccount();
   const [sixMonthData, setSixMonthData] = useState<any>(null);
+  const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
   const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  async function loadData(accountId: number) {
     try {
-      const accountsRes = await fetch('/api/accounts');
-      const accounts = await accountsRes.json();
-      
-      if (accounts.length > 0) {
-        const acc = accounts[0];
-        setAccount(acc);
+      // One recommendations request feeds both the summary widgets and the trend chart
+      const currentMonth = getCurrentMonthUTC();
+      const recommendationsRes = await fetch(
+        `/api/recommendations?accountId=${accountId}&year=${currentMonth.year}&month=${currentMonth.month}`
+      );
+      const recsData = await recommendationsRes.json();
 
-        const expensesRes = await fetch(`/api/expenses?accountId=${acc.id}`);
-        const allExpenses = await expensesRes.json();
-        
-        // Filter to only variable expenses
-        const variableOnly = allExpenses
-          .filter((exp: any) => exp.isVariable)
-          .map((exp: any) => ({ id: exp.id, name: exp.name }));
-        
-        setVariableExpenses(variableOnly);
-
-        // Fetch 6-month forecast from recommendations API
-        const currentMonth = getCurrentMonthUTC();
-        const recommendationsRes = await fetch(
-          `/api/recommendations?accountId=${acc.id}&year=${currentMonth.year}&month=${currentMonth.month}`
-        );
-        const recommendations = await recommendationsRes.json();
-        
-        if (recommendations.sixMonthForecast) {
-          setSixMonthData(recommendations.sixMonthForecast);
-        }
+      if (recsData?.sixMonthForecast) {
+        setSixMonthData(recsData.sixMonthForecast);
       }
+      setRecommendations({
+        insights: recsData?.suggestions || [],
+        suggestedContribution: recsData?.contributionAnalysis?.recommendedAnnualContribution || 0,
+        adjustmentNeeded: recsData?.contributionAnalysis?.adjustmentNeeded || false,
+      });
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -58,10 +40,21 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
     }
   }
 
-  if (loading) {
+  useEffect(() => {
+    if (account) {
+      loadData(account.id);
+    } else if (!accountLoading) {
+      setLoading(false);
+    }
+  }, [account?.id, accountLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading || accountLoading) {
     return (
-      <div>
-        <p>Loading...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="skeleton" style={{ height: '110px' }} />
+        <div className="skeleton" style={{ height: '110px' }} />
+        <div className="skeleton" style={{ height: '110px' }} />
+        <div className="skeleton" style={{ height: '320px', marginTop: '1rem' }} />
       </div>
     );
   }
@@ -74,19 +67,9 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
     );
   }
 
-  if (variableExpenses.length === 0) {
-    return (
-      <div>
-        <p style={{ color: '#666' }}>
-          No variable expenses found. Add a variable expense in the Setup tab to use the Period Trend Forecast widget.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <DashboardSummaryWidgets accountId={account.id} onNavigate={onNavigate} />
+      <DashboardSummaryWidgets accountId={account.id} recommendations={recommendations} onNavigate={onNavigate} />
       
       {/* 6-Month Trend Chart */}
       {sixMonthData && sixMonthData.months && sixMonthData.months.length > 0 && (
@@ -95,5 +78,3 @@ export default function DashboardTab({ onNavigate }: DashboardTabProps) {
     </div>
   );
 }
-
-

@@ -12,6 +12,7 @@ export interface CashEvent {
   incomeRuleId?: number; // ID of the income rule this event comes from
   recurringExpenseId?: number; // ID of the recurring expense this event comes from
   forecastedAmount?: number; // Original forecasted amount (for variance calculation)
+  category?: string; // Category of the recurring expense / income this event comes from
 }
 
 export interface DayForecast {
@@ -194,6 +195,7 @@ async function generateCashEvents(
         amount: -Math.abs(amount),
         type: expense.isVariable ? 'variable_expense' : 'fixed_expense',
         recurringExpenseId: expense.id,
+        category: expense.category,
       });
     }
   }

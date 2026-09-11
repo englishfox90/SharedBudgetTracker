@@ -102,7 +102,7 @@ export default function SixMonthTrendChart({ months }: SixMonthTrendChartProps) 
             {/* Balance line (solid blue) */}
             <path
               d={balancePath}
-              stroke="#1e40af"
+              stroke="var(--chart-balance)"
               strokeWidth={3}
               fill="none"
             />
@@ -114,7 +114,7 @@ export default function SixMonthTrendChart({ months }: SixMonthTrendChartProps) 
                 cx={scaleX(i)}
                 cy={scaleY(month.closingBalance)}
                 r={4}
-                fill="#1e40af"
+                fill="var(--chart-balance)"
               />
             ))}
 
@@ -165,7 +165,7 @@ export default function SixMonthTrendChart({ months }: SixMonthTrendChartProps) 
             <text x={0} y={0} fontSize="11" fontWeight="600" fill="var(--text-primary)">Legend</text>
             
             {/* Balance */}
-            <line x1={0} y1={20} x2={25} y2={20} stroke="#1e40af" strokeWidth={2.5} />
+            <line x1={0} y1={20} x2={25} y2={20} stroke="var(--chart-balance)" strokeWidth={2.5} />
             <text x={30} y={24} fontSize="10" fill="var(--text-secondary)">Balance</text>
             
             {/* Income */}
