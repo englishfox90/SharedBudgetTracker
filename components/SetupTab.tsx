@@ -11,6 +11,8 @@ import { AddExpenseDialog } from './setup/AddExpenseDialog';
 import ImportCSV from './ImportCSV';
 import { useAccount } from '@/contexts/AccountContext';
 import { formatDateUTC } from '@/lib/date-utils';
+import { formatMoney } from '@/lib/actualize';
+import type { ContributionSplitLine, ContributionSplitSummary } from '@/lib/contribution-capacity';
 
 type NumericField = 'startingBalance' | 'safeMinBalance' | 'inflationRate';
 
@@ -145,10 +147,10 @@ export default function SetupTab() {
       const result = await res.json();
       await loadRules(account.id);
 
-      const allocation = result.allocation;
+      const allocation: ContributionSplitSummary | undefined = result.allocation;
       const lines = (allocation?.contributors ?? []).map(
-        (c: any) =>
-          `${c.name}: ${money(c.allocatedPerPaycheck)} a paycheck (${Math.round(c.shareOfNet * 100)}% of take-home)` +
+        (c: ContributionSplitLine) =>
+          `${c.name}: ${formatMoney(c.allocatedPerPaycheck)} a paycheck (${Math.round(c.shareOfNet * 100)}% of take-home)` +
           (c.cappedByCeiling ? ' — capped at their ceiling' : '')
       );
 
@@ -160,11 +162,11 @@ export default function SetupTab() {
           title: 'Shared expenses outrun the paychecks',
           type: 'error',
           message: [
-            `Shared expenses need ${money(allocation.cashNeedAnnual / 12)} a month, but everyone's ceilings together only reach ${money(allocation.totalCapacityAnnual / 12)}.`,
+            `Shared expenses need ${formatMoney(allocation.cashNeedAnnual / 12)} a month, but everyone's ceilings together only reach ${formatMoney(allocation.totalCapacityAnnual / 12)}.`,
             '',
             ...lines,
             '',
-            `That leaves ${money(allocation.shortfallMonthly)} a month with no paycheck behind it. Contributions were set to the maximum each check can carry — the rest has to come out of expenses, or from raising a contribution ceiling.`,
+            `That leaves ${formatMoney(allocation.shortfallMonthly)} a month with no paycheck behind it. Contributions were set to the maximum each check can carry — the rest has to come out of expenses, or from raising a contribution ceiling.`,
           ].join('\n'),
         });
         return;
@@ -177,10 +179,10 @@ export default function SetupTab() {
           'Contributions updated from the 6-month expense forecast, split by take-home pay.',
           '',
           ...lines,
-          ...(allocation?.totalSharedBenefitAnnual > 0
+          ...((allocation?.totalSharedBenefitAnnual ?? 0) > 0
             ? [
                 '',
-                `${money(allocation.totalSharedBenefitAnnual / 12)} a month of shared benefits paid straight from paychecks was counted toward the split.`,
+                `${formatMoney((allocation?.totalSharedBenefitAnnual ?? 0) / 12)} a month of shared benefits paid straight from paychecks was counted toward the split.`,
               ]
             : []),
         ].join('\n'),
@@ -360,11 +362,6 @@ export default function SetupTab() {
   );
 }
 
-/** Money for the messages above, where formatMoney's component is not in scope. */
-function money(value: number): string {
-  return `$${(value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 /**
  * The household's combined take-home pay, what is already committed, and how
  * much room is left. Without this the Setup tab shows contributions with
@@ -395,24 +392,21 @@ function HouseholdCapacitySummary({ rules }: { rules: IncomeRule[] }) {
     <div className="grid-3" style={{ marginBottom: '1rem' }}>
       <div className="stat-tile">
         <div className="stat-tile__label">Combined take-home</div>
-        <div className="stat-tile__value">{money(totals.net / 12)}</div>
+        <div className="stat-tile__value">{formatMoney(totals.net / 12)}</div>
         <div className="stat-tile__sub">a month, after taxes and deductions</div>
       </div>
       <div className="stat-tile">
-        <div className="stat-tile__label">Committed to shared expenses</div>
-        <div className="stat-tile__value">{money(totals.committed / 12)}</div>
+        <div className="stat-tile__label">Committed</div>
+        <div className="stat-tile__value">{formatMoney(totals.committed / 12)}</div>
         <div className="stat-tile__sub">{Math.round(usedOfNet * 100)}% of take-home</div>
       </div>
       <div className={`stat-tile${overCommitted ? '' : ' stat-tile--accent'}`}>
         <div className="stat-tile__label">{overCommitted ? 'Over the ceiling by' : 'Room left'}</div>
-        <div
-          className="stat-tile__value"
-          style={overCommitted ? { color: 'var(--color-danger)' } : undefined}
-        >
-          {money(Math.abs(headroom) / 12)}
+        <div className={`stat-tile__value${overCommitted ? ' money-neg' : ''}`}>
+          {formatMoney(Math.abs(headroom) / 12)}
         </div>
         <div className="stat-tile__sub">
-          a month{totals.shared > 0 ? ` · ${money(totals.shared / 12)} of shared benefits paid from paychecks` : ''}
+          a month{totals.shared > 0 ? ` · ${formatMoney(totals.shared / 12)} of shared benefits paid from paychecks` : ''}
         </div>
       </div>
     </div>

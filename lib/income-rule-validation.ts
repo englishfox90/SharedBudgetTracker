@@ -29,30 +29,30 @@ export function validatePayrollFields(body: PayrollFieldsInput): string | null {
     body.filingStatus !== undefined &&
     !FILING_STATUSES.includes(body.filingStatus as FilingStatus)
   ) {
-    return `filingStatus must be one of ${FILING_STATUSES.join(', ')}`;
+    return 'Pick a filing status from the list.';
   }
   if (body.stateTaxRate !== undefined && body.stateTaxRate !== null) {
     const rate = Number(body.stateTaxRate);
     if (!Number.isFinite(rate) || rate < 0 || rate > 20) {
-      return 'stateTaxRate must be a percentage between 0 and 20';
+      return 'Enter a state tax rate between 0% and 20%.';
     }
   }
   if (body.additionalWithholding !== undefined && body.additionalWithholding !== null) {
     const extra = Number(body.additionalWithholding);
     if (!Number.isFinite(extra) || extra < 0) {
-      return 'additionalWithholding cannot be negative';
+      return 'Extra withholding cannot be negative.';
     }
   }
   if (body.netPayOverride !== undefined && body.netPayOverride !== null) {
     const net = Number(body.netPayOverride);
     if (!Number.isFinite(net) || net < 0) {
-      return 'netPayOverride cannot be negative';
+      return 'Net pay cannot be negative.';
     }
   }
   if (body.maxContributionPct !== undefined && body.maxContributionPct !== null) {
     const pct = Number(body.maxContributionPct);
     if (!Number.isFinite(pct) || pct <= 0 || pct > 1) {
-      return 'maxContributionPct must be greater than 0 and no more than 1';
+      return 'The contribution ceiling has to be between 1% and 100% of take-home pay.';
     }
   }
   return null;
@@ -67,7 +67,7 @@ export interface DeductionPayload {
 
 /** Returns an error message, or null when every deduction is usable. */
 export function validateDeductions(deductions: unknown): string | null {
-  if (!Array.isArray(deductions)) return 'deductions must be an array';
+  if (!Array.isArray(deductions)) return 'Deductions could not be read. Please try again.';
   for (const raw of deductions) {
     const deduction = raw as { name?: unknown; amount?: unknown; treatment?: unknown };
     if (typeof deduction.name !== 'string' || !deduction.name.trim()) {

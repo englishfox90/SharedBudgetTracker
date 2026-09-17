@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
-import { PlusIcon } from '../icons';
+import { AlertTriangleIcon, PlusIcon } from '../icons';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import {
   PaycheckFields,
@@ -79,7 +79,18 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        // Discard a half-filled payroll section rather than carrying it into
+        // the next income source someone adds.
+        if (!next) {
+          setPaycheck(emptyPaycheckForm);
+          setError(null);
+        }
+      }}
+    >
       <Dialog.Trigger asChild>
         <button className="btn btn-primary btn-sm"><PlusIcon size={16} /> Add income</button>
       </Dialog.Trigger>
@@ -88,6 +99,13 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
         <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
           <Dialog.Title className="dialog-title">Add Income Source</Dialog.Title>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {error && (
+                <div className="alert alert--danger" role="alert">
+                  <AlertTriangleIcon size={18} />
+                  <div>{error}</div>
+                </div>
+              )}
+
             <div>
               <Label.Root className="label">Name</Label.Root>
               <input
@@ -160,12 +178,6 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
                 onChange={setPaycheck}
               />
             </div>
-
-            {error && (
-              <p style={{ color: 'var(--color-danger)', fontSize: 'var(--font-small)', margin: 0 }}>
-                {error}
-              </p>
-            )}
 
             <div className="dialog-actions" style={{ marginTop: '1rem' }}>
               <Dialog.Close asChild>

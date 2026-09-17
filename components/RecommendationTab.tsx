@@ -1,10 +1,11 @@
 'use client';
 
+import * as Dialog from '@radix-ui/react-dialog';
 import { IconLabel, InfoIcon, ZapIcon, CheckIcon, LightbulbIcon, AlertTriangleIcon } from './icons';
 import { formatMoney } from '@/lib/actualize';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
+import { useIsMobile, preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import SixMonthOverview from './recommendations/SixMonthOverview';
 import VarianceSummary from './recommendations/VarianceSummary';
 import TrendChart from './recommendations/TrendChart';
@@ -27,6 +28,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const [message, setMessage] = useState<{ title: string; text: string; type: 'error' | 'info' } | null>(null);
   const [loading, setLoading] = useState(false);
   const [implementing, setImplementing] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [implementSuccess, setImplementSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showHow, setShowHow] = useState(false);
@@ -62,6 +64,7 @@ export default function RecommendationTab({ currentMonth }: Props) {
   async function showImplementationModal() {
     if (!accountId || !data?.contributionAnalysis.recommendedAnnualContribution) return;
 
+    setPreparing(true);
     try {
       // Load income rules to show in modal
       const rulesRes = await fetch(`/api/income-rules?accountId=${accountId}`);
@@ -94,6 +97,8 @@ export default function RecommendationTab({ currentMonth }: Props) {
     } catch (error) {
       console.error('Error loading income rules:', error);
       setMessage({ title: 'Something went wrong', text: 'Could not load income sources.', type: 'error' });
+    } finally {
+      setPreparing(false);
     }
   }
 
@@ -182,6 +187,15 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const analysis = data.contributionAnalysis;
   const recommended = analysis.recommendedAnnualContribution ?? analysis.currentAnnualContribution;
   const annualIncrease = recommended - analysis.currentAnnualContribution;
+  // What the confirm dialog will actually write. When the ceilings cannot cover
+  // the recommendation, the allocator delivers less than `recommended`, and a
+  // headline larger than the rows beneath it would be a lie.
+  const appliedAnnualChange = allocation
+    ? allocation.contributors.reduce(
+        (sum, c) => sum + c.changePerPaycheck * c.payPeriodsPerYear,
+        0
+      )
+    : annualIncrease;
 
   return (
     <div className="stack" style={{ gap: '1.25rem', position: 'relative' }}>
@@ -277,13 +291,15 @@ export default function RecommendationTab({ currentMonth }: Props) {
             </p>
             <button
               onClick={showImplementationModal}
-              disabled={implementing || implementSuccess}
+              disabled={implementing || implementSuccess || preparing}
               className={`btn ${implementSuccess ? 'btn-success' : 'btn-primary'}`}
             >
               {implementSuccess ? (
                 <><CheckIcon size={16} /> Applied</>
               ) : implementing ? (
                 'Updating…'
+              ) : preparing ? (
+                'Working out the split…'
               ) : (
                 <><ZapIcon size={16} /> Apply recommendation</>
               )}
@@ -317,25 +333,27 @@ export default function RecommendationTab({ currentMonth }: Props) {
         type={message?.type || 'info'}
       />
 
-      {/* Confirmation modal */}
-      {showConfirmModal && data && (
-        <>
-          <div className="dialog-overlay" onClick={() => setShowConfirmModal(false)} />
-          <div className="dialog-content dialog-content--wide" role="dialog" aria-modal="true" aria-labelledby="confirm-contribution-title">
-            <h3 id="confirm-contribution-title" className="dialog-title">Confirm contribution increase</h3>
-            <p className="dialog-description">
+      {/* Confirmation dialog. Radix, like every other dialog in the app: this is
+          the last step before contributions are written, so it has to trap
+          focus, close on Escape and restore focus afterwards. */}
+      <Dialog.Root open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
+          <Dialog.Overlay className="dialog-overlay" />
+          <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
+            <Dialog.Title className="dialog-title">Confirm contribution change</Dialog.Title>
+            <Dialog.Description className="dialog-description">
               Split by take-home pay. Anyone already carrying shared costs from their paycheck is
               credited for them, and nobody is taken past their ceiling.
-            </p>
+            </Dialog.Description>
 
             <div className="grid-2" style={{ marginBottom: '1rem' }}>
               <div className="stat-tile stat-tile--accent">
-                <div className="stat-tile__label">Total increase per year</div>
-                <div className="stat-tile__value">{formatMoney(annualIncrease, true)}</div>
+                <div className="stat-tile__label">Change per year</div>
+                <div className="stat-tile__value">{formatMoney(appliedAnnualChange, true)}</div>
               </div>
               <div className="stat-tile">
                 <div className="stat-tile__label">About per month</div>
-                <div className="stat-tile__value">{formatMoney(annualIncrease / 12, true)}</div>
+                <div className="stat-tile__value">{formatMoney(appliedAnnualChange / 12, true)}</div>
               </div>
             </div>
 
@@ -403,14 +421,23 @@ export default function RecommendationTab({ currentMonth }: Props) {
             )}
 
             <div className="dialog-actions">
-              <button onClick={() => setShowConfirmModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={confirmImplementation} className="btn btn-primary">
-                <CheckIcon size={16} /> Apply increase
+              <Dialog.Close asChild>
+                <button className="btn btn-secondary" disabled={implementing}>
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                onClick={confirmImplementation}
+                className="btn btn-primary"
+                disabled={implementing}
+                style={{ opacity: implementing ? 0.5 : 1 }}
+              >
+                <CheckIcon size={16} /> {implementing ? 'Applying…' : 'Apply change'}
               </button>
             </div>
-          </div>
-        </>
-      )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

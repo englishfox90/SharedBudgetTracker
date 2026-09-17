@@ -101,6 +101,63 @@ export interface AllocationResult {
   feasible: boolean;
 }
 
+/** One contributor as the contributions endpoint reports them. */
+export interface ContributionSplitLine {
+  incomeRuleId: number;
+  name: string;
+  netPerPaycheck: number;
+  capacityPerPaycheck: number;
+  allocatedPerPaycheck: number;
+  previousPerPaycheck: number;
+  changePerPaycheck: number;
+  sharedBenefitPerPaycheck: number;
+  shareOfNet: number;
+  cappedByCeiling: boolean;
+  netIsEstimate: boolean;
+}
+
+/** The `allocation` block returned by POST /api/contributions. */
+export interface ContributionSplitSummary {
+  feasible: boolean;
+  shortfallAnnual: number;
+  shortfallMonthly: number;
+  cashNeedAnnual: number;
+  householdCostAnnual: number;
+  totalCapacityAnnual: number;
+  totalNetAnnual: number;
+  totalSharedBenefitAnnual: number;
+  cappedContributors: string[];
+  contributors: ContributionSplitLine[];
+}
+
+/** Builds that block, so the route and its callers cannot drift apart. */
+export function summarizeAllocation(allocation: AllocationResult): ContributionSplitSummary {
+  return {
+    feasible: allocation.feasible,
+    shortfallAnnual: allocation.shortfallAnnual,
+    shortfallMonthly: round(allocation.shortfallAnnual / 12),
+    cashNeedAnnual: allocation.cashNeedAnnual,
+    householdCostAnnual: allocation.householdCostAnnual,
+    totalCapacityAnnual: allocation.totalCapacityAnnual,
+    totalNetAnnual: allocation.totalNetAnnual,
+    totalSharedBenefitAnnual: allocation.totalSharedBenefitAnnual,
+    cappedContributors: allocation.contributors.filter((c) => c.cappedByCeiling).map((c) => c.name),
+    contributors: allocation.contributors.map((c) => ({
+      incomeRuleId: c.incomeRuleId,
+      name: c.name,
+      netPerPaycheck: c.netPerPaycheck,
+      capacityPerPaycheck: c.capacityPerPaycheck,
+      allocatedPerPaycheck: c.allocatedPerPaycheck,
+      previousPerPaycheck: c.currentPerPaycheck,
+      changePerPaycheck: c.changePerPaycheck,
+      sharedBenefitPerPaycheck: c.sharedBenefitPerPaycheck,
+      shareOfNet: c.netPerPaycheck > 0 ? c.allocatedPerPaycheck / c.netPerPaycheck : 0,
+      cappedByCeiling: c.cappedByCeiling,
+      netIsEstimate: c.paycheck.isEstimate,
+    })),
+  };
+}
+
 const DEFAULT_MAX_CONTRIBUTION_PCT = 0.8;
 
 function toDeductionInputs(rule: IncomeRuleLike): DeductionInput[] {

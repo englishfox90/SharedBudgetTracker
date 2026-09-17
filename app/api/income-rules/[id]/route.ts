@@ -81,23 +81,19 @@ export async function PATCH(
         ? parseFloat(contributionAmount)
         : existing.contributionAmount;
 
-    const verdict = evaluateContribution(
-      { ...pending, contributionAmount: requestedContribution },
-      requestedContribution
-    );
+    // Only a request that actually sets a contribution can be refused. Payroll
+    // details are facts about someone's pay: a lower salary or a new deduction
+    // is true whether or not it leaves the existing contribution over the
+    // ceiling, and refusing it would strand the user in a dialog with no
+    // contribution field to fix. Those edits save, and the over-capacity badge
+    // and meter in Setup report the state they leave behind.
+    if (contributionAmount !== undefined) {
+      const verdict = evaluateContribution(
+        { ...pending, contributionAmount: requestedContribution },
+        requestedContribution
+      );
 
-    // Only block when this request is the thing pushing the contribution over
-    // the line. An existing rule that is already above its ceiling can still be
-    // edited — otherwise the fields needed to fix it would be unreachable.
-    const raisesTheProblem =
-      contributionAmount !== undefined || requestedContribution > 0;
-    if (!verdict.allowed && raisesTheProblem) {
-      const wasAlreadyOver = !evaluateContribution(existing, existing.contributionAmount).allowed;
-      const contributionUnchanged =
-        contributionAmount === undefined ||
-        Math.abs(requestedContribution - existing.contributionAmount) < 0.005;
-
-      if (!(wasAlreadyOver && contributionUnchanged)) {
+      if (!verdict.allowed) {
         return NextResponse.json(
           {
             error: verdict.reason,

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getVariableExpenseEstimates } from '@/lib/variable-expenses-advanced';
 import { validateAccountAccess } from '@/lib/auth-helpers';
-import { allocateContributions } from '@/lib/contribution-capacity';
+import { allocateContributions, summarizeAllocation } from '@/lib/contribution-capacity';
 
 /**
  * POST /api/contributions?accountId=X
@@ -120,8 +120,6 @@ export async function POST(request: Request) {
       )
     );
 
-    const cappedContributors = allocation.contributors.filter((c) => c.cappedByCeiling);
-
     return NextResponse.json({
       success: true,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
@@ -138,32 +136,9 @@ export async function POST(request: Request) {
         };
       }),
       incomeRulesUpdated: allocation.contributors.length,
-      // Everything a caller needs to explain the split, or to explain why it
-      // could not be met in full.
-      allocation: {
-        feasible: allocation.feasible,
-        shortfallAnnual: allocation.shortfallAnnual,
-        shortfallMonthly: Math.round((allocation.shortfallAnnual / 12) * 100) / 100,
-        cashNeedAnnual: allocation.cashNeedAnnual,
-        householdCostAnnual: allocation.householdCostAnnual,
-        totalCapacityAnnual: allocation.totalCapacityAnnual,
-        totalNetAnnual: allocation.totalNetAnnual,
-        totalSharedBenefitAnnual: allocation.totalSharedBenefitAnnual,
-        cappedContributors: cappedContributors.map((c) => c.name),
-        contributors: allocation.contributors.map((c) => ({
-          incomeRuleId: c.incomeRuleId,
-          name: c.name,
-          netPerPaycheck: c.netPerPaycheck,
-          capacityPerPaycheck: c.capacityPerPaycheck,
-          allocatedPerPaycheck: c.allocatedPerPaycheck,
-          previousPerPaycheck: c.currentPerPaycheck,
-          changePerPaycheck: c.changePerPaycheck,
-          sharedBenefitPerPaycheck: c.sharedBenefitPerPaycheck,
-          shareOfNet: c.netPerPaycheck > 0 ? c.allocatedPerPaycheck / c.netPerPaycheck : 0,
-          cappedByCeiling: c.cappedByCeiling,
-          netIsEstimate: c.paycheck.isEstimate,
-        })),
-      },
+      // Everything a caller needs to explain the split, or why it could not be
+      // met in full.
+      allocation: summarizeAllocation(allocation),
     });
   } catch (error) {
     console.error('Error calculating contributions:', error);

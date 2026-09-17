@@ -1,3 +1,5 @@
+import type { ContributorCapacity } from '@/lib/contribution-capacity';
+
 export interface Account {
   id: number;
   name: string;
@@ -36,45 +38,9 @@ export interface IncomeRule {
   maxContributionPct: number;
   deductions?: PaycheckDeduction[];
   /** Derived take-home and ceiling; attached by the income-rules API. */
-  capacity?: ContributorCapacitySummary;
+  capacity?: ContributorCapacity;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/** Mirrors ContributorCapacity in lib/contribution-capacity.ts. */
-export interface ContributorCapacitySummary {
-  incomeRuleId: number;
-  name: string;
-  payPeriodsPerYear: number;
-  netPerPaycheck: number;
-  netAnnual: number;
-  maxContributionPct: number;
-  capacityPerPaycheck: number;
-  capacityAnnual: number;
-  sharedBenefitPerPaycheck: number;
-  sharedBenefitAnnual: number;
-  currentPerPaycheck: number;
-  currentAnnual: number;
-  headroomPerPaycheck: number;
-  headroomAnnual: number;
-  utilizationOfNet: number;
-  overCapacity: boolean;
-  overCapacityBy: number;
-  exceedsNetPay: boolean;
-  paycheck: {
-    gross: number;
-    preTaxDeductions: number;
-    postTaxDeductions: number;
-    oasdi: number;
-    medicare: number;
-    federalWithholding: number;
-    stateWithholding: number;
-    totalTaxes: number;
-    net: number;
-    sharedBenefitDeductions: number;
-    effectiveNetRate: number;
-    isEstimate: boolean;
-  };
 }
 
 export interface RecurringExpense {

@@ -144,8 +144,11 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
             )}
             {capacity && capacity.sharedBenefitPerPaycheck > 0 && (
               <span className="pill pill--info">
-                +{formatMoney(capacity.sharedBenefitPerPaycheck)} shared benefits
+                +{formatMoney(capacity.sharedBenefitPerPaycheck)} household benefits
               </span>
+            )}
+            {capacity?.paycheck.isEstimate && (
+              <span className="pill pill--neutral">net estimated</span>
             )}
           </div>
           <div className="list-item__meta">
@@ -153,20 +156,19 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
           </div>
           {capacity && (
             <div className="list-item__meta">
-              Takes home {formatMoney(capacity.netPerPaycheck)} a check
-              {capacity.paycheck.isEstimate ? ' (estimated)' : ''} · ceiling{' '}
-              {formatMoney(capacity.capacityPerPaycheck)} ·{' '}
-              {capacity.headroomPerPaycheck >= 0
-                ? `${formatMoney(capacity.headroomPerPaycheck)} of room left`
-                : `${formatMoney(Math.abs(capacity.headroomPerPaycheck))} over the ceiling`}
+              Takes home {formatMoney(capacity.netPerPaycheck)} a check · ceiling{' '}
+              {formatMoney(capacity.capacityPerPaycheck)}
             </div>
           )}
           {capacity && capacity.netPerPaycheck > 0 && (
             <div
               className={`meter meter--${utilizationTone}`}
-              style={{ marginTop: '0.4rem', maxWidth: '320px' }}
-              role="img"
-              aria-label={`Contribution uses ${Math.round((utilization ?? 0) * 100)}% of take-home pay`}
+              style={{ marginTop: '0.4rem' }}
+              role="meter"
+              aria-valuenow={Math.round((utilization ?? 0) * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Contribution as a share of take-home pay"
             >
               <div
                 className="meter__fill"
@@ -179,7 +181,7 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
           {formatMoney(rule.contributionAmount)}
           <small>
             per paycheck
-            {capacity ? ` · ${Math.round(capacity.utilizationOfNet * 100)}% of net` : ''}
+            {capacity ? ` · ${Math.round(capacity.utilizationOfNet * 100)}% of take-home` : ''}
           </small>
         </div>
         <div className="list-item__actions">
@@ -196,6 +198,13 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
           <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
             <Dialog.Title className="dialog-title">Edit income source</Dialog.Title>
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {error && (
+                <div className="alert alert--danger" role="alert">
+                  <AlertTriangleIcon size={18} />
+                  <div>{error}</div>
+                </div>
+              )}
+
               <div>
                 <Label.Root className="label">Name</Label.Root>
                 <input
@@ -261,12 +270,6 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   onChange={setPaycheck}
                 />
               </div>
-
-              {error && (
-                <p style={{ color: 'var(--color-danger)', fontSize: 'var(--font-small)', margin: 0 }}>
-                  {error}
-                </p>
-              )}
 
               <div className="dialog-actions" style={{ marginTop: '1rem' }}>
                 <Dialog.Close asChild>
