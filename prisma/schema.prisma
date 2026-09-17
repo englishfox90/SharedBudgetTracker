@@ -11,107 +11,134 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
-  password      String    // Hashed with bcrypt
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  account       Account?  // One user = one account
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String // Hashed with bcrypt
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account? // One user = one account
 
   @@map("users")
 }
 
 model Account {
-  id                    Int                 @id @default(autoincrement())
-  userId                Int                 @unique // Link to user
-  name                  String
-  type                  String              // "checking", "credit_card"
-  startingBalance       Float
-  startDate             DateTime            @default(now()) // Date when starting balance is effective
-  safeMinBalance        Float
-  defaultPayFrequency   String              @default("semi_monthly") // "monthly", "semi_monthly", "bi_weekly", "weekly"
-  inflationRate         Float               @default(3.0) // Percentage for expense forecasting
-  autoCalculateContrib  Boolean             @default(true) // Auto-calculate contributions based on expenses
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  incomeRules           IncomeRule[]
-  recurringExpenses     RecurringExpense[]
-  transactions          Transaction[]
+  id                   Int                @id @default(autoincrement())
+  userId               Int                @unique // Link to user
+  name                 String
+  type                 String // "checking", "credit_card"
+  startingBalance      Float
+  startDate            DateTime           @default(now()) // Date when starting balance is effective
+  safeMinBalance       Float
+  defaultPayFrequency  String             @default("semi_monthly") // "monthly", "semi_monthly", "bi_weekly", "weekly"
+  inflationRate        Float              @default(3.0) // Percentage for expense forecasting
+  autoCalculateContrib Boolean            @default(true) // Auto-calculate contributions based on expenses
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomeRules          IncomeRule[]
+  recurringExpenses    RecurringExpense[]
+  transactions         Transaction[]
 
   @@map("accounts")
 }
 
 model IncomeRule {
-  id                   Int           @id @default(autoincrement())
-  accountId            Int
-  name                 String
-  annualSalary         Float         // Annual gross salary
-  contributionAmount   Float         @default(0) // Calculated contribution amount per pay period
-  payFrequency         String        // "monthly", "semi_monthly", "bi_weekly", "weekly"
-  payDays              String        // JSON array of pay days (day of month or week)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  account              Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  transactions         Transaction[] // Actualized income transactions
+  id                    Int                 @id @default(autoincrement())
+  accountId             Int
+  name                  String
+  annualSalary          Float // Annual gross salary
+  contributionAmount    Float               @default(0) // Calculated contribution amount per pay period
+  payFrequency          String // "monthly", "semi_monthly", "bi_weekly", "weekly"
+  payDays               String // JSON array of pay days (day of month or week)
+  // Payroll details used to estimate take-home pay. Gross salary alone cannot
+  // say what lands in the bank, which is what a contribution is actually paid
+  // from. See lib/paycheck.ts.
+  filingStatus          String              @default("single") // "single", "married_joint", "head_of_household"
+  stateTaxRate          Float               @default(0) // State income tax as a percentage, e.g. 4.45
+  additionalWithholding Float               @default(0) // Extra federal withholding per paycheck (W-4)
+  netPayOverride        Float? // Take-home from a real stub; wins over the estimate
+  maxContributionPct    Float               @default(0.8) // Ceiling on the share of net pay this person can be asked for
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  account               Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions          Transaction[] // Actualized income transactions
+  deductions            PaycheckDeduction[]
 
   @@map("income_rules")
 }
 
+/// A recurring line on someone's pay stub. Pre-tax items change the tax
+/// calculation, and any item flagged as a shared benefit (family health
+/// insurance, say) counts as a household contribution that person is already
+/// making before a dollar of cash moves.
+model PaycheckDeduction {
+  id              Int        @id @default(autoincrement())
+  incomeRuleId    Int
+  name            String
+  amount          Float // Per paycheck
+  treatment       String // "pre_tax_section_125", "pre_tax_retirement", "post_tax"
+  isSharedBenefit Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  incomeRule      IncomeRule @relation(fields: [incomeRuleId], references: [id], onDelete: Cascade)
+
+  @@map("paycheck_deductions")
+}
+
 model RecurringExpense {
-  id                    Int                     @id @default(autoincrement())
+  id                    Int                    @id @default(autoincrement())
   accountId             Int
   name                  String
   amount                Float
-  dayOfMonth            Int                     // 1-31 for monthly/semi_monthly, 0-6 (day of week) for weekly/bi_weekly
+  dayOfMonth            Int // 1-31 for monthly/semi_monthly, 0-6 (day of week) for weekly/bi_weekly
   category              String
-  frequency             String                  @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
-  isVariable            Boolean                 @default(false)
-  budgetGoal            Float?                  // Optional monthly budget target for variable expenses
-  billingCycleDay       Int?                    // For credit cards: day of month billing cycle starts (e.g., 16 = Nov 16 to Dec 15)
-  anchorDate            DateTime?               // Reference date for bi-weekly expenses (calculates every 14 days from this date)
+  frequency             String                 @default("monthly") // "weekly", "bi_weekly", "semi_monthly", "monthly"
+  isVariable            Boolean                @default(false)
+  budgetGoal            Float? // Optional monthly budget target for variable expenses
+  billingCycleDay       Int? // For credit cards: day of month billing cycle starts (e.g., 16 = Nov 16 to Dec 15)
+  anchorDate            DateTime? // Reference date for bi-weekly expenses (calculates every 14 days from this date)
   activeFrom            DateTime?
   activeTo              DateTime?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  account               Account                 @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  transactions          Transaction[]           // Actualized expense transactions
-  dailySpendingAverages DailySpendingAverage[]  // Historical daily spending patterns
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  account               Account                @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions          Transaction[] // Actualized expense transactions
+  dailySpendingAverages DailySpendingAverage[] // Historical daily spending patterns
 
   @@map("recurring_expenses")
 }
 
 model Transaction {
-  id                  Int               @id @default(autoincrement())
-  accountId           Int
-  date                DateTime
-  description         String
-  amount              Float             // positive = deposit, negative = withdrawal
-  category            String?
-  source              String            @default("manual") // "manual", "import"
-  incomeRuleId        Int?              // Link to income rule if this actualizes a salary deposit
-  recurringExpenseId  Int?              // Link to recurring expense if this actualizes a recurring payment
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  account             Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  incomeRule          IncomeRule?       @relation(fields: [incomeRuleId], references: [id], onDelete: SetNull)
-  recurringExpense    RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+  id                 Int               @id @default(autoincrement())
+  accountId          Int
+  date               DateTime
+  description        String
+  amount             Float // positive = deposit, negative = withdrawal
+  category           String?
+  source             String            @default("manual") // "manual", "import"
+  incomeRuleId       Int? // Link to income rule if this actualizes a salary deposit
+  recurringExpenseId Int? // Link to recurring expense if this actualizes a recurring payment
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  account            Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  incomeRule         IncomeRule?       @relation(fields: [incomeRuleId], references: [id], onDelete: SetNull)
+  recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
 
   @@map("transactions")
 }
 
 model DailySpendingAverage {
-  id                  Int      @id @default(autoincrement())
-  recurringExpenseId  Int
-  month               Int      // 1-12
-  day                 Int      // 1-31
-  sumOfSpending       Float    // Total spending for this day across all years
-  transactionCount    Int      // Number of transactions for this day
-  dailyAverage        Float    // Average spending for this calendar day
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  recurringExpense    RecurringExpense @relation(fields: [recurringExpenseId], references: [id], onDelete: Cascade)
+  id                 Int              @id @default(autoincrement())
+  recurringExpenseId Int
+  month              Int // 1-12
+  day                Int // 1-31
+  sumOfSpending      Float // Total spending for this day across all years
+  transactionCount   Int // Number of transactions for this day
+  dailyAverage       Float // Average spending for this calendar day
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  recurringExpense   RecurringExpense @relation(fields: [recurringExpenseId], references: [id], onDelete: Cascade)
 
   @@unique([recurringExpenseId, month, day])
   @@map("daily_spending_averages")

@@ -20,6 +20,13 @@ export default function SetupTab() {
   const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // The contribution split gets its own dialog: an unfundable split is a real
+  // finding, not a failure, and does not belong under "Something went wrong".
+  const [contributionResult, setContributionResult] = useState<{
+    title: string;
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Local draft values for the account fields. They are only sent to the
@@ -129,12 +136,55 @@ export default function SetupTab() {
 
     try {
       const res = await fetch(`/api/contributions?accountId=${account.id}`, { method: 'POST' });
-      if (res.ok) {
-        await loadRules(account.id);
-        setSuccessMessage('Contributions updated based on forecasted expenses!');
-      } else {
-        setErrorMessage('Could not calculate contributions. Please try again.');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setErrorMessage(body.error || 'Could not calculate contributions. Please try again.');
+        return;
       }
+
+      const result = await res.json();
+      await loadRules(account.id);
+
+      const allocation = result.allocation;
+      const lines = (allocation?.contributors ?? []).map(
+        (c: any) =>
+          `${c.name}: ${money(c.allocatedPerPaycheck)} a paycheck (${Math.round(c.shareOfNet * 100)}% of take-home)` +
+          (c.cappedByCeiling ? ' — capped at their ceiling' : '')
+      );
+
+      // An infeasible split is the thing worth saying out loud: the expenses
+      // are larger than the paychecks can cover, and no contribution setting
+      // fixes that.
+      if (allocation && !allocation.feasible) {
+        setContributionResult({
+          title: 'Shared expenses outrun the paychecks',
+          type: 'error',
+          message: [
+            `Shared expenses need ${money(allocation.cashNeedAnnual / 12)} a month, but everyone's ceilings together only reach ${money(allocation.totalCapacityAnnual / 12)}.`,
+            '',
+            ...lines,
+            '',
+            `That leaves ${money(allocation.shortfallMonthly)} a month with no paycheck behind it. Contributions were set to the maximum each check can carry — the rest has to come out of expenses, or from raising a contribution ceiling.`,
+          ].join('\n'),
+        });
+        return;
+      }
+
+      setContributionResult({
+        title: 'Contributions updated',
+        type: 'success',
+        message: [
+          'Contributions updated from the 6-month expense forecast, split by take-home pay.',
+          '',
+          ...lines,
+          ...(allocation?.totalSharedBenefitAnnual > 0
+            ? [
+                '',
+                `${money(allocation.totalSharedBenefitAnnual / 12)} a month of shared benefits paid straight from paychecks was counted toward the split.`,
+              ]
+            : []),
+        ].join('\n'),
+      });
     } catch (error) {
       console.error('Error calculating contributions:', error);
       setErrorMessage('Could not calculate contributions. Please try again.');
@@ -235,6 +285,7 @@ export default function SetupTab() {
           </div>
           <AddIncomeDialog accountId={account.id} onAdded={loadData} />
         </div>
+        <HouseholdCapacitySummary rules={incomeRules} />
         <div className="list">
           {incomeRules.map((rule) => {
             const totalContribution = incomeRules.reduce((sum, r) => sum + r.contributionAmount, 0);
@@ -285,6 +336,13 @@ export default function SetupTab() {
       </section>
 
       <MessageDialog
+        open={!!contributionResult}
+        onOpenChange={(open) => !open && setContributionResult(null)}
+        title={contributionResult?.title || ''}
+        message={contributionResult?.message || ''}
+        type={contributionResult?.type || 'success'}
+      />
+      <MessageDialog
         open={!!successMessage}
         onOpenChange={(open) => !open && setSuccessMessage(null)}
         title="Success"
@@ -298,6 +356,65 @@ export default function SetupTab() {
         message={errorMessage || ''}
         type="error"
       />
+    </div>
+  );
+}
+
+/** Money for the messages above, where formatMoney's component is not in scope. */
+function money(value: number): string {
+  return `$${(value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * The household's combined take-home pay, what is already committed, and how
+ * much room is left. Without this the Setup tab shows contributions with
+ * nothing to judge them against.
+ */
+function HouseholdCapacitySummary({ rules }: { rules: IncomeRule[] }) {
+  const withCapacity = rules.filter((r) => r.capacity);
+  if (withCapacity.length === 0) return null;
+
+  const totals = withCapacity.reduce(
+    (acc, rule) => {
+      const c = rule.capacity!;
+      return {
+        net: acc.net + c.netPerPaycheck * c.payPeriodsPerYear,
+        ceiling: acc.ceiling + c.capacityPerPaycheck * c.payPeriodsPerYear,
+        committed: acc.committed + c.currentPerPaycheck * c.payPeriodsPerYear,
+        shared: acc.shared + c.sharedBenefitPerPaycheck * c.payPeriodsPerYear,
+      };
+    },
+    { net: 0, ceiling: 0, committed: 0, shared: 0 }
+  );
+
+  const headroom = totals.ceiling - totals.committed;
+  const overCommitted = headroom < 0;
+  const usedOfNet = totals.net > 0 ? totals.committed / totals.net : 0;
+
+  return (
+    <div className="grid-3" style={{ marginBottom: '1rem' }}>
+      <div className="stat-tile">
+        <div className="stat-tile__label">Combined take-home</div>
+        <div className="stat-tile__value">{money(totals.net / 12)}</div>
+        <div className="stat-tile__sub">a month, after taxes and deductions</div>
+      </div>
+      <div className="stat-tile">
+        <div className="stat-tile__label">Committed to shared expenses</div>
+        <div className="stat-tile__value">{money(totals.committed / 12)}</div>
+        <div className="stat-tile__sub">{Math.round(usedOfNet * 100)}% of take-home</div>
+      </div>
+      <div className={`stat-tile${overCommitted ? '' : ' stat-tile--accent'}`}>
+        <div className="stat-tile__label">{overCommitted ? 'Over the ceiling by' : 'Room left'}</div>
+        <div
+          className="stat-tile__value"
+          style={overCommitted ? { color: 'var(--color-danger)' } : undefined}
+        >
+          {money(Math.abs(headroom) / 12)}
+        </div>
+        <div className="stat-tile__sub">
+          a month{totals.shared > 0 ? ` · ${money(totals.shared / 12)} of shared benefits paid from paychecks` : ''}
+        </div>
+      </div>
     </div>
   );
 }

@@ -12,6 +12,15 @@ export interface Account {
   updatedAt: Date;
 }
 
+export interface PaycheckDeduction {
+  id?: number;
+  incomeRuleId?: number;
+  name: string;
+  amount: number;
+  treatment: 'pre_tax_section_125' | 'pre_tax_retirement' | 'post_tax';
+  isSharedBenefit: boolean;
+}
+
 export interface IncomeRule {
   id: number;
   accountId: number;
@@ -20,8 +29,52 @@ export interface IncomeRule {
   contributionAmount: number;
   payFrequency: string;
   payDays: string; // JSON array
+  filingStatus: string;
+  stateTaxRate: number;
+  additionalWithholding: number;
+  netPayOverride: number | null;
+  maxContributionPct: number;
+  deductions?: PaycheckDeduction[];
+  /** Derived take-home and ceiling; attached by the income-rules API. */
+  capacity?: ContributorCapacitySummary;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** Mirrors ContributorCapacity in lib/contribution-capacity.ts. */
+export interface ContributorCapacitySummary {
+  incomeRuleId: number;
+  name: string;
+  payPeriodsPerYear: number;
+  netPerPaycheck: number;
+  netAnnual: number;
+  maxContributionPct: number;
+  capacityPerPaycheck: number;
+  capacityAnnual: number;
+  sharedBenefitPerPaycheck: number;
+  sharedBenefitAnnual: number;
+  currentPerPaycheck: number;
+  currentAnnual: number;
+  headroomPerPaycheck: number;
+  headroomAnnual: number;
+  utilizationOfNet: number;
+  overCapacity: boolean;
+  overCapacityBy: number;
+  exceedsNetPay: boolean;
+  paycheck: {
+    gross: number;
+    preTaxDeductions: number;
+    postTaxDeductions: number;
+    oasdi: number;
+    medicare: number;
+    federalWithholding: number;
+    stateWithholding: number;
+    totalTaxes: number;
+    net: number;
+    sharedBenefitDeductions: number;
+    effectiveNetRate: number;
+    isEstimate: boolean;
+  };
 }
 
 export interface RecurringExpense {
