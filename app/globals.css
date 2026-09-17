@@ -1349,3 +1349,61 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: center;
 }
+
+/* Paycheck deduction editor -------------------------------------------------
+   One deduction line: name, amount, tax treatment, a household-benefit toggle
+   and a remove button. Two rows on a phone so the name and the treatment
+   select keep a usable width; a single row once there is space for it. */
+.form-section__title {
+  font-size: var(--font-small);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.deduction-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  grid-template-areas:
+    'name amount remove'
+    'treatment treatment treatment'
+    'shared shared shared';
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.625rem;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+}
+.deduction-row__name { grid-area: name; }
+.deduction-row__amount { grid-area: amount; text-align: right; }
+.deduction-row__treatment { grid-area: treatment; }
+.deduction-row__remove { grid-area: remove; justify-self: end; }
+.deduction-row__shared {
+  grid-area: shared;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 36px;
+  font-size: var(--font-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.deduction-row__shared input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+@media (min-width: 720px) {
+  .deduction-row {
+    grid-template-columns: minmax(0, 1.4fr) 110px minmax(0, 1.2fr) auto auto;
+    grid-template-areas: 'name amount treatment shared remove';
+    background: transparent;
+    border-color: transparent;
+    padding: 0;
+  }
+  .deduction-row__shared {
+    white-space: nowrap;
+  }
+}

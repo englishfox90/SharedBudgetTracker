@@ -3,8 +3,14 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Label from '@radix-ui/react-label';
-import { PlusIcon } from '../icons';
+import { AlertTriangleIcon, PlusIcon } from '../icons';
 import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
+import {
+  PaycheckFields,
+  PaycheckFormState,
+  emptyPaycheckForm,
+  paycheckFormToPayload,
+} from './PaycheckFields';
 
 interface Props {
   accountId: number;
@@ -18,7 +24,9 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
   const [payFrequency, setPayFrequency] = useState('semi_monthly');
   const [payDay1, setPayDay1] = useState('1');
   const [payDay2, setPayDay2] = useState('15');
+  const [paycheck, setPaycheck] = useState<PaycheckFormState>(emptyPaycheckForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleSalaryChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -35,8 +43,9 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
     const salaryValue = parseFloat(annualSalary.replace(/,/g, ''));
 
     setIsSubmitting(true);
+    setError(null);
     try {
-      await fetch('/api/income-rules', {
+      const res = await fetch('/api/income-rules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -46,30 +55,57 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
           contributionAmount: 0,
           payFrequency,
           payDays,
+          ...paycheckFormToPayload(paycheck),
         }),
       });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || 'Could not add this income source.');
+        return;
+      }
 
       setOpen(false);
       setName('');
       setAnnualSalary('');
+      setPaycheck(emptyPaycheckForm);
       onAdded();
     } catch (error) {
       console.error('Error adding income rule:', error);
+      setError('Could not add this income source.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        // Discard a half-filled payroll section rather than carrying it into
+        // the next income source someone adds.
+        if (!next) {
+          setPaycheck(emptyPaycheckForm);
+          setError(null);
+        }
+      }}
+    >
       <Dialog.Trigger asChild>
         <button className="btn btn-primary btn-sm"><PlusIcon size={16} /> Add income</button>
       </Dialog.Trigger>
       <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
+        <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
           <Dialog.Title className="dialog-title">Add Income Source</Dialog.Title>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {error && (
+                <div className="alert alert--danger" role="alert">
+                  <AlertTriangleIcon size={18} />
+                  <div>{error}</div>
+                </div>
+              )}
+
             <div>
               <Label.Root className="label">Name</Label.Root>
               <input
@@ -134,6 +170,15 @@ export function AddIncomeDialog({ accountId, onAdded }: Props) {
                 </div>
               )}
             </div>
+            <div style={{ borderTop: '1px solid var(--border-secondary)', paddingTop: '1rem' }}>
+              <PaycheckFields
+                annualSalary={parseFloat(annualSalary.replace(/,/g, '')) || 0}
+                payFrequency={payFrequency}
+                value={paycheck}
+                onChange={setPaycheck}
+              />
+            </div>
+
             <div className="dialog-actions" style={{ marginTop: '1rem' }}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">

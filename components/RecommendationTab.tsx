@@ -1,10 +1,11 @@
 'use client';
 
+import * as Dialog from '@radix-ui/react-dialog';
 import { IconLabel, InfoIcon, ZapIcon, CheckIcon, LightbulbIcon, AlertTriangleIcon } from './icons';
 import { formatMoney } from '@/lib/actualize';
 
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/lib/useIsMobile';
+import { useIsMobile, preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import SixMonthOverview from './recommendations/SixMonthOverview';
 import VarianceSummary from './recommendations/VarianceSummary';
 import TrendChart from './recommendations/TrendChart';
@@ -13,6 +14,7 @@ import ComparisonChart from './recommendations/ComparisonChart';
 import { RecommendationOverview } from '@/lib/recommendation-engine';
 import { useAccount } from '@/contexts/AccountContext';
 import { MessageDialog } from './dialogs';
+import { AllocationResult, allocateContributions } from '@/lib/contribution-capacity';
 
 interface Props {
   currentMonth: { year: number; month: number };
@@ -26,10 +28,14 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const [message, setMessage] = useState<{ title: string; text: string; type: 'error' | 'info' } | null>(null);
   const [loading, setLoading] = useState(false);
   const [implementing, setImplementing] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [implementSuccess, setImplementSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showHow, setShowHow] = useState(false);
-  const [incomeRules, setIncomeRules] = useState<any[]>([]);
+  // How the recommended total would actually land on each paycheck. Computed
+  // with the same allocator the server uses, so the preview and the saved
+  // result cannot disagree.
+  const [allocation, setAllocation] = useState<AllocationResult | null>(null);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -57,73 +63,89 @@ export default function RecommendationTab({ currentMonth }: Props) {
 
   async function showImplementationModal() {
     if (!accountId || !data?.contributionAnalysis.recommendedAnnualContribution) return;
-    
+
+    setPreparing(true);
     try {
       // Load income rules to show in modal
       const rulesRes = await fetch(`/api/income-rules?accountId=${accountId}`);
       const rules = await rulesRes.json();
-      
+
       if (rules.length === 0) {
         setMessage({ title: 'No income sources', text: 'Set up income sources in the Setup tab first.', type: 'info' });
         return;
       }
 
-      const currentTotal = data.contributionAnalysis.currentAnnualContribution;
-      if (!currentTotal || currentTotal <= 0) {
+      // Split the recommended total across the paychecks that have to fund it.
+      // This replaces scaling everyone by the same percentage, which had no
+      // idea what any of them took home.
+      const split = allocateContributions(
+        rules,
+        data.contributionAnalysis.recommendedAnnualContribution
+      );
+
+      if (split.totalNetAnnual <= 0) {
         setMessage({
-          title: 'No current contributions',
-          text: 'Contributions are currently zero, so they cannot be scaled up proportionally. Set a contribution amount on each income source in the Setup tab (or use Calculate Contributions) and try again.',
+          title: 'No take-home pay to work with',
+          text: 'Add a salary and pay frequency to each income source in Setup so the app can work out what each paycheck can carry.',
           type: 'info',
         });
         return;
       }
-      
-      setIncomeRules(rules);
+
+      setAllocation(split);
       setShowConfirmModal(true);
     } catch (error) {
       console.error('Error loading income rules:', error);
       setMessage({ title: 'Something went wrong', text: 'Could not load income sources.', type: 'error' });
+    } finally {
+      setPreparing(false);
     }
   }
 
   async function confirmImplementation() {
-    if (!accountId || !data?.contributionAnalysis.recommendedAnnualContribution) return;
-    
+    if (!accountId || !allocation) return;
+
     setShowConfirmModal(false);
     setImplementing(true);
     setImplementSuccess(false);
-    
+
     try {
-      // Calculate adjustment ratio
-      const currentTotal = data.contributionAnalysis.currentAnnualContribution;
-      const recommendedTotal = data.contributionAnalysis.recommendedAnnualContribution;
-      if (!currentTotal || currentTotal <= 0) return; // guarded in showImplementationModal
-      const adjustmentRatio = recommendedTotal / currentTotal;
-      
-      // Update each income rule proportionally
-      const updatePromises = incomeRules.map((rule: any) => {
-        const newContribution = rule.contributionAmount * adjustmentRatio;
-        return fetch(`/api/income-rules/${rule.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contributionAmount: Math.round(newContribution * 100) / 100,
-          }),
+      const responses = await Promise.all(
+        allocation.contributors.map((contributor) =>
+          fetch(`/api/income-rules/${contributor.incomeRuleId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contributionAmount: contributor.allocatedPerPaycheck }),
+          })
+        )
+      );
+
+      // The server runs the same capacity check. If it turns anything down, say
+      // so rather than reporting a success that did not happen.
+      const rejected = responses.filter((res) => !res.ok);
+      if (rejected.length > 0) {
+        const body = await rejected[0].json().catch(() => ({}));
+        setMessage({
+          title: 'Some contributions were not saved',
+          text:
+            body.error ||
+            'One or more contributions were above what that paycheck can carry. Nothing above the ceiling was saved.',
+          type: 'error',
         });
-      });
-      
-      await Promise.all(updatePromises);
-      
+        await loadRecommendations();
+        return;
+      }
+
       setImplementSuccess(true);
-      
+
       // Reload recommendations immediately to show updated values
       await loadRecommendations();
-      
+
       // Reset success message after showing it briefly
       setTimeout(() => {
         setImplementSuccess(false);
       }, 3000);
-      
+
     } catch (error) {
       console.error('Error implementing recommendation:', error);
       setMessage({ title: 'Something went wrong', text: 'Could not update income sources. Please try manually in the Setup tab.', type: 'error' });
@@ -165,6 +187,15 @@ export default function RecommendationTab({ currentMonth }: Props) {
   const analysis = data.contributionAnalysis;
   const recommended = analysis.recommendedAnnualContribution ?? analysis.currentAnnualContribution;
   const annualIncrease = recommended - analysis.currentAnnualContribution;
+  // What the confirm dialog will actually write. When the ceilings cannot cover
+  // the recommendation, the allocator delivers less than `recommended`, and a
+  // headline larger than the rows beneath it would be a lie.
+  const appliedAnnualChange = allocation
+    ? allocation.contributors.reduce(
+        (sum, c) => sum + c.changePerPaycheck * c.payPeriodsPerYear,
+        0
+      )
+    : annualIncrease;
 
   return (
     <div className="stack" style={{ gap: '1.25rem', position: 'relative' }}>
@@ -223,19 +254,52 @@ export default function RecommendationTab({ currentMonth }: Props) {
             </div>
           </div>
 
+          {data.capacityAnalysis.totalNetAnnual > 0 && (
+            <p style={{ fontSize: 'var(--font-small)', color: 'var(--text-secondary)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+              That is {Math.round((recommended / data.capacityAnalysis.totalNetAnnual) * 100)}% of your
+              combined take-home pay of {formatMoney(data.capacityAnalysis.totalNetAnnual / 12)} a month
+              {data.capacityAnalysis.totalSharedBenefitAnnual > 0 && (
+                <>
+                  , on top of {formatMoney(data.capacityAnalysis.totalSharedBenefitAnnual / 12)} a month
+                  of shared benefits already paid from paychecks
+                </>
+              )}
+              .
+            </p>
+          )}
+
+          {analysis.limitedByCapacity && (
+            <div className="alert alert--danger" style={{ marginBottom: '1rem' }}>
+              <AlertTriangleIcon size={18} />
+              <div>
+                Closing the gap outright would take{' '}
+                <strong>{formatMoney(analysis.uncappedAnnualContribution ?? 0)}</strong> a year. The
+                paychecks top out at{' '}
+                <strong>{formatMoney(data.capacityAnalysis.totalCapacityAnnual)}</strong>, so the
+                recommendation above has been trimmed to fit. That leaves{' '}
+                <strong>{formatMoney(analysis.unfundedAnnualGap / 12)}</strong> a month that no
+                contribution can cover — it has to come out of expenses, or from raising a
+                contribution ceiling in Setup.
+              </div>
+            </div>
+          )}
+
           <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <p style={{ fontSize: 'var(--font-label)', color: 'var(--text-secondary)', flex: '1 1 260px' }}>
-              Applies the increase proportionally across every income source in Setup. You can review the split before it is saved.
+              Split across income sources by take-home pay, and never above what a paycheck can carry.
+              You can review the split before it is saved.
             </p>
             <button
               onClick={showImplementationModal}
-              disabled={implementing || implementSuccess}
+              disabled={implementing || implementSuccess || preparing}
               className={`btn ${implementSuccess ? 'btn-success' : 'btn-primary'}`}
             >
               {implementSuccess ? (
                 <><CheckIcon size={16} /> Applied</>
               ) : implementing ? (
                 'Updating…'
+              ) : preparing ? (
+                'Working out the split…'
               ) : (
                 <><ZapIcon size={16} /> Apply recommendation</>
               )}
@@ -269,42 +333,69 @@ export default function RecommendationTab({ currentMonth }: Props) {
         type={message?.type || 'info'}
       />
 
-      {/* Confirmation modal */}
-      {showConfirmModal && data && (
-        <>
-          <div className="dialog-overlay" onClick={() => setShowConfirmModal(false)} />
-          <div className="dialog-content dialog-content--wide" role="dialog" aria-modal="true" aria-labelledby="confirm-contribution-title">
-            <h3 id="confirm-contribution-title" className="dialog-title">Confirm contribution increase</h3>
-            <p className="dialog-description">Each income source is scaled by the same percentage.</p>
+      {/* Confirmation dialog. Radix, like every other dialog in the app: this is
+          the last step before contributions are written, so it has to trap
+          focus, close on Escape and restore focus afterwards. */}
+      <Dialog.Root open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
+          <Dialog.Overlay className="dialog-overlay" />
+          <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
+            <Dialog.Title className="dialog-title">Confirm contribution change</Dialog.Title>
+            <Dialog.Description className="dialog-description">
+              Split by take-home pay. Anyone already carrying shared costs from their paycheck is
+              credited for them, and nobody is taken past their ceiling.
+            </Dialog.Description>
 
             <div className="grid-2" style={{ marginBottom: '1rem' }}>
               <div className="stat-tile stat-tile--accent">
-                <div className="stat-tile__label">Total increase per year</div>
-                <div className="stat-tile__value">{formatMoney(annualIncrease, true)}</div>
+                <div className="stat-tile__label">Change per year</div>
+                <div className="stat-tile__value">{formatMoney(appliedAnnualChange, true)}</div>
               </div>
               <div className="stat-tile">
                 <div className="stat-tile__label">About per month</div>
-                <div className="stat-tile__value">{formatMoney(annualIncrease / 12, true)}</div>
+                <div className="stat-tile__value">{formatMoney(appliedAnnualChange / 12, true)}</div>
               </div>
             </div>
 
             <div className="list" style={{ marginBottom: '1rem' }}>
-              {incomeRules.map((rule: any) => {
-                const currentTotal = analysis.currentAnnualContribution;
-                const adjustmentRatio = currentTotal > 0 ? recommended / currentTotal : 1;
-                const newContribution = rule.contributionAmount * adjustmentRatio;
-                const increase = newContribution - rule.contributionAmount;
-                const payPeriodsPerYear = getPayPeriodsPerYear(rule.payFrequency);
+              {(allocation?.contributors ?? []).map((contributor) => {
+                const increase = contributor.changePerPaycheck;
+                const shareOfNet =
+                  contributor.netPerPaycheck > 0
+                    ? contributor.allocatedPerPaycheck / contributor.netPerPaycheck
+                    : 0;
                 return (
-                  <div key={rule.id} className="list-item" style={{ background: 'var(--bg-tertiary)' }}>
+                  <div
+                    key={contributor.incomeRuleId}
+                    className="list-item"
+                    style={{ background: 'var(--bg-tertiary)' }}
+                  >
                     <div className="list-item__body">
-                      <div className="list-item__title">{rule.name}</div>
+                      <div className="list-item__title">
+                        {contributor.name}
+                        {contributor.cappedByCeiling && (
+                          <span className="pill pill--warning">at ceiling</span>
+                        )}
+                      </div>
                       <div className="list-item__meta">
-                        {formatMoney(rule.contributionAmount)} → <strong>{formatMoney(newContribution)}</strong> per paycheck · {payPeriodsPerYear} paychecks a year
+                        {formatMoney(contributor.currentPerPaycheck)} →{' '}
+                        <strong>{formatMoney(contributor.allocatedPerPaycheck)}</strong> per paycheck ·{' '}
+                        {contributor.payPeriodsPerYear} paychecks a year
+                      </div>
+                      <div className="list-item__meta">
+                        {Math.round(shareOfNet * 100)}% of {formatMoney(contributor.netPerPaycheck)}{' '}
+                        take-home
+                        {contributor.paycheck.isEstimate ? ' (estimated)' : ''} · ceiling{' '}
+                        {formatMoney(contributor.capacityPerPaycheck)}
+                        {contributor.sharedBenefitPerPaycheck > 0 && (
+                          <> · plus {formatMoney(contributor.sharedBenefitPerPaycheck)} in shared benefits</>
+                        )}
                       </div>
                     </div>
-                    <div className="list-item__amount money-pos">
-                      {formatMoney(increase * payPeriodsPerYear, true)}
+                    <div
+                      className={`list-item__amount ${increase >= 0 ? 'money-pos' : 'money-neg'}`}
+                    >
+                      {formatMoney(increase * contributor.payPeriodsPerYear, true)}
                       <small>per year</small>
                     </div>
                   </div>
@@ -312,37 +403,41 @@ export default function RecommendationTab({ currentMonth }: Props) {
               })}
             </div>
 
-            <div className="alert alert--info">
-              <LightbulbIcon size={18} />
-              <div>Keeps the balance above the safe minimum and builds a cushion month over month.</div>
-            </div>
+            {allocation && !allocation.feasible ? (
+              <div className="alert alert--danger">
+                <AlertTriangleIcon size={18} />
+                <div>
+                  Even at everyone&apos;s ceiling this leaves{' '}
+                  <strong>{formatMoney(allocation.shortfallAnnual / 12)}</strong> a month unfunded.
+                  Applying this sets each paycheck to the most it can carry, but the balance will
+                  still come up short until expenses come down.
+                </div>
+              </div>
+            ) : (
+              <div className="alert alert--info">
+                <LightbulbIcon size={18} />
+                <div>Keeps the balance above the safe minimum and builds a cushion month over month.</div>
+              </div>
+            )}
 
             <div className="dialog-actions">
-              <button onClick={() => setShowConfirmModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={confirmImplementation} className="btn btn-primary">
-                <CheckIcon size={16} /> Apply increase
+              <Dialog.Close asChild>
+                <button className="btn btn-secondary" disabled={implementing}>
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                onClick={confirmImplementation}
+                className="btn btn-primary"
+                disabled={implementing}
+                style={{ opacity: implementing ? 0.5 : 1 }}
+              >
+                <CheckIcon size={16} /> {implementing ? 'Applying…' : 'Apply change'}
               </button>
             </div>
-          </div>
-        </>
-      )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
-
-// Helper function
-function getPayPeriodsPerYear(payFrequency: string): number {
-  switch (payFrequency) {
-    case 'weekly':
-      return 52;
-    case 'bi_weekly':
-      return 26;
-    case 'semi_monthly':
-      return 24;
-    case 'monthly':
-      return 12;
-    default:
-      return 24;
-  }
-}
-

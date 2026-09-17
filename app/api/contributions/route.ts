@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getVariableExpenseEstimates } from '@/lib/variable-expenses-advanced';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { allocateContributions, summarizeAllocation } from '@/lib/contribution-capacity';
 
 /**
  * POST /api/contributions?accountId=X
- * Calculate and update contribution amounts based on forecasted expenses
+ *
+ * Recalculates each person's contribution from the forecasted expenses.
+ *
+ * The split is proportional to take-home pay rather than gross salary, and no
+ * one is asked for more than their ceiling allows. When the forecast needs more
+ * cash than the ceilings can supply, the endpoint writes what fits and returns
+ * the shortfall instead of silently overloading a paycheck.
  */
 export async function POST(request: Request) {
   try {
@@ -18,9 +25,10 @@ export async function POST(request: Request) {
 
     const accountIdInt = validation.accountId;
 
-    // Get all income rules
+    // Get all income rules, with the payroll detail needed to estimate net pay
     const incomeRules = await prisma.incomeRule.findMany({
       where: { accountId: accountIdInt },
+      include: { deductions: true },
     });
 
     if (incomeRules.length === 0) {
@@ -92,56 +100,33 @@ export async function POST(request: Request) {
     // Calculate average monthly expenses across 6 months
     const totalMonthlyExpenses = monthlyExpenseTotals.reduce((sum, val) => sum + val, 0) / 6;
 
-    // Calculate total monthly income
-    let totalMonthlyIncome = 0;
-    for (const rule of incomeRules) {
-      const monthlySalary = rule.annualSalary / 12;
-      totalMonthlyIncome += monthlySalary;
+    // Split the annual cash need across contributors, capped by what each
+    // paycheck can actually carry.
+    const allocation = allocateContributions(incomeRules, totalMonthlyExpenses * 12);
+
+    if (allocation.totalNetAnnual <= 0) {
+      return NextResponse.json(
+        { error: 'Estimated take-home pay is zero, so contributions cannot be split' },
+        { status: 400 }
+      );
     }
 
-    if (totalMonthlyIncome === 0) {
-      return NextResponse.json({ error: 'Total monthly income is zero' }, { status: 400 });
-    }
-
-    // Calculate contribution percentage needed
-    const contributionPercentage = totalMonthlyExpenses / totalMonthlyIncome;
-
-    // Update each income rule's contribution amount based on their share
-    for (const rule of incomeRules) {
-      const monthlySalary = rule.annualSalary / 12;
-      const monthlyContribution = monthlySalary * contributionPercentage;
-
-      // Convert to per-paycheck amount
-      let perPaycheckAmount = monthlyContribution;
-      switch (rule.payFrequency) {
-        case 'weekly':
-          perPaycheckAmount = monthlyContribution / (52 / 12);
-          break;
-        case 'bi_weekly':
-          perPaycheckAmount = monthlyContribution / (26 / 12);
-          break;
-        case 'semi_monthly':
-          perPaycheckAmount = monthlyContribution / 2;
-          break;
-        case 'monthly':
-        default:
-          // Already monthly
-          break;
-      }
-
-      const roundedAmount = Math.round(perPaycheckAmount * 100) / 100;
-      
-      await prisma.incomeRule.update({
-        where: { id: rule.id },
-        data: { contributionAmount: roundedAmount },
-      });
-    }
+    await Promise.all(
+      allocation.contributors.map((contributor) =>
+        prisma.incomeRule.update({
+          where: { id: contributor.incomeRuleId },
+          data: { contributionAmount: contributor.allocatedPerPaycheck },
+        })
+      )
+    );
 
     return NextResponse.json({
       success: true,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
-      totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
-      contributionPercentage: Math.round(contributionPercentage * 10000) / 100, // Convert to percentage
+      totalMonthlyNetIncome: Math.round((allocation.totalNetAnnual / 12) * 100) / 100,
+      // Share of combined take-home pay the shared expenses consume.
+      contributionPercentage:
+        Math.round((allocation.cashNeedAnnual / allocation.totalNetAnnual) * 10000) / 100,
       forecastPeriod: '6-month average',
       monthlyBreakdown: monthlyExpenseTotals.map((total, i) => {
         const date = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
@@ -150,7 +135,10 @@ export async function POST(request: Request) {
           total: Math.round(total * 100) / 100,
         };
       }),
-      incomeRulesUpdated: incomeRules.length,
+      incomeRulesUpdated: allocation.contributors.length,
+      // Everything a caller needs to explain the split, or why it could not be
+      // met in full.
+      allocation: summarizeAllocation(allocation),
     });
   } catch (error) {
     console.error('Error calculating contributions:', error);

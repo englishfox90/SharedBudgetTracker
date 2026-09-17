@@ -7,7 +7,13 @@ import { preventAutoFocusOnTouch } from '@/lib/useIsMobile';
 import { IncomeRule } from '@/types';
 import { ConfirmDialog } from '../dialogs';
 import { formatMoney } from '@/lib/actualize';
-import { TrashIcon } from '../icons';
+import { AlertTriangleIcon, TrashIcon } from '../icons';
+import {
+  PaycheckFields,
+  PaycheckFormState,
+  paycheckFormFromRule,
+  paycheckFormToPayload,
+} from './PaycheckFields';
 
 interface Props {
   rule: IncomeRule;
@@ -21,9 +27,11 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
   const [annualSalary, setAnnualSalary] = useState(rule.annualSalary.toLocaleString());
   const [payDay1, setPayDay1] = useState('');
   const [payDay2, setPayDay2] = useState('');
+  const [paycheck, setPaycheck] = useState<PaycheckFormState>(paycheckFormFromRule(rule));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function formatCurrency(value: string): string {
     const num = value.replace(/[^0-9]/g, '');
@@ -41,6 +49,8 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
     setAnnualSalary(rule.annualSalary.toLocaleString());
     setPayDay1(payDays[0]?.toString() || '1');
     setPayDay2(payDays[1]?.toString() || '15');
+    setPaycheck(paycheckFormFromRule(rule));
+    setError(null);
     setShowEditDialog(true);
   }
 
@@ -50,16 +60,29 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
     const payDays = rule.payFrequency === 'monthly' ? [parseInt(payDay1)] : [parseInt(payDay1), parseInt(payDay2)];
 
     setIsUpdating(true);
+    setError(null);
     try {
-      await fetch(`/api/income-rules/${rule.id}`, {
+      const res = await fetch(`/api/income-rules/${rule.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annualSalary: salaryValue, payDays }),
+        body: JSON.stringify({
+          annualSalary: salaryValue,
+          payDays,
+          ...paycheckFormToPayload(paycheck),
+        }),
       });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || 'Could not save this income source.');
+        return;
+      }
+
       setShowEditDialog(false);
       onUpdate();
     } catch (error) {
       console.error('Error updating income rule:', error);
+      setError('Could not save this income source.');
     } finally {
       setIsUpdating(false);
     }
@@ -95,6 +118,18 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
     ? Math.round((rule.contributionAmount / totalContribution) * 100) 
     : 0;
 
+  // Attached by the income-rules API. Absent only if a caller fetched the rule
+  // some other way, in which case the card just omits the take-home line.
+  const capacity = rule.capacity;
+  const utilization = capacity?.utilizationOfNet ?? null;
+  const utilizationTone = !capacity
+    ? 'safe'
+    : capacity.utilizationOfNet > capacity.maxContributionPct
+      ? 'danger'
+      : capacity.utilizationOfNet > capacity.maxContributionPct * 0.85
+        ? 'warning'
+        : 'safe';
+
   return (
     <>
       <div className="list-item">
@@ -102,13 +137,52 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
           <div className="list-item__title">
             {rule.name}
             <span className="pill pill--accent">{percentage}% of contributions</span>
+            {capacity?.overCapacity && (
+              <span className="pill pill--danger">
+                <AlertTriangleIcon size={12} /> over capacity
+              </span>
+            )}
+            {capacity && capacity.sharedBenefitPerPaycheck > 0 && (
+              <span className="pill pill--info">
+                +{formatMoney(capacity.sharedBenefitPerPaycheck)} household benefits
+              </span>
+            )}
+            {capacity?.paycheck.isEstimate && (
+              <span className="pill pill--neutral">net estimated</span>
+            )}
           </div>
           <div className="list-item__meta">
             {formatMoney(rule.annualSalary)} a year · {payFrequencyLabel} · {payDaysText}
           </div>
+          {capacity && (
+            <div className="list-item__meta">
+              Takes home {formatMoney(capacity.netPerPaycheck)} a check · ceiling{' '}
+              {formatMoney(capacity.capacityPerPaycheck)}
+            </div>
+          )}
+          {capacity && capacity.netPerPaycheck > 0 && (
+            <div
+              className={`meter meter--${utilizationTone}`}
+              style={{ marginTop: '0.4rem' }}
+              role="meter"
+              aria-valuenow={Math.round((utilization ?? 0) * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Contribution as a share of take-home pay"
+            >
+              <div
+                className="meter__fill"
+                style={{ width: `${Math.min(100, Math.max(0, (utilization ?? 0) * 100))}%` }}
+              />
+            </div>
+          )}
         </div>
         <div className="list-item__amount">
-          {formatMoney(rule.contributionAmount)}<small>per paycheck</small>
+          {formatMoney(rule.contributionAmount)}
+          <small>
+            per paycheck
+            {capacity ? ` · ${Math.round(capacity.utilizationOfNet * 100)}% of take-home` : ''}
+          </small>
         </div>
         <div className="list-item__actions">
           <button onClick={openEditDialog} className="btn btn-secondary btn-sm">Edit</button>
@@ -121,9 +195,16 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
       <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
         <Dialog.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
           <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content className="dialog-content" onOpenAutoFocus={preventAutoFocusOnTouch}>
+          <Dialog.Content className="dialog-content dialog-content--wide" onOpenAutoFocus={preventAutoFocusOnTouch}>
             <Dialog.Title className="dialog-title">Edit income source</Dialog.Title>
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {error && (
+                <div className="alert alert--danger" role="alert">
+                  <AlertTriangleIcon size={18} />
+                  <div>{error}</div>
+                </div>
+              )}
+
               <div>
                 <Label.Root className="label">Name</Label.Root>
                 <input
@@ -181,6 +262,15 @@ export function IncomeRuleCard({ rule, totalContribution, onUpdate, onDelete }: 
                   </div>
                 )}
               </div>
+              <div style={{ borderTop: '1px solid var(--border-secondary)', paddingTop: '1rem' }}>
+                <PaycheckFields
+                  annualSalary={parseFloat(annualSalary.replace(/,/g, '')) || 0}
+                  payFrequency={rule.payFrequency}
+                  value={paycheck}
+                  onChange={setPaycheck}
+                />
+              </div>
+
               <div className="dialog-actions" style={{ marginTop: '1rem' }}>
                 <Dialog.Close asChild>
                   <button type="button" className="btn btn-secondary btn-sm">

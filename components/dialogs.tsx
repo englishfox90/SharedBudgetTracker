@@ -72,7 +72,10 @@ export function MessageDialog({
           <AlertDialog.Title className="dialog-title" style={{ color: titleColor }}>
             {title}
           </AlertDialog.Title>
-          <AlertDialog.Description className="dialog-description">{message}</AlertDialog.Description>
+          {/* Messages may carry a short breakdown across several lines. */}
+          <AlertDialog.Description className="dialog-description" style={{ whiteSpace: 'pre-line' }}>
+            {message}
+          </AlertDialog.Description>
           <div className="dialog-actions">
             <AlertDialog.Action asChild>
               <button className="btn btn-primary">OK</button>

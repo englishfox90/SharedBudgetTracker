@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateAccountAccess } from '@/lib/auth-helpers';
+import { describeCapacity, evaluateContribution } from '@/lib/contribution-capacity';
+import {
+  normalizeDeductions,
+  validateDeductions,
+  validatePayrollFields,
+} from '@/lib/income-rule-validation';
 
 export async function PATCH(
   request: Request,
@@ -9,12 +15,24 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, annualSalary, contributionAmount, payFrequency, payDays } = body;
+    const {
+      name,
+      annualSalary,
+      contributionAmount,
+      payFrequency,
+      payDays,
+      filingStatus,
+      stateTaxRate,
+      additionalWithholding,
+      netPayOverride,
+      maxContributionPct,
+      deductions,
+    } = body;
 
     // Verify income rule belongs to user's account
     const existing = await prisma.incomeRule.findUnique({
       where: { id: parseInt(id) },
-      select: { accountId: true }
+      include: { deductions: true },
     });
 
     if (!existing) {
@@ -23,6 +41,70 @@ export async function PATCH(
 
     const validation = await validateAccountAccess(existing.accountId.toString());
     if (validation instanceof NextResponse) return validation;
+
+    const payrollError = validatePayrollFields(body);
+    if (payrollError) {
+      return NextResponse.json({ error: payrollError }, { status: 400 });
+    }
+
+    if (deductions !== undefined) {
+      const deductionError = validateDeductions(deductions);
+      if (deductionError) {
+        return NextResponse.json({ error: deductionError }, { status: 400 });
+      }
+    }
+
+    // Check the contribution against the paycheck as it will be *after* this
+    // patch. A salary cut, a new deduction or a lower ceiling all shrink what
+    // the paycheck can carry, so the rule has to be evaluated as a whole.
+    const pending = {
+      ...existing,
+      ...(name !== undefined && { name }),
+      ...(annualSalary !== undefined && { annualSalary: parseFloat(annualSalary) }),
+      ...(payFrequency !== undefined && { payFrequency }),
+      ...(filingStatus !== undefined && { filingStatus }),
+      ...(stateTaxRate !== undefined && { stateTaxRate: parseFloat(stateTaxRate) }),
+      ...(additionalWithholding !== undefined && {
+        additionalWithholding: parseFloat(additionalWithholding),
+      }),
+      ...(netPayOverride !== undefined && {
+        netPayOverride: netPayOverride === null ? null : parseFloat(netPayOverride),
+      }),
+      ...(maxContributionPct !== undefined && {
+        maxContributionPct: parseFloat(maxContributionPct),
+      }),
+      ...(deductions !== undefined && { deductions: normalizeDeductions(deductions) }),
+    };
+
+    const requestedContribution =
+      contributionAmount !== undefined
+        ? parseFloat(contributionAmount)
+        : existing.contributionAmount;
+
+    // Only a request that actually sets a contribution can be refused. Payroll
+    // details are facts about someone's pay: a lower salary or a new deduction
+    // is true whether or not it leaves the existing contribution over the
+    // ceiling, and refusing it would strand the user in a dialog with no
+    // contribution field to fix. Those edits save, and the over-capacity badge
+    // and meter in Setup report the state they leave behind.
+    if (contributionAmount !== undefined) {
+      const verdict = evaluateContribution(
+        { ...pending, contributionAmount: requestedContribution },
+        requestedContribution
+      );
+
+      if (!verdict.allowed) {
+        return NextResponse.json(
+          {
+            error: verdict.reason,
+            capacity: verdict.capacity,
+            maxAllowedPerPaycheck: verdict.maxAllowedPerPaycheck,
+            overBy: verdict.overBy,
+          },
+          { status: 422 }
+        );
+      }
+    }
 
     const incomeRule = await prisma.incomeRule.update({
       where: { id: parseInt(id) },
@@ -34,10 +116,30 @@ export async function PATCH(
         }),
         ...(payFrequency && { payFrequency }),
         ...(payDays && { payDays: JSON.stringify(payDays) }),
+        ...(filingStatus !== undefined && { filingStatus }),
+        ...(stateTaxRate !== undefined && { stateTaxRate: parseFloat(stateTaxRate) }),
+        ...(additionalWithholding !== undefined && {
+          additionalWithholding: parseFloat(additionalWithholding),
+        }),
+        ...(netPayOverride !== undefined && {
+          netPayOverride: netPayOverride === null ? null : parseFloat(netPayOverride),
+        }),
+        ...(maxContributionPct !== undefined && {
+          maxContributionPct: parseFloat(maxContributionPct),
+        }),
+        // The deduction list is replaced wholesale: it mirrors a pay stub, and
+        // patching individual lines invites drift between the two.
+        ...(deductions !== undefined && {
+          deductions: {
+            deleteMany: {},
+            create: normalizeDeductions(deductions),
+          },
+        }),
       },
+      include: { deductions: true },
     });
 
-    return NextResponse.json(incomeRule);
+    return NextResponse.json({ ...incomeRule, capacity: describeCapacity(incomeRule) });
   } catch (error) {
     console.error('Error updating income rule:', error);
     return NextResponse.json(

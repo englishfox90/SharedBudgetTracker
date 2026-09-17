@@ -13,7 +13,9 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "verify:paycheck": "tsx scripts/verify-paycheck-estimator.ts",
+    "verify:contributions": "tsx scripts/verify-contribution-capacity.ts"
   },
   "keywords": [],
   "author": "",
